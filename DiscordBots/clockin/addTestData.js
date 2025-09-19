@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const mongoose = require("mongoose");
 const Role = require("./models/roles.js");
 const Settings = require("./models/guildSettings.js");
@@ -37,15 +39,18 @@ const roleData = {
 
 async function addTestData() {
   try {
+    const mongoUrl = process.env.MONGO_URL;
+
+    if (!mongoUrl) {
+      throw new Error("Missing MONGO_URL environment variable.");
+    }
+
     //connect to the database
-    await mongoose.connect(
-      "mongodb+srv://admin-uwais:password%40123@cluster0.2ieu9.mongodb.net/?retryWrites=true&w=majority",
-      {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-        dbName: "Clockin", // Specify the database name
-      }
-    );
+    await mongoose.connect(mongoUrl, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      dbName: "Clockin", // Specify the database name
+    });
     await Role.create(roleData);
     await Settings.create(guildData);
   } catch (error) {
