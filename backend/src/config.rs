@@ -5,7 +5,7 @@ use serde::Deserialize;
 #[serde(default)]
 pub struct AppConfig {
     pub server: ServerConfig,
-    pub mongodb: MongoConfig,
+    pub database: DatabaseConfig,
 }
 
 impl AppConfig {
@@ -22,7 +22,7 @@ impl Default for AppConfig {
     fn default() -> Self {
         Self {
             server: ServerConfig::default(),
-            mongodb: MongoConfig::default(),
+            database: DatabaseConfig::default(),
         }
     }
 }
@@ -45,6 +45,37 @@ impl Default for ServerConfig {
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(default)]
+pub struct DatabaseConfig {
+    pub backend: DatabaseBackend,
+    pub mongodb: MongoConfig,
+    pub sqlite: SqliteConfig,
+}
+
+impl Default for DatabaseConfig {
+    fn default() -> Self {
+        Self {
+            backend: DatabaseBackend::Mongo,
+            mongodb: MongoConfig::default(),
+            sqlite: SqliteConfig::default(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum DatabaseBackend {
+    Mongo,
+    Sqlite,
+}
+
+impl Default for DatabaseBackend {
+    fn default() -> Self {
+        DatabaseBackend::Mongo
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(default)]
 pub struct MongoConfig {
     pub uri: String,
     pub database: String,
@@ -55,6 +86,20 @@ impl Default for MongoConfig {
         Self {
             uri: default_mongo_uri(),
             database: default_mongo_db(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(default)]
+pub struct SqliteConfig {
+    pub path: String,
+}
+
+impl Default for SqliteConfig {
+    fn default() -> Self {
+        Self {
+            path: default_sqlite_path(),
         }
     }
 }
@@ -73,4 +118,8 @@ fn default_mongo_uri() -> String {
 
 fn default_mongo_db() -> String {
     "clockin".to_string()
+}
+
+fn default_sqlite_path() -> String {
+    "./data/clockin.sqlite".to_string()
 }

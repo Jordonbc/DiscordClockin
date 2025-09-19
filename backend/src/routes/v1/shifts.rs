@@ -1,14 +1,13 @@
+use std::sync::Arc;
+
 use actix_web::{HttpResponse, post, web};
 use chrono::Utc;
-use mongodb::{
-    Collection,
-    bson::{Bson, doc},
-};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     error::ApiError,
-    models::{guild_worker::GuildWorkersDocument, views::WorkerView},
+    models::{clockins::ClockInMessageDocument, views::WorkerView},
+    repository::Repository,
     state::AppState,
 };
 
@@ -31,8 +30,8 @@ pub async fn start_shift(
     state: web::Data<AppState>,
     payload: web::Json<StartShiftRequest>,
 ) -> Result<HttpResponse, ApiError> {
-    let collection = state.workers_collection();
-    let mut workers = fetch_or_create_workers(&collection, &payload.guild_id).await?;
+    let repository: Arc<dyn Repository> = state.repository.clone();
+    let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
     let now = current_timestamp_ms();
 
     {
@@ -49,10 +48,16 @@ pub async fn start_shift(
         worker.mark_clock_in(now, payload.clock_in_message_id.clone());
     }
 
-    persist_workers(&collection, &workers).await?;
+    repository.persist_workers(&workers).await?;
 
     if let Some(message_id) = &payload.clock_in_message_id {
-        upsert_clockin_message(&state, &payload.guild_id, &payload.user_id, message_id).await?;
+        let record = ClockInMessageDocument {
+            id: None,
+            guild_id: payload.guild_id.clone(),
+            user_id: payload.user_id.clone(),
+            message_id: message_id.clone(),
+        };
+        repository.upsert_clockin_message(&record).await?;
     }
 
     let worker_view = workers
@@ -78,8 +83,8 @@ pub async fn end_shift(
     state: web::Data<AppState>,
     payload: web::Json<EndShiftRequest>,
 ) -> Result<HttpResponse, ApiError> {
-    let collection = state.workers_collection();
-    let mut workers = fetch_or_create_workers(&collection, &payload.guild_id).await?;
+    let repository: Arc<dyn Repository> = state.repository.clone();
+    let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
     let now = current_timestamp_ms();
 
     {
@@ -94,11 +99,9 @@ pub async fn end_shift(
         worker.mark_clock_out(now);
     }
 
-    persist_workers(&collection, &workers).await?;
-
-    state
-        .clockins_collection()
-        .delete_one(doc! { "guildId": &payload.guild_id, "userId": &payload.user_id })
+    repository.persist_workers(&workers).await?;
+    repository
+        .delete_clockin_message(&payload.guild_id, &payload.user_id)
         .await?;
 
     let worker_view = workers
@@ -124,8 +127,8 @@ pub async fn start_break(
     state: web::Data<AppState>,
     payload: web::Json<BreakRequest>,
 ) -> Result<HttpResponse, ApiError> {
-    let collection = state.workers_collection();
-    let mut workers = fetch_or_create_workers(&collection, &payload.guild_id).await?;
+    let repository: Arc<dyn Repository> = state.repository.clone();
+    let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
     let now = current_timestamp_ms();
 
     {
@@ -142,7 +145,7 @@ pub async fn start_break(
         worker.mark_break_start(now);
     }
 
-    persist_workers(&collection, &workers).await?;
+    repository.persist_workers(&workers).await?;
 
     let worker_view = workers
         .find_worker(&payload.user_id)
@@ -161,8 +164,8 @@ pub async fn end_break(
     state: web::Data<AppState>,
     payload: web::Json<BreakRequest>,
 ) -> Result<HttpResponse, ApiError> {
-    let collection = state.workers_collection();
-    let mut workers = fetch_or_create_workers(&collection, &payload.guild_id).await?;
+    let repository: Arc<dyn Repository> = state.repository.clone();
+    let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
     let now = current_timestamp_ms();
 
     {
@@ -179,7 +182,7 @@ pub async fn end_break(
         worker.mark_break_end(now);
     }
 
-    persist_workers(&collection, &workers).await?;
+    repository.persist_workers(&workers).await?;
 
     let worker_view = workers
         .find_worker(&payload.user_id)
@@ -195,58 +198,4 @@ pub async fn end_break(
 
 fn current_timestamp_ms() -> i64 {
     Utc::now().timestamp_millis()
-}
-
-async fn fetch_or_create_workers(
-    collection: &Collection<GuildWorkersDocument>,
-    guild_id: &str,
-) -> Result<GuildWorkersDocument, ApiError> {
-    if let Some(doc) = collection.find_one(doc! { "guildId": guild_id }).await? {
-        return Ok(doc);
-    }
-
-    let mut doc = GuildWorkersDocument {
-        id: None,
-        guild_id: guild_id.to_string(),
-        workers: Vec::new(),
-    };
-
-    let insert_result = collection.insert_one(&doc).await?;
-    if let Bson::ObjectId(id) = insert_result.inserted_id {
-        doc.id = Some(id);
-    }
-
-    Ok(doc)
-}
-
-async fn persist_workers(
-    collection: &Collection<GuildWorkersDocument>,
-    document: &GuildWorkersDocument,
-) -> Result<(), ApiError> {
-    collection
-        .replace_one(doc! { "guildId": &document.guild_id }, document)
-        .await?;
-    Ok(())
-}
-
-async fn upsert_clockin_message(
-    state: &AppState,
-    guild_id: &str,
-    user_id: &str,
-    message_id: &str,
-) -> Result<(), ApiError> {
-    let collection = state.clockins_collection();
-    let filter = doc! {
-        "guildId": guild_id,
-        "userId": user_id,
-    };
-    let update = doc! {
-        "$set": {
-            "guildId": guild_id,
-            "userId": user_id,
-            "messageId": message_id,
-        }
-    };
-    collection.update_one(filter, update).upsert(true).await?;
-    Ok(())
 }

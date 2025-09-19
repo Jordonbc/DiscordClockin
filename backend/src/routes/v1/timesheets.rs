@@ -1,11 +1,13 @@
+use std::sync::Arc;
+
 use actix_web::{HttpResponse, get, web};
 use chrono::Utc;
-use mongodb::bson::doc;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     error::ApiError,
     models::{guild_worker::WorkerRecord, roles::GuildRolesDocument, views::WorkerView},
+    repository::Repository,
     state::AppState,
 };
 
@@ -58,9 +60,10 @@ pub async fn get_timesheet(
     state: web::Data<AppState>,
     path: web::Path<TimesheetPath>,
 ) -> Result<HttpResponse, ApiError> {
-    let workers_collection = state.workers_collection();
-    let guild_workers = workers_collection
-        .find_one(doc! { "guildId": &path.guild_id })
+    let repository: Arc<dyn Repository> = state.repository.clone();
+
+    let guild_workers = repository
+        .find_workers(&path.guild_id)
         .await?
         .ok_or_else(|| ApiError::NotFound("Guild has no workers".into()))?;
 
@@ -80,7 +83,7 @@ pub async fn get_timesheet(
         session_minutes_accumulated,
     };
 
-    let payroll = resolve_payroll(&state, &path.guild_id, worker).await;
+    let payroll = resolve_payroll(&repository, &path.guild_id, worker).await;
 
     Ok(HttpResponse::Ok().json(TimesheetResponse {
         worker: worker_view,
@@ -130,18 +133,11 @@ fn duration_minutes(start_ms: i64, end_ms: i64) -> f64 {
 }
 
 async fn resolve_payroll(
-    state: &AppState,
+    repository: &Arc<dyn Repository>,
     guild_id: &str,
     worker: &WorkerRecord,
 ) -> Option<PayrollSummary> {
-    let roles_doc = match state
-        .roles_collection()
-        .find_one(doc! { "guildId": guild_id })
-        .await
-    {
-        Ok(Some(doc)) => doc,
-        _ => return None,
-    };
+    let roles_doc = repository.get_roles(guild_id).await.ok().flatten()?;
 
     let rate = worker
         .experience

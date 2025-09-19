@@ -1,10 +1,12 @@
+use std::sync::Arc;
+
 use actix_web::{HttpResponse, get, post, web};
-use mongodb::bson::{doc, to_bson};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     error::ApiError,
     models::{guild_worker::WorkerRecord, roles::GuildRolesDocument, views::WorkerView},
+    repository::Repository,
     state::AppState,
 };
 
@@ -26,21 +28,18 @@ pub async fn register_worker(
     state: web::Data<AppState>,
     payload: web::Json<RegisterWorkerRequest>,
 ) -> Result<HttpResponse, ApiError> {
-    let roles_collection = state.roles_collection();
-    let roles_doc = roles_collection
-        .find_one(doc! { "guildId": &payload.guild_id })
+    let repository: Arc<dyn Repository> = state.repository.clone();
+
+    let roles_doc = repository
+        .get_roles(&payload.guild_id)
         .await?
         .ok_or_else(|| ApiError::Validation("No roles configured for guild".into()))?;
 
     validate_role_choice(&roles_doc, &payload.role_id, payload.experience.as_deref())?;
 
-    let workers_collection = state.workers_collection();
+    let mut guild_workers = repository.get_or_init_workers(&payload.guild_id).await?;
 
-    let existing_worker = workers_collection
-        .find_one(doc! { "guildId": &payload.guild_id, "workers.userId": &payload.user_id })
-        .await?;
-
-    if existing_worker.is_some() {
+    if guild_workers.find_worker(&payload.user_id).is_some() {
         return Err(ApiError::Conflict("Worker already registered".into()));
     }
 
@@ -50,29 +49,11 @@ pub async fn register_worker(
         payload.experience.clone(),
     );
 
-    let worker_bson = to_bson(&new_worker)
-        .map_err(|_| ApiError::Validation("Failed to serialize worker".into()))?;
-    let worker_doc = worker_bson
-        .as_document()
-        .cloned()
-        .ok_or_else(|| ApiError::Internal)?;
+    guild_workers.workers.push(new_worker);
 
-    let filter = doc! { "guildId": &payload.guild_id };
-    let update = doc! {
-        "$setOnInsert": { "guildId": &payload.guild_id },
-        "$push": { "workers": worker_doc }
-    };
-    workers_collection
-        .update_one(filter, update)
-        .upsert(true)
-        .await?;
+    repository.persist_workers(&guild_workers).await?;
 
-    let updated_doc = workers_collection
-        .find_one(doc! { "guildId": &payload.guild_id })
-        .await?
-        .ok_or_else(|| ApiError::Internal)?;
-
-    let worker = updated_doc
+    let worker = guild_workers
         .find_worker(&payload.user_id)
         .ok_or_else(|| ApiError::Internal)?;
 
@@ -92,9 +73,10 @@ pub async fn get_worker(
     state: web::Data<AppState>,
     path: web::Path<WorkerPath>,
 ) -> Result<HttpResponse, ApiError> {
-    let workers_collection = state.workers_collection();
-    let doc = workers_collection
-        .find_one(doc! { "guildId": &path.guild_id })
+    let repository: Arc<dyn Repository> = state.repository.clone();
+
+    let doc = repository
+        .find_workers(&path.guild_id)
         .await?
         .ok_or_else(|| ApiError::NotFound("Guild has no workers".into()))?;
 
