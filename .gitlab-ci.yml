@@ -1,0 +1,15 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  only:
+    - Develop # Or whichever branch triggers deployments
+  tags:
+    - deployment # Match the tag you specified during runner registration
+  script:
+    # - cd /home/gitlab-runner/clockinbot # Path where your project is on the VPS
+    # - git config --global --add safe.directory /home/gitlab-runner/clockinbot
+    # - git pull origin Develop
+    - docker-compose down
+    - docker-compose up -d --build

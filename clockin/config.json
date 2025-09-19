@@ -1,0 +1,13 @@
+{
+  "balanceThumbnailUrl": "https://media.discordapp.net/attachments/1033109394134671385/1251847132462317608/sack-dollar.png?ex=667010fe&is=666ebf7e&hm=e2fd7aabea72ef2e6b880c26c48f1b6f220237a601d3b89130dccd72647fef99&=&format=webp&quality=lossless&width=494&height=494",
+  "clockoutFooterText": "Segritude Games",
+  "clockoutFooterIconUrl": "https://cdn.discordapp.com/emojis/1028049414473908296.webp?size=96&quality=lossless",
+  "updatesGuildId": "1016787224827801610",
+  "updatesChannelId": "1016787224827801610",
+  "clockoutLogGuildId": "1016787224827801610",
+  "clockoutLogChannelId": "1016787224827801610",
+  "discordInviteBaseUrl": "https://discord.com/api/oauth2/authorize",
+  "discordInvitePermissions": "8",
+  "discordInviteScopes": "bot%20applications.commands",
+  "discordSupportServerUrl": "https://discord.gg/4V2DE8Kz"
+}

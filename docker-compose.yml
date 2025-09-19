@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  redis:
+    image: redis:latest
+    container_name: redis_container
+    restart: always
+    # ports:
+    #   - "6379:6379"
+
+  clockin_bot:
+    build: ./clockin
+    container_name: bot1_container
+    env_file:
+      - /home/gitlab-runner/envs/clockin.env
+
+  holiday_bot:
+    build: ./Holiday Segritude
+    container_name: bot2_container
+    env_file:
+      - /home/gitlab-runner/envs/holiday.env
+
+  reporter_bot:
+    build: ./Report Segritude
+    container_name: bot3_container
+    env_file:
+      - /home/gitlab-runner/envs/reporter.env
