@@ -22,13 +22,13 @@ pub struct WorkerView {
     pub experience: Option<String>,
     pub breaks_count: i32,
     pub break_time_hours: f64,
-    pub worked_minutes: Option<i64>,
+    pub worked_hours: Option<f64>,
     pub clock_in_message: Option<String>,
     pub clock_dates: ClockDatesView,
     pub afk_dates: AfkDatesView,
-    pub daily_worked_minutes: i64,
-    pub weekly_worked_minutes: i64,
-    pub total_worked_minutes: i64,
+    pub daily_worked_hours: f64,
+    pub weekly_worked_hours: f64,
+    pub total_worked_hours: f64,
 }
 
 impl From<&WorkerRecord> for WorkerView {
@@ -40,13 +40,13 @@ impl From<&WorkerRecord> for WorkerView {
             experience: worker.experience.clone(),
             breaks_count: worker.breaks_count,
             break_time_hours: worker.break_time,
-            worked_minutes: worker.worked,
+            worked_hours: worker.worked,
             clock_in_message: worker.clock_in_message.clone(),
             clock_dates: ClockDatesView::from(&worker.clock_dates),
             afk_dates: AfkDatesView::from(&worker.afk_dates),
-            daily_worked_minutes: worker.daily_worked,
-            weekly_worked_minutes: worker.weekly_worked,
-            total_worked_minutes: worker.total_worked,
+            daily_worked_hours: worker.daily_worked,
+            weekly_worked_hours: worker.weekly_worked,
+            total_worked_hours: worker.total_worked,
         }
     }
 }

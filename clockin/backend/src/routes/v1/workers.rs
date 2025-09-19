@@ -1,14 +1,10 @@
-use actix_web::{get, post, web, HttpResponse};
-use mongodb::{bson::{doc, to_bson}, options::UpdateOptions};
+use actix_web::{HttpResponse, get, post, web};
+use mongodb::bson::{doc, to_bson};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     error::ApiError,
-    models::{
-        guild_worker::{GuildWorkersDocument, WorkerRecord},
-        roles::GuildRolesDocument,
-        views::WorkerView,
-    },
+    models::{guild_worker::WorkerRecord, roles::GuildRolesDocument, views::WorkerView},
     state::AppState,
 };
 
@@ -32,7 +28,7 @@ pub async fn register_worker(
 ) -> Result<HttpResponse, ApiError> {
     let roles_collection = state.roles_collection();
     let roles_doc = roles_collection
-        .find_one(doc! { "guildId": &payload.guild_id }, None)
+        .find_one(doc! { "guildId": &payload.guild_id })
         .await?
         .ok_or_else(|| ApiError::Validation("No roles configured for guild".into()))?;
 
@@ -41,7 +37,7 @@ pub async fn register_worker(
     let workers_collection = state.workers_collection();
 
     let existing_worker = workers_collection
-        .find_one(doc! { "guildId": &payload.guild_id, "workers.userId": &payload.user_id }, None)
+        .find_one(doc! { "guildId": &payload.guild_id, "workers.userId": &payload.user_id })
         .await?;
 
     if existing_worker.is_some() {
@@ -66,12 +62,13 @@ pub async fn register_worker(
         "$setOnInsert": { "guildId": &payload.guild_id },
         "$push": { "workers": worker_doc }
     };
-    let options = UpdateOptions::builder().upsert(true).build();
-
-    workers_collection.update_one(filter, update, options).await?;
+    workers_collection
+        .update_one(filter, update)
+        .upsert(true)
+        .await?;
 
     let updated_doc = workers_collection
-        .find_one(doc! { "guildId": &payload.guild_id }, None)
+        .find_one(doc! { "guildId": &payload.guild_id })
         .await?
         .ok_or_else(|| ApiError::Internal)?;
 
@@ -97,7 +94,7 @@ pub async fn get_worker(
 ) -> Result<HttpResponse, ApiError> {
     let workers_collection = state.workers_collection();
     let doc = workers_collection
-        .find_one(doc! { "guildId": &path.guild_id }, None)
+        .find_one(doc! { "guildId": &path.guild_id })
         .await?
         .ok_or_else(|| ApiError::NotFound("Guild has no workers".into()))?;
 

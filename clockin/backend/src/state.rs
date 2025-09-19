@@ -3,7 +3,9 @@ use mongodb::{Client, Database};
 
 #[derive(Clone)]
 pub struct AppState {
+    #[allow(dead_code)]
     pub config: AppConfig,
+    #[allow(dead_code)]
     pub client: Client,
     pub database: Database,
 }
@@ -19,11 +21,14 @@ impl AppState {
         })
     }
 
-    pub fn workers_collection(&self) -> mongodb::Collection<crate::models::guild_worker::GuildWorkersDocument> {
+    pub fn workers_collection(
+        &self,
+    ) -> mongodb::Collection<crate::models::guild_worker::GuildWorkersDocument> {
         self.database
             .collection::<crate::models::guild_worker::GuildWorkersDocument>("guildworkers")
     }
 
+    #[allow(dead_code)]
     pub fn settings_collection(
         &self,
     ) -> mongodb::Collection<crate::models::settings::GuildSettingsDocument> {
@@ -31,7 +36,9 @@ impl AppState {
             .collection::<crate::models::settings::GuildSettingsDocument>("guildsettings")
     }
 
-    pub fn roles_collection(&self) -> mongodb::Collection<crate::models::roles::GuildRolesDocument> {
+    pub fn roles_collection(
+        &self,
+    ) -> mongodb::Collection<crate::models::roles::GuildRolesDocument> {
         self.database
             .collection::<crate::models::roles::GuildRolesDocument>("roles")
     }

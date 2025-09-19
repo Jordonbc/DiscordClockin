@@ -1,4 +1,4 @@
-use actix_web::{http::StatusCode, HttpResponse, ResponseError};
+use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 use serde_json::json;
 use thiserror::Error;
 
@@ -10,8 +10,6 @@ pub enum ApiError {
     NotFound(String),
     #[error("conflict: {0}")]
     Conflict(String),
-    #[error("unauthorized: {0}")]
-    Unauthorized(String),
     #[error("database error: {0}")]
     Database(#[from] mongodb::error::Error),
     #[error("internal server error")]
@@ -24,7 +22,6 @@ impl ResponseError for ApiError {
             ApiError::Validation(_) => StatusCode::BAD_REQUEST,
             ApiError::NotFound(_) => StatusCode::NOT_FOUND,
             ApiError::Conflict(_) => StatusCode::CONFLICT,
-            ApiError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
             ApiError::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::Internal => StatusCode::INTERNAL_SERVER_ERROR,
         }
@@ -35,7 +32,6 @@ impl ResponseError for ApiError {
             ApiError::Validation(_) => "validation_error",
             ApiError::NotFound(_) => "not_found",
             ApiError::Conflict(_) => "conflict",
-            ApiError::Unauthorized(_) => "unauthorized",
             ApiError::Database(_) => "database_error",
             ApiError::Internal => "internal_error",
         };

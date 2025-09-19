@@ -34,15 +34,15 @@ pub struct WorkerRecord {
     #[serde(default, rename = "breaksCount")]
     pub breaks_count: i32,
     #[serde(default)]
-    pub worked: Option<i64>,
+    pub worked: Option<f64>,
     #[serde(default, rename = "breakTime")]
     pub break_time: f64,
     #[serde(rename = "dailyWorked")]
-    pub daily_worked: i64,
+    pub daily_worked: f64,
     #[serde(rename = "weeklyWorked")]
-    pub weekly_worked: i64,
+    pub weekly_worked: f64,
     #[serde(rename = "totalWorked")]
-    pub total_worked: i64,
+    pub total_worked: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -92,16 +92,12 @@ impl WorkerRecord {
             experience,
             role_id,
             breaks_count: 0,
-            worked: Some(0),
+            worked: Some(0.0),
             break_time: 0.0,
-            daily_worked: 0,
-            weekly_worked: 0,
-            total_worked: 0,
+            daily_worked: 0.0,
+            weekly_worked: 0.0,
+            total_worked: 0.0,
         }
-    }
-
-    pub fn ensure_status(&self, expected: &str) -> bool {
-        self.status.eq_ignore_ascii_case(expected)
     }
 
     pub fn mark_clock_in(&mut self, timestamp_ms: i64, message_id: Option<String>) {
@@ -115,7 +111,7 @@ impl WorkerRecord {
     pub fn mark_clock_out(&mut self, timestamp_ms: i64) {
         self.status = "Offline".to_string();
         self.breaks_count = 0;
-        self.worked = Some(0);
+        self.worked = Some(0.0);
         self.break_time = 0.0;
         self.clock_dates.clock_out.push(timestamp_ms);
         self.afk_dates.afk_in.clear();
@@ -131,7 +127,9 @@ impl WorkerRecord {
     pub fn mark_break_end(&mut self, timestamp_ms: i64) {
         self.status = "Work".to_string();
         self.afk_dates.afk_out.push(timestamp_ms);
-        if let (Some(afk_in), Some(afk_out)) = (self.afk_dates.afk_in.last(), self.afk_dates.afk_out.last()) {
+        if let (Some(afk_in), Some(afk_out)) =
+            (self.afk_dates.afk_in.last(), self.afk_dates.afk_out.last())
+        {
             let duration = (*afk_out - *afk_in) as f64 / 1000.0 / 60.0 / 60.0;
             self.break_time += duration.max(0.0);
         }
