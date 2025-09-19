@@ -262,14 +262,16 @@ pub async fn add_experience(
     payload: web::Json<ExperienceRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    let payload = payload.into_inner();
+    let experience = payload.name.trim();
+
     info!(
         "Adding experience '{}' to guild {}",
-        path.experience, path.guild_id
+        experience, path.guild_id
     );
     let mut roles_doc = repository.get_or_init_roles(&path.guild_id).await?;
     let settings = repository.get_or_init_settings(&path.guild_id).await?;
 
-    let experience = payload.name.trim();
     if experience.is_empty() {
         return Err(ApiError::Validation("Experience name is required".into()));
     }
@@ -289,7 +291,7 @@ pub async fn add_experience(
 
     debug!(
         "Experience '{}' added to guild {}; total experiences now {}",
-        request.name,
+        experience,
         path.guild_id,
         roles_doc.experiences.len()
     );

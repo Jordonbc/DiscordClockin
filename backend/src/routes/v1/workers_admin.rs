@@ -125,9 +125,9 @@ async fn modify_hours(
         "Updated hours for worker {} in guild {} -> daily: {}, weekly: {}, total: {}",
         body.user_id,
         body.guild_id,
-        worker_view.daily_hours,
-        worker_view.weekly_hours,
-        worker_view.total_hours
+        worker_view.daily_worked_hours,
+        worker_view.weekly_worked_hours,
+        worker_view.total_worked_hours
     );
 
     Ok(HttpResponse::Ok().json(WorkerMutationResponse {
@@ -184,7 +184,10 @@ pub async fn change_role(
 
     debug!(
         "Worker {} in guild {} now assigned to role {} with experience {}",
-        worker_view.user_id, payload.guild_id, worker_view.role_id, worker_view.experience
+        worker_view.user_id,
+        payload.guild_id,
+        worker_view.role_id,
+        worker_view.experience.as_deref().unwrap_or("none")
     );
 
     Ok(HttpResponse::Ok().json(WorkerMutationResponse {

@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use async_trait::async_trait;
 use log::{debug, info, trace};
 use serde::de::DeserializeOwned;
@@ -29,7 +31,20 @@ pub struct SqliteRepository {
 impl SqliteRepository {
     pub async fn new(config: &SqliteConfig) -> Result<Self, ApiError> {
         debug!("Opening SQLite database at {}", config.path);
-        let connection = Connection::open(&config.path).await?;
+        let db_path = Path::new(&config.path);
+
+        if let Some(parent) = db_path.parent() {
+            if !parent.as_os_str().is_empty() {
+                std::fs::create_dir_all(parent).map_err(|err| {
+                    ApiError::Storage(format!(
+                        "failed to create SQLite data directory {}: {err}",
+                        parent.display()
+                    ))
+                })?;
+            }
+        }
+
+        let connection = Connection::open(db_path).await?;
         info!("SQLite connection established at {}", config.path);
         connection
             .call(

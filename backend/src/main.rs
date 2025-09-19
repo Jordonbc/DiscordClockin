@@ -13,7 +13,7 @@ use state::AppState;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    dotenvy::dotenv().ok();
+    load_env();
     init_logging();
 
     info!("Bootstrapping ClockIn backend service");
@@ -50,6 +50,25 @@ async fn main() -> std::io::Result<()> {
         Err(err) => {
             error!("HTTP server exited with error: {err}");
             Err(err)
+        }
+    }
+}
+
+fn load_env() {
+    if dotenvy::dotenv_override().is_ok() {
+        return;
+    }
+
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let fallback_path = std::path::Path::new(manifest_dir).join(".env");
+
+    if fallback_path.exists() {
+        if let Err(err) = dotenvy::from_path_override(&fallback_path) {
+            eprintln!(
+                "failed to load environment from {}: {}",
+                fallback_path.display(),
+                err
+            );
         }
     }
 }

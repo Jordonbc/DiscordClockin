@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use config::{Config, ConfigError, Environment, File};
 use serde::Deserialize;
 
@@ -14,7 +16,17 @@ impl AppConfig {
             .add_source(File::with_name("config").required(false))
             .add_source(Environment::with_prefix("APP").separator("__"));
 
-        builder.build()?.try_deserialize()
+        let mut config: AppConfig = builder.build()?.try_deserialize()?;
+
+        if let Ok(raw_backend) = std::env::var("APP_DATABASE__BACKEND") {
+            let parsed = DatabaseBackend::from_str(raw_backend.trim()).map_err(|err| {
+                ConfigError::Message(format!("invalid APP_DATABASE__BACKEND value: {err}"))
+            })?;
+
+            config.database.backend = parsed;
+        }
+
+        Ok(config)
     }
 }
 
@@ -66,6 +78,18 @@ impl Default for DatabaseConfig {
 pub enum DatabaseBackend {
     Mongo,
     Sqlite,
+}
+
+impl FromStr for DatabaseBackend {
+    type Err = &'static str;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        match value.to_ascii_lowercase().as_str() {
+            "mongo" => Ok(DatabaseBackend::Mongo),
+            "sqlite" => Ok(DatabaseBackend::Sqlite),
+            _ => Err("expected 'mongo' or 'sqlite'"),
+        }
+    }
 }
 
 impl Default for DatabaseBackend {
