@@ -1,10 +1,17 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { createErrorEmbed, createSuccessEmbed } = require("../utils/embeds");
+const {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+} = require("discord.js");
+const { createErrorEmbed, createSuccessEmbed, applyInteractionBranding } = require("../utils/embeds");
 const { showRegistrationFlow } = require("../workflows/registerWorker");
 const { showBalance } = require("../workflows/showBalance");
 const { requestTimeOffModal } = require("../workflows/timeOff");
 const { emergencyLeaveHandler } = require("../workflows/emergency");
 const { submitIssueModal, submitSuggestionModal } = require("../workflows/support");
+
+const DEFAULT_COLOR = process.env.DEFAULT_COLOR || "#5865F2";
 
 module.exports = {
   id: "mainMsg_selectMenu",
@@ -53,15 +60,35 @@ async function handleClockIn(interaction, { api }) {
       clockInMessageId: interaction.message.id,
     });
 
-    const embed = createSuccessEmbed("You are now clocked in. Have a productive session!");
+    const embed = createSuccessEmbed(
+      "You're clocked in and tracking time. Use the buttons below to pause or wrap up whenever you need."
+    )
+      .setTitle("Clock-in successful")
+      .addFields(
+        {
+          name: "Need to step away?",
+          value: "Tap **Take a break** to pause the timer or **Clock out** when you're done.",
+        },
+        {
+          name: "Stay updated",
+          value: "We'll DM you important reminders while you're on the clock.",
+        }
+      );
+
+    applyInteractionBranding(embed, interaction, {
+      accentEmoji: "✅",
+      color: DEFAULT_COLOR,
+    });
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId("clock_break")
         .setStyle(ButtonStyle.Secondary)
+        .setEmoji("⏸️")
         .setLabel("Take a break"),
       new ButtonBuilder()
         .setCustomId("clock_out")
         .setStyle(ButtonStyle.Danger)
+        .setEmoji("🛑")
         .setLabel("Clock out")
     );
 
@@ -73,8 +100,28 @@ async function handleClockIn(interaction, { api }) {
 }
 
 async function handleContactHr(interaction) {
-  await interaction.reply({
-    content: "Please open a ticket or reach out to the HR team directly in the HR channel.",
-    ephemeral: true,
+  const embed = new EmbedBuilder()
+    .setTitle("Contact HR")
+    .setDescription("Need help from a person? Here's how to reach the HR team.")
+    .addFields(
+      {
+        name: "Open a ticket",
+        value: "Use the HR ticket channel to start a private thread with the team.",
+      },
+      {
+        name: "Direct message",
+        value: "If it's urgent, DM an HR representative so they can follow up quickly.",
+      },
+      {
+        name: "Availability",
+        value: "HR is online during business hours and will respond as soon as possible.",
+      }
+    );
+
+  applyInteractionBranding(embed, interaction, {
+    accentEmoji: "👥",
+    color: DEFAULT_COLOR,
   });
+
+  await interaction.reply({ embeds: [embed], ephemeral: true });
 }
