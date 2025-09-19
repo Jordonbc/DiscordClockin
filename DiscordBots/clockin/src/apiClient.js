@@ -72,6 +72,107 @@ class ApiClient {
     );
   }
 
+  async getSettings({ guildId }) {
+    const payload = await this.#getJson(`guilds/${encodeURIComponent(guildId)}/settings`);
+    return payload?.settings;
+  }
+
+  async updateSettings({ guildId, updates }) {
+    const payload = await this.#patchJson(
+      `guilds/${encodeURIComponent(guildId)}/settings`,
+      updates
+    );
+    return payload?.settings;
+  }
+
+  async getRoles({ guildId }) {
+    const payload = await this.#getJson(`guilds/${encodeURIComponent(guildId)}/roles`);
+    return payload?.roles;
+  }
+
+  async createRole({ guildId, name, category, hourlySalary, experiences, roleId }) {
+    const payload = await this.#postJson(`guilds/${encodeURIComponent(guildId)}/roles`, {
+      name,
+      category,
+      hourly_salary: hourlySalary,
+      experiences,
+      role_id: roleId || undefined,
+    });
+    return payload;
+  }
+
+  async deleteRole({ guildId, roleId }) {
+    return this.#request(
+      `guilds/${encodeURIComponent(guildId)}/roles/${encodeURIComponent(roleId)}`,
+      { method: "DELETE" }
+    );
+  }
+
+  async addExperience({ guildId, name }) {
+    return this.#postJson(`guilds/${encodeURIComponent(guildId)}/roles/experiences`, {
+      name,
+    });
+  }
+
+  async removeExperience({ guildId, name }) {
+    return this.#request(
+      `guilds/${encodeURIComponent(guildId)}/roles/experiences/${encodeURIComponent(name)}`,
+      { method: "DELETE" }
+    );
+  }
+
+  async addHours({ guildId, userId, hours, scope }) {
+    return this.#postJson("workers/hours/add", {
+      guild_id: guildId,
+      user_id: userId,
+      hours,
+      scope,
+    });
+  }
+
+  async removeHours({ guildId, userId, hours, scope }) {
+    return this.#postJson("workers/hours/remove", {
+      guild_id: guildId,
+      user_id: userId,
+      hours,
+      scope,
+    });
+  }
+
+  async changeWorkerRole({ guildId, userId, roleId, experience }) {
+    return this.#postJson("workers/change-role", {
+      guild_id: guildId,
+      user_id: userId,
+      role_id: roleId,
+      experience,
+    });
+  }
+
+  async deleteWorker({ guildId, userId }) {
+    return this.#request(
+      `workers/${encodeURIComponent(guildId)}/${encodeURIComponent(userId)}`,
+      { method: "DELETE" }
+    );
+  }
+
+  async deleteAllWorkers({ guildId }) {
+    return this.#request(`guilds/${encodeURIComponent(guildId)}/workers`, {
+      method: "DELETE",
+    });
+  }
+
+  async deleteAllRoles({ guildId }) {
+    return this.#request(`guilds/${encodeURIComponent(guildId)}/roles`, {
+      method: "DELETE",
+    });
+  }
+
+  async deleteAllData({ guildId }) {
+    return this.#request(`guilds/${encodeURIComponent(guildId)}/data`, {
+      method: "DELETE",
+    });
+  }
+
   async #getJson(path) {
     return this.#request(path, { method: "GET" });
   }
@@ -79,6 +180,16 @@ class ApiClient {
   async #postJson(path, body) {
     return this.#request(path, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  }
+
+  async #patchJson(path, body) {
+    return this.#request(path, {
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },

@@ -7,7 +7,7 @@ use crate::{
     error::ApiError,
     models::{
         clockins::ClockInMessageDocument, guild_worker::GuildWorkersDocument,
-        roles::GuildRolesDocument,
+        roles::GuildRolesDocument, settings::GuildSettingsDocument,
     },
 };
 
@@ -18,6 +18,8 @@ const CREATE_GUILD_WORKERS: &str =
 const CREATE_CLOCKINS: &str = "CREATE TABLE IF NOT EXISTS clockins (guild_id TEXT NOT NULL, user_id TEXT NOT NULL, message_id TEXT NOT NULL, PRIMARY KEY (guild_id, user_id))";
 const CREATE_ROLES: &str =
     "CREATE TABLE IF NOT EXISTS roles (guild_id TEXT PRIMARY KEY, data TEXT NOT NULL)";
+const CREATE_SETTINGS: &str =
+    "CREATE TABLE IF NOT EXISTS settings (guild_id TEXT PRIMARY KEY, data TEXT NOT NULL)";
 
 pub struct SqliteRepository {
     connection: Connection,
@@ -34,6 +36,8 @@ impl SqliteRepository {
                     conn.execute(CREATE_CLOCKINS, [])
                         .map_err(tokio_rusqlite::Error::from)?;
                     conn.execute(CREATE_ROLES, [])
+                        .map_err(tokio_rusqlite::Error::from)?;
+                    conn.execute(CREATE_SETTINGS, [])
                         .map_err(tokio_rusqlite::Error::from)?;
                     Ok(())
                 },
@@ -94,6 +98,20 @@ impl SqliteRepository {
             )
             .await?;
         Ok(())
+    }
+
+    async fn delete_row(&self, query: &'static str, guild_id: &str) -> Result<usize, ApiError> {
+        let id = guild_id.to_string();
+        let affected = self
+            .connection
+            .call(
+                move |conn: &mut rusqlite::Connection| -> Result<usize, tokio_rusqlite::Error> {
+                    conn.execute(query, [&id])
+                        .map_err(tokio_rusqlite::Error::from)
+                },
+            )
+            .await?;
+        Ok(affected)
     }
 }
 
@@ -182,5 +200,130 @@ impl Repository for SqliteRepository {
     async fn get_roles(&self, guild_id: &str) -> Result<Option<GuildRolesDocument>, ApiError> {
         self.read_json("SELECT data FROM roles WHERE guild_id = ?1", guild_id)
             .await
+    }
+
+    async fn get_or_init_roles(&self, guild_id: &str) -> Result<GuildRolesDocument, ApiError> {
+        if let Some(document) = self
+            .read_json::<GuildRolesDocument>("SELECT data FROM roles WHERE guild_id = ?1", guild_id)
+            .await?
+        {
+            return Ok(document);
+        }
+
+        let document = GuildRolesDocument {
+            id: None,
+            guild_id: guild_id.to_string(),
+            roles: Vec::new(),
+            categories: Vec::new(),
+            experiences: Vec::new(),
+        };
+
+        self.upsert_json(
+            "INSERT OR REPLACE INTO roles (guild_id, data) VALUES (?1, ?2)",
+            guild_id,
+            &document,
+        )
+        .await?;
+
+        Ok(document)
+    }
+
+    async fn persist_roles(&self, roles: &GuildRolesDocument) -> Result<(), ApiError> {
+        self.upsert_json(
+            "INSERT OR REPLACE INTO roles (guild_id, data) VALUES (?1, ?2)",
+            &roles.guild_id,
+            roles,
+        )
+        .await
+    }
+
+    async fn delete_roles(&self, guild_id: &str) -> Result<Option<GuildRolesDocument>, ApiError> {
+        let existing = self
+            .read_json::<GuildRolesDocument>("SELECT data FROM roles WHERE guild_id = ?1", guild_id)
+            .await?;
+
+        if existing.is_some() {
+            self.delete_row("DELETE FROM roles WHERE guild_id = ?1", guild_id)
+                .await?;
+        }
+
+        Ok(existing)
+    }
+
+    async fn get_or_init_settings(
+        &self,
+        guild_id: &str,
+    ) -> Result<GuildSettingsDocument, ApiError> {
+        if let Some(document) = self
+            .read_json::<GuildSettingsDocument>(
+                "SELECT data FROM settings WHERE guild_id = ?1",
+                guild_id,
+            )
+            .await?
+        {
+            return Ok(document);
+        }
+
+        let document = GuildSettingsDocument {
+            id: None,
+            guild_id: guild_id.to_string(),
+            ..GuildSettingsDocument::default()
+        };
+
+        self.upsert_json(
+            "INSERT OR REPLACE INTO settings (guild_id, data) VALUES (?1, ?2)",
+            guild_id,
+            &document,
+        )
+        .await?;
+
+        Ok(document)
+    }
+
+    async fn persist_settings(&self, settings: &GuildSettingsDocument) -> Result<(), ApiError> {
+        self.upsert_json(
+            "INSERT OR REPLACE INTO settings (guild_id, data) VALUES (?1, ?2)",
+            &settings.guild_id,
+            settings,
+        )
+        .await
+    }
+
+    async fn delete_settings(
+        &self,
+        guild_id: &str,
+    ) -> Result<Option<GuildSettingsDocument>, ApiError> {
+        let existing = self
+            .read_json::<GuildSettingsDocument>(
+                "SELECT data FROM settings WHERE guild_id = ?1",
+                guild_id,
+            )
+            .await?;
+
+        if existing.is_some() {
+            self.delete_row("DELETE FROM settings WHERE guild_id = ?1", guild_id)
+                .await?;
+        }
+
+        Ok(existing)
+    }
+
+    async fn delete_workers(
+        &self,
+        guild_id: &str,
+    ) -> Result<Option<GuildWorkersDocument>, ApiError> {
+        let existing = self
+            .read_json::<GuildWorkersDocument>(
+                "SELECT data FROM guild_workers WHERE guild_id = ?1",
+                guild_id,
+            )
+            .await?;
+
+        if existing.is_some() {
+            self.delete_row("DELETE FROM guild_workers WHERE guild_id = ?1", guild_id)
+                .await?;
+        }
+
+        Ok(existing)
     }
 }

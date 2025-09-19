@@ -9,7 +9,7 @@ use crate::{
     error::ApiError,
     models::{
         clockins::ClockInMessageDocument, guild_worker::GuildWorkersDocument,
-        roles::GuildRolesDocument,
+        roles::GuildRolesDocument, settings::GuildSettingsDocument,
     },
 };
 
@@ -40,6 +40,11 @@ impl MongoRepository {
     fn clockins_collection(&self) -> Collection<ClockInMessageDocument> {
         self.database
             .collection::<ClockInMessageDocument>("clockins")
+    }
+
+    fn settings_collection(&self) -> Collection<GuildSettingsDocument> {
+        self.database
+            .collection::<GuildSettingsDocument>("settings")
     }
 }
 
@@ -118,5 +123,121 @@ impl Repository for MongoRepository {
             .find_one(doc! { "guildId": guild_id })
             .await?;
         Ok(document)
+    }
+
+    async fn get_or_init_roles(&self, guild_id: &str) -> Result<GuildRolesDocument, ApiError> {
+        if let Some(document) = self
+            .roles_collection()
+            .find_one(doc! { "guildId": guild_id })
+            .await?
+        {
+            return Ok(document);
+        }
+
+        let mut document = GuildRolesDocument {
+            id: None,
+            guild_id: guild_id.to_string(),
+            roles: Vec::new(),
+            categories: Vec::new(),
+            experiences: Vec::new(),
+        };
+
+        let insert = self.roles_collection().insert_one(&document).await?;
+        if let Bson::ObjectId(id) = insert.inserted_id {
+            document.id = Some(id);
+        }
+
+        Ok(document)
+    }
+
+    async fn persist_roles(&self, roles: &GuildRolesDocument) -> Result<(), ApiError> {
+        let filter = doc! { "guildId": &roles.guild_id };
+        self.roles_collection().replace_one(filter, roles).await?;
+        Ok(())
+    }
+
+    async fn delete_roles(&self, guild_id: &str) -> Result<Option<GuildRolesDocument>, ApiError> {
+        let existing = self
+            .roles_collection()
+            .find_one(doc! { "guildId": guild_id })
+            .await?;
+
+        if existing.is_some() {
+            self.roles_collection()
+                .delete_one(doc! { "guildId": guild_id })
+                .await?;
+        }
+
+        Ok(existing)
+    }
+
+    async fn get_or_init_settings(
+        &self,
+        guild_id: &str,
+    ) -> Result<GuildSettingsDocument, ApiError> {
+        if let Some(document) = self
+            .settings_collection()
+            .find_one(doc! { "guildId": guild_id })
+            .await?
+        {
+            return Ok(document);
+        }
+
+        let mut document = GuildSettingsDocument {
+            id: None,
+            guild_id: guild_id.to_string(),
+            ..GuildSettingsDocument::default()
+        };
+
+        let insert = self.settings_collection().insert_one(&document).await?;
+        if let Bson::ObjectId(id) = insert.inserted_id {
+            document.id = Some(id);
+        }
+
+        Ok(document)
+    }
+
+    async fn persist_settings(&self, settings: &GuildSettingsDocument) -> Result<(), ApiError> {
+        let filter = doc! { "guildId": &settings.guild_id };
+        self.settings_collection()
+            .replace_one(filter, settings)
+            .await?;
+        Ok(())
+    }
+
+    async fn delete_settings(
+        &self,
+        guild_id: &str,
+    ) -> Result<Option<GuildSettingsDocument>, ApiError> {
+        let existing = self
+            .settings_collection()
+            .find_one(doc! { "guildId": guild_id })
+            .await?;
+
+        if existing.is_some() {
+            self.settings_collection()
+                .delete_one(doc! { "guildId": guild_id })
+                .await?;
+        }
+
+        Ok(existing)
+    }
+
+    async fn delete_workers(
+        &self,
+        guild_id: &str,
+    ) -> Result<Option<GuildWorkersDocument>, ApiError> {
+        let existing = self
+            .workers_collection()
+            .find_one(doc! { "guildId": guild_id })
+            .await?;
+
+        if existing.is_some() {
+            self.workers_collection()
+                .delete_one(doc! { "guildId": guild_id })
+                .await?;
+        }
+
+        Ok(existing)
     }
 }

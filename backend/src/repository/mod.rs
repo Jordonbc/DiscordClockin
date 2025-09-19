@@ -7,7 +7,7 @@ use crate::{
     error::ApiError,
     models::{
         clockins::ClockInMessageDocument, guild_worker::GuildWorkersDocument,
-        roles::GuildRolesDocument,
+        roles::GuildRolesDocument, settings::GuildSettingsDocument,
     },
 };
 
@@ -31,6 +31,27 @@ pub trait Repository: Send + Sync {
     async fn delete_clockin_message(&self, guild_id: &str, user_id: &str) -> Result<(), ApiError>;
 
     async fn get_roles(&self, guild_id: &str) -> Result<Option<GuildRolesDocument>, ApiError>;
+
+    async fn get_or_init_roles(&self, guild_id: &str) -> Result<GuildRolesDocument, ApiError>;
+
+    async fn persist_roles(&self, roles: &GuildRolesDocument) -> Result<(), ApiError>;
+
+    async fn delete_roles(&self, guild_id: &str) -> Result<Option<GuildRolesDocument>, ApiError>;
+
+    async fn get_or_init_settings(&self, guild_id: &str)
+    -> Result<GuildSettingsDocument, ApiError>;
+
+    async fn persist_settings(&self, settings: &GuildSettingsDocument) -> Result<(), ApiError>;
+
+    async fn delete_settings(
+        &self,
+        guild_id: &str,
+    ) -> Result<Option<GuildSettingsDocument>, ApiError>;
+
+    async fn delete_workers(
+        &self,
+        guild_id: &str,
+    ) -> Result<Option<GuildWorkersDocument>, ApiError>;
 }
 
 pub async fn build_repository(
