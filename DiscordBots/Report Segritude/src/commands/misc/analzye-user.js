@@ -1,9 +1,16 @@
-const GuildWorkers = require("../../models/guildWorkers");
 const axios = require("axios");
 const { EmbedBuilder } = require("discord.js");
 const connectToDatabase = require("../../utils/database/db");
+const GuildWorkers = require("../../models/guildWorkers");
+const backendApi = require("../../utils/backendApi");
 
 async function getUserWorkData(guildId, userId) {
+  const backendWorker = await loadWorkerFromBackend(guildId, userId);
+
+  if (backendWorker) {
+    return backendWorker;
+  }
+
   await connectToDatabase();
   const guild = await GuildWorkers.findOne({ guildId }).lean();
   if (!guild) return null;
@@ -65,6 +72,15 @@ async function generateUserAnalysis(worker) {
   } catch (error) {
     console.error("❌ Error fetching LLM response:", error);
     return "⚠️ Failed to generate user analysis. Please check if Ollama is running.";
+  }
+}
+
+async function loadWorkerFromBackend(guildId, userId) {
+  try {
+    return await backendApi.getWorker({ guildId, userId });
+  } catch (error) {
+    console.error("Failed to load worker from backend:", error);
+    return null;
   }
 }
 

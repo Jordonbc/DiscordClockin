@@ -1,6 +1,7 @@
 const worker = require("../models/worker.js");
 const role = require("../models/roles.js");
 const { EmbedBuilder } = require("discord.js");
+const backendApi = require("../utils/backendApi.js");
 
 module.exports = {
   id: "new_worker_experience_select",
@@ -83,6 +84,12 @@ module.exports = {
       // Push the worker and save
       guildWorkers.workers.push(newWorker);
       await guildWorkers.save();
+      await backendApi.registerWorker({
+        guildId: interaction.guild.id,
+        userId,
+        roleId: roleData.id,
+        experience: selectedExperience,
+      });
 
       const embed = new EmbedBuilder()
         .setTitle("Worker Created Successfully")

@@ -2,6 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 const Roles = require("../models/roles.js");
 const Worker = require("../models/worker.js");
 const Messages = require("../models/messageIds.js");
+const backendApi = require("../utils/backendApi.js");
 
 module.exports = {
   id: "newWorker_experience_menu",
@@ -79,6 +80,13 @@ async function createWorker(
       { $push: { workers: newWorkerData } },
       { upsert: true }
     );
+
+    await backendApi.registerWorker({
+      guildId,
+      userId: interaction.user.id,
+      roleId: role.id,
+      experience,
+    });
 
     const embed = new EmbedBuilder()
       .setTitle("Created your profile!")

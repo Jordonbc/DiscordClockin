@@ -10,6 +10,11 @@ use crate::{
     state::AppState,
 };
 
+#[derive(Debug, Serialize)]
+pub struct ListWorkersResponse {
+    pub workers: Vec<WorkerView>,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct RegisterWorkerRequest {
     pub guild_id: String,
@@ -66,6 +71,28 @@ pub async fn register_worker(
 pub struct WorkerPath {
     pub guild_id: String,
     pub user_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WorkersPath {
+    pub guild_id: String,
+}
+
+#[get("/workers/{guild_id}")]
+pub async fn list_workers(
+    state: web::Data<AppState>,
+    path: web::Path<WorkersPath>,
+) -> Result<HttpResponse, ApiError> {
+    let repository: Arc<dyn Repository> = state.repository.clone();
+
+    let doc = repository
+        .find_workers(&path.guild_id)
+        .await?
+        .ok_or_else(|| ApiError::NotFound("Guild has no workers".into()))?;
+
+    let workers = doc.workers.iter().map(WorkerView::from).collect::<Vec<_>>();
+
+    Ok(HttpResponse::Ok().json(ListWorkersResponse { workers }))
 }
 
 #[get("/workers/{guild_id}/{user_id}")]

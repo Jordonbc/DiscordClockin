@@ -4,8 +4,9 @@ const {
   ButtonBuilder,
   ButtonStyle,
 } = require("discord.js");
-const GuildWorkers = require("../../models/guildWorkers"); // Adjust path as needed
+const GuildWorkers = require("../../models/guildWorkers");
 const connectToDatabase = require("../../utils/database/db");
+const backendApi = require("../../utils/backendApi");
 
 module.exports = {
   name: "user-work-hours",
@@ -15,28 +16,24 @@ module.exports = {
   async callback(client, interaction) {
     await interaction.deferReply();
 
-    // Connect to database
-    await connectToDatabase();
-
     try {
-      // Get guild ID from the interaction
       const guildId = interaction.guild.id;
+      let workers = await loadWorkersFromBackend(guildId);
 
-      // Fetch workers data from database
-      const guildWorkersData = await GuildWorkers.findOne({ guildId });
+      if (!workers) {
+        await connectToDatabase();
+        const guildWorkersData = await GuildWorkers.findOne({ guildId });
 
-      if (
-        !guildWorkersData ||
-        !guildWorkersData.workers ||
-        guildWorkersData.workers.length === 0
-      ) {
-        return interaction.editReply("No workers found in this guild.");
+        if (!guildWorkersData?.workers?.length) {
+          return interaction.editReply("No workers found in this guild.");
+        }
+
+        workers = guildWorkersData.workers;
       }
 
-      const workers = guildWorkersData.workers;
-
-      // Sort workers by weekly worked hours (descending)
-      workers.sort((a, b) => b.weeklyWorked - a.weeklyWorked);
+      workers.sort(
+        (a, b) => hoursValue(b.weeklyWorked) - hoursValue(a.weeklyWorked)
+      );
 
       // Create embeds (maximum 25 fields per embed, and max 10 embeds per message)
       const WORKERS_PER_EMBED = 10; // Number of workers per embed
@@ -74,9 +71,8 @@ module.exports = {
           // Format experience level
           const experience = worker.experience ? worker.experience : "N/A";
 
-          // Format time values to hours (convert from milliseconds/seconds as needed)
-          const weeklyHours = worker.weeklyWorked;
-          const dailyHours = worker.dailyWorked;
+          const weeklyHours = formatHours(hoursValue(worker.weeklyWorked));
+          const dailyHours = formatHours(hoursValue(worker.dailyWorked));
 
           embed.addFields({
             name: `${statusEmoji} ${username} (${experience})`,
@@ -170,11 +166,31 @@ module.exports = {
   },
 };
 
-// Helper function to format hours
-function formatHours(timeValue) {
-  // Assuming timeValue is in seconds, but adjust as needed depending on your data
-  const hours = Math.floor(timeValue / 3600);
-  const minutes = Math.floor((timeValue % 3600) / 60);
+async function loadWorkersFromBackend(guildId) {
+  try {
+    const response = await backendApi.listWorkers({ guildId });
 
-  return `${hours}h ${minutes}m`;
+    if (!response || !Array.isArray(response.workers) || !response.workers.length) {
+      return null;
+    }
+
+    return response.workers;
+  } catch (error) {
+    console.error("Failed to load workers from backend:", error);
+    return null;
+  }
+}
+
+function formatHours(hours) {
+  const totalMinutes = Math.round((hours || 0) * 60);
+  const wholeHours = Math.floor(totalMinutes / 60);
+  const minutes = Math.max(totalMinutes - wholeHours * 60, 0);
+
+  return `${wholeHours}h ${minutes}m`;
+}
+
+function hoursValue(value) {
+  const numeric = Number(value);
+
+  return Number.isFinite(numeric) ? numeric : 0;
 }

@@ -15,6 +15,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .service(shifts::end_break)
             .service(timesheets::get_timesheet)
             .service(workers::register_worker)
+            .service(workers::list_workers)
             .service(workers::get_worker),
     );
 }

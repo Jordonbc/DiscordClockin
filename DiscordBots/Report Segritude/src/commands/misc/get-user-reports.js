@@ -1,6 +1,16 @@
+const { AttachmentBuilder, EmbedBuilder } = require("discord.js");
 const connectToDatabase = require("../../utils/database/db.js");
 const GuildWorkers = require("../../models/guildWorkers");
-const { AttachmentBuilder, EmbedBuilder } = require("discord.js");
+const backendApi = require("../../utils/backendApi");
+
+async function loadWorkerFromBackend(guildId, userId) {
+  try {
+    return await backendApi.getWorker({ guildId, userId });
+  } catch (error) {
+    console.error("Failed to load worker from backend:", error);
+    return null;
+  }
+}
 
 module.exports = {
   name: "get-user-reports",
@@ -29,20 +39,22 @@ module.exports = {
   callback: async (client, interaction) => {
     await interaction.deferReply();
 
-    // Connect to MongoDB
-    await connectToDatabase();
-
     const user = interaction.options.getUser("user");
     const guildId = interaction.guild.id;
     const userId = user.id;
     const timeframe = interaction.options.getString("timeframe") || "all";
 
-    // Fetch user data from MongoDB
-    const guildData = await GuildWorkers.findOne({ guildId });
-    if (!guildData)
-      return interaction.editReply("No data found for this server.");
+    let worker = await loadWorkerFromBackend(guildId, userId);
 
-    const worker = guildData.workers.find((w) => w.userId === userId);
+    if (!worker) {
+      await connectToDatabase();
+      const guildData = await GuildWorkers.findOne({ guildId });
+      if (!guildData)
+        return interaction.editReply("No data found for this server.");
+
+      worker = guildData.workers.find((w) => w.userId === userId);
+    }
+
     if (!worker)
       return interaction.editReply("No records found for this user.");
 
@@ -52,16 +64,16 @@ module.exports = {
     const startOfWeek = new Date(now - 7 * 24 * 60 * 60 * 1000).getTime();
     const startOfMonth = new Date(now - 30 * 24 * 60 * 60 * 1000).getTime();
 
-    let filteredClockIns = [...worker.clockDates.clockIn];
-    let filteredClockOuts = [...worker.clockDates.clockOut];
+    let filteredClockIns = [...(worker.clockDates?.clockIn || [])];
+    let filteredClockOuts = [...(worker.clockDates?.clockOut || [])];
     let filteredAfkIns = worker.afkDates?.afkIn || [];
     let filteredAfkOuts = worker.afkDates?.afkOut || [];
 
     if (timeframe === "today") {
-      filteredClockIns = worker.clockDates.clockIn.filter(
+      filteredClockIns = (worker.clockDates?.clockIn || []).filter(
         (time) => time >= startOfDay
       );
-      filteredClockOuts = worker.clockDates.clockOut.filter(
+      filteredClockOuts = (worker.clockDates?.clockOut || []).filter(
         (time) => time >= startOfDay
       );
       filteredAfkIns =
@@ -69,10 +81,10 @@ module.exports = {
       filteredAfkOuts =
         worker.afkDates?.afkOut?.filter((time) => time >= startOfDay) || [];
     } else if (timeframe === "week") {
-      filteredClockIns = worker.clockDates.clockIn.filter(
+      filteredClockIns = (worker.clockDates?.clockIn || []).filter(
         (time) => time >= startOfWeek
       );
-      filteredClockOuts = worker.clockDates.clockOut.filter(
+      filteredClockOuts = (worker.clockDates?.clockOut || []).filter(
         (time) => time >= startOfWeek
       );
       filteredAfkIns =
@@ -80,10 +92,10 @@ module.exports = {
       filteredAfkOuts =
         worker.afkDates?.afkOut?.filter((time) => time >= startOfWeek) || [];
     } else if (timeframe === "month") {
-      filteredClockIns = worker.clockDates.clockIn.filter(
+      filteredClockIns = (worker.clockDates?.clockIn || []).filter(
         (time) => time >= startOfMonth
       );
-      filteredClockOuts = worker.clockDates.clockOut.filter(
+      filteredClockOuts = (worker.clockDates?.clockOut || []).filter(
         (time) => time >= startOfMonth
       );
       filteredAfkIns =

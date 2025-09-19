@@ -1,22 +1,21 @@
-const GuildWorkers = require("../../models/guildWorkers");
 const axios = require("axios");
 const { EmbedBuilder } = require("discord.js");
 const connectToDatabase = require("../../utils/database/db");
+const GuildWorkers = require("../../models/guildWorkers");
+const backendApi = require("../../utils/backendApi");
 
 async function getWeeklyWorkData(guildId) {
+  const workersFromBackend = await loadWorkersFromBackend(guildId);
+
+  if (workersFromBackend) {
+    return workersFromBackend.map(mapWorkerForAnalysis);
+  }
+
   await connectToDatabase();
   const guild = await GuildWorkers.findOne({ guildId }).lean();
   if (!guild) return [];
 
-  return guild.workers.map((worker) => ({
-    userId: worker.userId,
-    role: worker.roleId,
-    experience: worker.experience,
-    weeklyWorked: worker.weeklyWorked,
-    totalWorked: worker.totalWorked,
-    breaksTaken: worker.breaksCount,
-    breakTime: worker.breakTime,
-  }));
+  return guild.workers.map(mapWorkerForAnalysis);
 }
 
 function formatWorkDataForLLM(workData) {
@@ -59,6 +58,33 @@ async function generateWeeklySummary(workData) {
     }
     return "⚠️ Failed to generate summary. Please check if Ollama is running.";
   }
+}
+
+async function loadWorkersFromBackend(guildId) {
+  try {
+    const response = await backendApi.listWorkers({ guildId });
+
+    if (!response || !Array.isArray(response.workers) || !response.workers.length) {
+      return null;
+    }
+
+    return response.workers;
+  } catch (error) {
+    console.error("Failed to load workers from backend:", error);
+    return null;
+  }
+}
+
+function mapWorkerForAnalysis(worker) {
+  return {
+    userId: worker.userId,
+    role: worker.roleId,
+    experience: worker.experience,
+    weeklyWorked: worker.weeklyWorked,
+    totalWorked: worker.totalWorked,
+    breaksTaken: worker.breaksCount,
+    breakTime: worker.breakTime,
+  };
 }
 
 async function sendWeeklySummary(client, interaction, summaryText) {

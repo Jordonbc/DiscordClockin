@@ -1,22 +1,46 @@
 const GuildWorkers = require("../models/worker.js");
 const calculateBreakTime = require("../functions/break/calculateBreakTime.js");
+const backendApi = require("../utils/backendApi.js");
 
 async function handleWorkerEvents(event, userId, guildId, messageId = null) {
   const guildWorkers = await GuildWorkers.findOne({ guildId });
+
+  if (!guildWorkers) {
+    console.warn(
+      `[handleWorkerEvents] Guild workers document not found for guild ${guildId}`
+    );
+    return;
+  }
+
   const worker = guildWorkers.workers.find(
-    (worker) => worker.userId === userId
+    (candidate) => candidate.userId === userId
   );
 
-  if (event === "clockout") handleClockout(worker, guildWorkers);
+  if (!worker) {
+    console.warn(
+      `[handleWorkerEvents] Worker ${userId} not found for guild ${guildId}`
+    );
+    return;
+  }
 
-  if (event === "clockin") handleClockin(worker, guildWorkers, messageId);
+  if (event === "clockout") {
+    await handleClockout(worker, guildWorkers, guildId, userId);
+  }
 
-  if (event === "break") handleBreak(worker, guildWorkers);
+  if (event === "clockin") {
+    await handleClockin(worker, guildWorkers, messageId, guildId, userId);
+  }
 
-  if (event === "back") handleBack(worker, guildWorkers);
+  if (event === "break") {
+    await handleBreak(worker, guildWorkers, guildId, userId);
+  }
+
+  if (event === "back") {
+    await handleBack(worker, guildWorkers, guildId, userId);
+  }
 }
 
-const handleClockout = async (worker, guildWorkers) => {
+const handleClockout = async (worker, guildWorkers, guildId, userId) => {
   worker.status = "Offline";
   worker.breaksCount = 0;
   worker.worked = 0;
@@ -25,29 +49,43 @@ const handleClockout = async (worker, guildWorkers) => {
   worker.afkDates.afkOut = [];
   worker.afkDates.afkIn = [];
   await guildWorkers.save();
+  await backendApi.endShift({ guildId, userId });
 };
 
-const handleClockin = async (worker, guildWorkers, messageId) => {
+const handleClockin = async (
+  worker,
+  guildWorkers,
+  messageId,
+  guildId,
+  userId
+) => {
   worker.clockInMessage = messageId;
   worker.status = "Work";
   worker.clockDates.clockIn.push(Date.now());
   await guildWorkers.save();
+  await backendApi.startShift({
+    guildId,
+    userId,
+    clockInMessageId: messageId,
+  });
 };
 
-const handleBreak = async (worker, guildWorkers) => {
+const handleBreak = async (worker, guildWorkers, guildId, userId) => {
   worker.status = "Break";
   worker.breaksCount++;
   worker.afkDates.afkIn.push(Date.now());
   await guildWorkers.save();
+  await backendApi.startBreak({ guildId, userId });
 };
 
-const handleBack = async (worker, guildWorkers) => {
+const handleBack = async (worker, guildWorkers, guildId, userId) => {
   worker.status = "Work";
   worker.afkDates.afkOut.push(Date.now());
   worker.breakTime += calculateBreakTime(worker);
   worker.afkDates.afkOut = [];
   worker.afkDates.afkIn = [];
   await guildWorkers.save();
+  await backendApi.endBreak({ guildId, userId });
 };
 
 module.exports = handleWorkerEvents;
