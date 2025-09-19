@@ -81,7 +81,13 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
-    if (interaction.isStringSelectMenu() || interaction.isUserSelectMenu() || interaction.isRoleSelectMenu()) {
+    if (
+      interaction.isStringSelectMenu() ||
+      interaction.isUserSelectMenu() ||
+      interaction.isRoleSelectMenu() ||
+      interaction.isChannelSelectMenu() ||
+      interaction.isMentionableSelectMenu()
+    ) {
       await handleComponentInteraction(client.selectMenus, interaction);
       return;
     }
