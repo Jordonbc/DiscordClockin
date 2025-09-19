@@ -16,7 +16,7 @@ class ApiClient {
       throw new Error("BACKEND_API_URL is required");
     }
 
-    this.baseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+    this.baseUrl = this.#normalizeBaseUrl(baseUrl);
     this.timeoutMs = timeoutMs;
   }
 
@@ -73,8 +73,7 @@ class ApiClient {
   }
 
   async getSettings({ guildId }) {
-    const payload = await this.#getJson(`guilds/${encodeURIComponent(guildId)}/settings`);
-    return payload?.settings;
+    return this.#getJson(`guilds/${encodeURIComponent(guildId)}/settings`);
   }
 
   async updateSettings({ guildId, updates }) {
@@ -239,6 +238,35 @@ class ApiClient {
     } catch (error) {
       return { message: text };
     }
+  }
+
+  #normalizeBaseUrl(baseUrl) {
+    let url;
+    try {
+      url = new URL(baseUrl);
+    } catch (error) {
+      throw new Error("BACKEND_API_URL must be a valid URL");
+    }
+
+    let pathname = url.pathname || "/";
+    const hasApiVersion = /\/api\/v\d+(?:\/|$)/i.test(pathname);
+    const endsWithApi = /\/api\/?$/i.test(pathname);
+    const isRootPath = pathname === "/" || pathname === "";
+
+    if (hasApiVersion) {
+      if (!pathname.endsWith("/")) {
+        pathname = `${pathname}/`;
+      }
+    } else if (isRootPath) {
+      pathname = "/api/v1/";
+    } else if (endsWithApi) {
+      pathname = pathname.replace(/\/api\/?$/i, "/api/v1/");
+    } else if (!pathname.endsWith("/")) {
+      pathname = `${pathname}/`;
+    }
+
+    url.pathname = pathname;
+    return url.toString();
   }
 }
 
