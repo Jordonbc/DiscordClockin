@@ -1,38 +1,63 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { createErrorEmbed, createSuccessEmbed } = require("../utils/embeds");
 const { notifyUserDm } = require("../utils/dm");
-
-const DM_COLOR = process.env.DEFAULT_COLOR || "#5865F2";
+const { getGuildIdFromInteraction, resolveGuildName } = require("../utils/interactions");
+const { isPrivilegedMember } = require("../utils/permissions");
+const { buildClockedInView } = require("../views/dmShiftControls");
 
 module.exports = {
   id: "clock_break_end",
   async execute(interaction, { api }) {
     try {
+      const guildId = getGuildIdFromInteraction(interaction);
+      if (!guildId) {
+        await interaction.reply({
+          content: "I couldn't tell which server you're on the clock for. Try clocking in again.",
+          ephemeral: true,
+        });
+        return;
+      }
+
+      if (interaction.inGuild()) {
+        const settingsPayload = await api.getSettings({ guildId });
+        const settings = settingsPayload?.settings;
+        if (!isPrivilegedMember(interaction, settings)) {
+          await interaction.reply({
+            content: "Head back to our DM and tap **Return to work** there to resume your shift.",
+            ephemeral: true,
+          });
+          return;
+        }
+      }
+
       await api.endBreak({
-        guildId: interaction.guildId,
+        guildId,
         userId: interaction.user.id,
       });
 
-      const embed = createSuccessEmbed("Welcome back! You're now clocked in.");
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId("clock_break")
-          .setStyle(ButtonStyle.Secondary)
-          .setLabel("Take a break"),
-        new ButtonBuilder()
-          .setCustomId("clock_out")
-          .setStyle(ButtonStyle.Danger)
-          .setLabel("Clock out")
-      );
+      const guildName = await resolveGuildName(interaction, guildId);
 
-      await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+      if (interaction.inGuild()) {
+        const embed = createSuccessEmbed("Welcome back! You're now clocked in.");
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId("clock_break")
+            .setStyle(ButtonStyle.Secondary)
+            .setLabel("Take a break"),
+          new ButtonBuilder()
+            .setCustomId("clock_out")
+            .setStyle(ButtonStyle.Danger)
+            .setLabel("Clock out")
+        );
 
-      const guildName = interaction.guild?.name || "this server";
-      const dmEmbed = new EmbedBuilder()
-        .setColor(DM_COLOR)
-        .setTitle("Break ended")
-        .setDescription(`You're back to work in **${guildName}**. I'll keep timing your shift.`);
-      await notifyUserDm(interaction, { embeds: [dmEmbed] });
+        await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+
+        const dmView = buildClockedInView({ guildName, guildId });
+        await notifyUserDm(interaction, dmView);
+      } else {
+        const dmView = buildClockedInView({ guildName, guildId });
+        await interaction.update(dmView);
+      }
     } catch (error) {
       const embed = createErrorEmbed(error);
       await interaction.reply({ embeds: [embed], ephemeral: true });

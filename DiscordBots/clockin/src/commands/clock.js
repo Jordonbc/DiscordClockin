@@ -1,15 +1,12 @@
-const {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  SlashCommandBuilder,
-  EmbedBuilder,
-  time,
-} = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, time } = require("discord.js");
 const { createErrorEmbed } = require("../utils/embeds");
 const { notifyUserDm } = require("../utils/dm");
-
-const DEFAULT_DM_COLOR = process.env.DEFAULT_COLOR || "#5865F2";
+const { isPrivilegedMember } = require("../utils/permissions");
+const {
+  buildClockedInView,
+  buildOnBreakView,
+  buildClockedOutView,
+} = require("../views/dmShiftControls");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -78,53 +75,54 @@ module.exports = {
 
 async function handleBreak(interaction, api, guildId, subcommand) {
   if (subcommand === "start") {
+    if (interaction.inGuild()) {
+      const settingsPayload = await api.getSettings({ guildId });
+      const settings = settingsPayload?.settings;
+      if (!isPrivilegedMember(interaction, settings)) {
+        await interaction.reply({
+          content: "Use the buttons in the DM I sent when you clocked in to manage your breaks.",
+          ephemeral: true,
+        });
+        return;
+      }
+    }
+
     await api.startBreak({ guildId, userId: interaction.user.id });
-    const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("clock_break_end")
-        .setStyle(ButtonStyle.Secondary)
-        .setLabel("Return to work"),
-      new ButtonBuilder()
-        .setCustomId("clock_out")
-        .setStyle(ButtonStyle.Danger)
-        .setLabel("Clock out")
-    );
 
     await interaction.reply({
-      content: "Enjoy your break!",
-      components: [row],
+      content: "Enjoy your break! I've updated your DM controls.",
       ephemeral: true,
     });
+
     const guildName = interaction.guild?.name || "this server";
-    const dmEmbed = new EmbedBuilder()
-      .setColor(DEFAULT_DM_COLOR)
-      .setTitle("Break started")
-      .setDescription(
-        `Your break is running for **${guildName}**. I'll ping you here so you remember to head back.`
-      )
-      .addFields({
-        name: "When you're ready",
-        value: "Use `/clock break end` or return to the clock-in post in the server to resume work.",
-      });
-    await notifyUserDm(interaction, { embeds: [dmEmbed] });
+    const dmView = buildOnBreakView({ guildName, guildId });
+    await notifyUserDm(interaction, dmView);
     return;
   }
 
   if (subcommand === "end") {
+    if (interaction.inGuild()) {
+      const settingsPayload = await api.getSettings({ guildId });
+      const settings = settingsPayload?.settings;
+      if (!isPrivilegedMember(interaction, settings)) {
+        await interaction.reply({
+          content: "Break controls now live in your Clockin DM. Tap **Return to work** there to resume.",
+          ephemeral: true,
+        });
+        return;
+      }
+    }
+
     await api.endBreak({ guildId, userId: interaction.user.id });
-    const row = buildWorkControlsRow();
 
     await interaction.reply({
-      content: "Welcome back! Break ended successfully.",
-      components: [row],
+      content: "Welcome back! You're clocked in again. I've refreshed your DM controls.",
       ephemeral: true,
     });
+
     const guildName = interaction.guild?.name || "this server";
-    const dmEmbed = new EmbedBuilder()
-      .setColor(DEFAULT_DM_COLOR)
-      .setTitle("Break ended")
-      .setDescription(`You're back on the clock for **${guildName}**. Let's get back to it!`);
-    await notifyUserDm(interaction, { embeds: [dmEmbed] });
+    const dmView = buildClockedInView({ guildName, guildId });
+    await notifyUserDm(interaction, dmView);
     return;
   }
 
@@ -141,29 +139,33 @@ async function handleClockIn(interaction, api, guildId) {
     clockInMessageId: interaction.channelId,
   });
 
-  const row = buildWorkControlsRow();
-
   await interaction.reply({
-    embeds: [buildShiftEmbed("Clocked in", response.worker)],
-    components: [row],
+    embeds: [
+      buildShiftEmbed("Clocked in", response.worker).setFooter({
+        text: "DM sent — manage breaks and clock-out from there.",
+      }),
+    ],
     ephemeral: true,
   });
 
   const guildName = interaction.guild?.name || "this server";
-  const dmEmbed = new EmbedBuilder()
-    .setColor(DEFAULT_DM_COLOR)
-    .setTitle("Clocked in")
-    .setDescription(
-      `You're now clocked in for **${guildName}**. I'll keep you posted here until it's time to wrap up.`
-    )
-    .addFields({
-      name: "Need to pause?",
-      value: "Use `/clock break start` or the buttons in the clock-in post when you're in the server.",
-    });
-  await notifyUserDm(interaction, { embeds: [dmEmbed] });
+  const dmView = buildClockedInView({ guildName, guildId });
+  await notifyUserDm(interaction, dmView);
 }
 
 async function handleClockOut(interaction, api, guildId) {
+  if (interaction.inGuild()) {
+    const settingsPayload = await api.getSettings({ guildId });
+    const settings = settingsPayload?.settings;
+    if (!isPrivilegedMember(interaction, settings)) {
+      await interaction.reply({
+        content: "Clock out using the red button in the DM I sent you when you started your shift.",
+        ephemeral: true,
+      });
+      return;
+    }
+  }
+
   const response = await api.endShift({
     guildId,
     userId: interaction.user.id,
@@ -175,15 +177,11 @@ async function handleClockOut(interaction, api, guildId) {
   });
 
   const guildName = interaction.guild?.name || "this server";
-  const dmEmbed = new EmbedBuilder()
-    .setColor(DEFAULT_DM_COLOR)
-    .setTitle("Clocked out")
-    .setDescription(`You're clocked out from **${guildName}**. Nice work today!`)
-    .addFields({
-      name: "Hours logged",
-      value: `${response.worker.total_worked_hours.toFixed(2)}h total so far.`,
-    });
-  await notifyUserDm(interaction, { embeds: [dmEmbed] });
+  const dmView = buildClockedOutView({
+    guildName,
+    totalWorkedHours: response.worker.total_worked_hours,
+  });
+  await notifyUserDm(interaction, dmView);
 }
 
 async function handleStatus(interaction, api, guildId) {
@@ -291,17 +289,4 @@ function buildTimesheetEmbed(user, data) {
   }
 
   return embed;
-}
-
-function buildWorkControlsRow() {
-  return new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId("clock_break")
-      .setStyle(ButtonStyle.Secondary)
-      .setLabel("Take a break"),
-    new ButtonBuilder()
-      .setCustomId("clock_out")
-      .setStyle(ButtonStyle.Danger)
-      .setLabel("Clock out")
-  );
 }
