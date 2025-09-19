@@ -5,6 +5,7 @@ const {
   EmbedBuilder,
 } = require("discord.js");
 const { createErrorEmbed, createSuccessEmbed, applyInteractionBranding } = require("../utils/embeds");
+const { notifyUserDm } = require("../utils/dm");
 const { showRegistrationFlow } = require("../workflows/registerWorker");
 const { showBalance } = require("../workflows/showBalance");
 const { requestTimeOffModal } = require("../workflows/timeOff");
@@ -93,6 +94,29 @@ async function handleClockIn(interaction, { api }) {
     );
 
     await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+
+    const guildName = interaction.guild?.name || "this server";
+    const dmEmbed = new EmbedBuilder()
+      .setDescription(
+        `You're now clocked in for **${guildName}**. I'll keep you updated here while your shift is active.`
+      )
+      .addFields(
+        {
+          name: "Take a break",
+          value: "Head back to the clock-in post or use `/clock break start` in the server when you need to pause.",
+        },
+        {
+          name: "Clock out",
+          value: "Use `/clock out` in the server once you're done for the day.",
+        }
+      );
+
+    applyInteractionBranding(dmEmbed, interaction, {
+      accentEmoji: "📨",
+      color: DEFAULT_COLOR,
+    });
+
+    await notifyUserDm(interaction, { embeds: [dmEmbed] });
   } catch (error) {
     const embed = createErrorEmbed(error);
     await interaction.reply({ embeds: [embed], ephemeral: true });

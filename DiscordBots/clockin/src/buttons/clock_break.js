@@ -1,5 +1,8 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require("discord.js");
 const { createErrorEmbed, createSuccessEmbed } = require("../utils/embeds");
+const { notifyUserDm } = require("../utils/dm");
+
+const DM_COLOR = process.env.DEFAULT_COLOR || "#5865F2";
 
 module.exports = {
   id: "clock_break",
@@ -27,6 +30,19 @@ module.exports = {
       } else {
         await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
       }
+
+      const guildName = interaction.guild?.name || "this server";
+      const dmEmbed = new EmbedBuilder()
+        .setColor(DM_COLOR)
+        .setTitle("Break started")
+        .setDescription(
+          `I'm tracking your break for **${guildName}**. I'll nudge you here when it's time to head back.`
+        )
+        .addFields({
+          name: "Resume work",
+          value: "Return to the server and tap **Return to work** or run `/clock break end` when you're ready.",
+        });
+      await notifyUserDm(interaction, { embeds: [dmEmbed] });
     } catch (error) {
       const embed = createErrorEmbed(error);
       if (interaction.deferred || interaction.replied) {
