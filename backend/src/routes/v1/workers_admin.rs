@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use actix_web::{HttpResponse, delete, post, web};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -78,6 +79,15 @@ async fn modify_hours(
         ));
     }
 
+    info!(
+        "{} {} hours ({:?}) for worker {} in guild {}",
+        if is_add { "Adding" } else { "Removing" },
+        body.hours,
+        body.scope,
+        body.user_id,
+        body.guild_id
+    );
+
     let repository: Arc<dyn Repository> = state.repository.clone();
     let mut workers = repository.get_or_init_workers(&body.guild_id).await?;
 
@@ -111,6 +121,15 @@ async fn modify_hours(
         .map(WorkerView::from)
         .ok_or(ApiError::Internal)?;
 
+    debug!(
+        "Updated hours for worker {} in guild {} -> daily: {}, weekly: {}, total: {}",
+        body.user_id,
+        body.guild_id,
+        worker_view.daily_hours,
+        worker_view.weekly_hours,
+        worker_view.total_hours
+    );
+
     Ok(HttpResponse::Ok().json(WorkerMutationResponse {
         worker: worker_view,
     }))
@@ -122,6 +141,11 @@ pub async fn change_role(
     payload: web::Json<ChangeRoleRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    let payload = payload.into_inner();
+    info!(
+        "Changing role for worker {} in guild {} to {} ({})",
+        payload.user_id, payload.guild_id, payload.role_id, payload.experience
+    );
     let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
     let roles_doc = repository.get_or_init_roles(&payload.guild_id).await?;
 
@@ -158,6 +182,11 @@ pub async fn change_role(
         .map(WorkerView::from)
         .ok_or(ApiError::Internal)?;
 
+    debug!(
+        "Worker {} in guild {} now assigned to role {} with experience {}",
+        worker_view.user_id, payload.guild_id, worker_view.role_id, worker_view.experience
+    );
+
     Ok(HttpResponse::Ok().json(WorkerMutationResponse {
         worker: worker_view,
     }))
@@ -169,6 +198,10 @@ pub async fn delete_worker(
     path: web::Path<WorkerRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    info!(
+        "Deleting worker {} from guild {}",
+        path.user_id, path.guild_id
+    );
     let mut workers = repository.get_or_init_workers(&path.guild_id).await?;
     let index = workers
         .workers
@@ -181,6 +214,13 @@ pub async fn delete_worker(
 
     let view = WorkerView::from(&removed);
 
+    debug!(
+        "Worker {} removed from guild {}; remaining workers {}",
+        view.user_id,
+        path.guild_id,
+        workers.workers.len()
+    );
+
     Ok(HttpResponse::Ok().json(WorkerMutationResponse { worker: view }))
 }
 
@@ -190,12 +230,14 @@ pub async fn delete_all_workers(
     path: web::Path<GuildPath>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    info!("Deleting all workers for guild {}", path.guild_id);
     let removed = repository
         .delete_workers(&path.guild_id)
         .await?
         .map(|doc| doc.workers.len())
         .unwrap_or(0);
 
+    info!("Deleted {} workers for guild {}", removed, path.guild_id);
     Ok(HttpResponse::Ok().json(DeleteSummary { removed }))
 }
 
@@ -220,6 +262,7 @@ pub async fn delete_all_data(
     path: web::Path<GuildPath>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    info!("Deleting all data for guild {}", path.guild_id);
 
     let workers_removed = repository
         .delete_workers(&path.guild_id)
@@ -232,6 +275,11 @@ pub async fn delete_all_data(
         .map(|doc| doc.roles.len())
         .unwrap_or(0);
     repository.delete_settings(&path.guild_id).await?;
+
+    info!(
+        "Purged guild {} data: {} workers removed, {} roles removed",
+        path.guild_id, workers_removed, roles_removed
+    );
 
     Ok(HttpResponse::Ok().json(json!({
         "workers_removed": workers_removed,

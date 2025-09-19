@@ -7,8 +7,10 @@ mod workers;
 mod workers_admin;
 
 use actix_web::web;
+use log::debug;
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
+    debug!("Registering v1 API routes");
     cfg.service(
         web::scope("/v1")
             .service(health::healthcheck)

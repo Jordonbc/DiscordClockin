@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use actix_web::{HttpResponse, get, post, web};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -35,6 +36,12 @@ pub async fn register_worker(
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
 
+    let payload = payload.into_inner();
+    info!(
+        "Registering worker {} for guild {} with role {}",
+        payload.user_id, payload.guild_id, payload.role_id
+    );
+
     let roles_doc = repository
         .get_roles(&payload.guild_id)
         .await?
@@ -57,6 +64,13 @@ pub async fn register_worker(
     guild_workers.workers.push(new_worker);
 
     repository.persist_workers(&guild_workers).await?;
+
+    debug!(
+        "Worker {} registered for guild {}; total workers now {}",
+        payload.user_id,
+        payload.guild_id,
+        guild_workers.workers.len()
+    );
 
     let worker = guild_workers
         .find_worker(&payload.user_id)
@@ -85,12 +99,20 @@ pub async fn list_workers(
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
 
+    info!("Listing workers for guild {}", path.guild_id);
+
     let doc = repository
         .find_workers(&path.guild_id)
         .await?
         .ok_or_else(|| ApiError::NotFound("Guild has no workers".into()))?;
 
     let workers = doc.workers.iter().map(WorkerView::from).collect::<Vec<_>>();
+
+    debug!(
+        "Found {} workers for guild {}",
+        workers.len(),
+        path.guild_id
+    );
 
     Ok(HttpResponse::Ok().json(ListWorkersResponse { workers }))
 }
@@ -101,6 +123,11 @@ pub async fn get_worker(
     path: web::Path<WorkerPath>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+
+    info!(
+        "Retrieving worker {} in guild {}",
+        path.user_id, path.guild_id
+    );
 
     let doc = repository
         .find_workers(&path.guild_id)

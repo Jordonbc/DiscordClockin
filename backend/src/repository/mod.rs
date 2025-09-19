@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use log::{debug, info};
 
 use crate::{
     config::{DatabaseBackend, MongoConfig, SqliteConfig},
@@ -59,13 +60,16 @@ pub async fn build_repository(
     mongo: &MongoConfig,
     sqlite: &SqliteConfig,
 ) -> Result<Arc<dyn Repository>, ApiError> {
+    debug!("Selecting repository backend: {backend:?}");
     match backend {
         DatabaseBackend::Mongo => {
             let repo = MongoRepository::new(mongo).await?;
+            info!("MongoDB repository ready");
             Ok(Arc::new(repo))
         }
         DatabaseBackend::Sqlite => {
             let repo = SqliteRepository::new(sqlite).await?;
+            info!("SQLite repository ready");
             Ok(Arc::new(repo))
         }
     }

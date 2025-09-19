@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use log::{debug, info};
+
 use crate::{
     config::AppConfig,
     error::ApiError,
@@ -15,12 +17,17 @@ pub struct AppState {
 
 impl AppState {
     pub async fn initialize(config: AppConfig) -> Result<Self, ApiError> {
+        let backend = config.database.backend.clone();
+        debug!("Preparing application state with {backend:?} repository backend");
+
         let repository = repository::build_repository(
-            config.database.backend.clone(),
+            backend.clone(),
             &config.database.mongodb,
             &config.database.sqlite,
         )
         .await?;
+
+        info!("Repository initialized using {backend:?} backend");
 
         Ok(Self { config, repository })
     }

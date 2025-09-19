@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use actix_web::{HttpResponse, get, web};
 use chrono::Utc;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -62,6 +63,11 @@ pub async fn get_timesheet(
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
 
+    info!(
+        "Retrieving timesheet for worker {} in guild {}",
+        path.user_id, path.guild_id
+    );
+
     let guild_workers = repository
         .find_workers(&path.guild_id)
         .await?
@@ -84,6 +90,13 @@ pub async fn get_timesheet(
     };
 
     let payroll = resolve_payroll(&repository, &path.guild_id, worker).await;
+
+    debug!(
+        "Calculated {} historical sessions for worker {} in guild {}",
+        sessions.len(),
+        path.user_id,
+        path.guild_id
+    );
 
     Ok(HttpResponse::Ok().json(TimesheetResponse {
         worker: worker_view,

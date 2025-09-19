@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 use actix_web::{HttpResponse, delete, get, post, web};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -76,8 +77,14 @@ pub async fn get_roles(
     path: web::Path<RolesPath>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    info!("Fetching roles for guild {}", path.guild_id);
     let doc = repository.get_or_init_roles(&path.guild_id).await?;
     let roles = GuildRolesView::from(&doc);
+    debug!(
+        "Roles response for guild {} includes {} role entries",
+        path.guild_id,
+        roles.roles.len()
+    );
     Ok(HttpResponse::Ok().json(RolesResponse { roles }))
 }
 
@@ -88,12 +95,17 @@ pub async fn create_role(
     payload: web::Json<CreateRoleRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    info!("Creating role in guild {}", path.guild_id);
     let mut roles_doc = repository.get_or_init_roles(&path.guild_id).await?;
     let settings = repository.get_or_init_settings(&path.guild_id).await?;
 
     enforce_role_limit(settings.plan.as_deref(), roles_doc.roles.len())?;
 
     let mut request = payload.into_inner();
+    debug!(
+        "Received role creation payload: name='{}', category='{}', experiences={:?}",
+        request.name, request.category, request.experiences
+    );
 
     dedupe_in_place(&mut request.experiences);
     if request.name.trim().is_empty() {
@@ -182,6 +194,14 @@ pub async fn create_role(
 
     repository.persist_roles(&roles_doc).await?;
 
+    info!(
+        "Role '{}' ({}) created for guild {}; total roles now {}",
+        new_role.name,
+        new_role.id,
+        path.guild_id,
+        roles_doc.roles.len()
+    );
+
     let view = RoleEntryView::from(&new_role);
     let roles = GuildRolesView::from(&roles_doc);
 
@@ -194,6 +214,10 @@ pub async fn delete_role(
     path: web::Path<RolePath>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    info!(
+        "Deleting role {} from guild {}",
+        path.role_id, path.guild_id
+    );
     let mut roles_doc = repository.get_or_init_roles(&path.guild_id).await?;
 
     let role_index = roles_doc
@@ -218,6 +242,13 @@ pub async fn delete_role(
 
     repository.persist_roles(&roles_doc).await?;
 
+    debug!(
+        "Removed role {}; remaining roles {} for guild {}",
+        path.role_id,
+        roles_doc.roles.len(),
+        path.guild_id
+    );
+
     let roles = GuildRolesView::from(&roles_doc);
     let view = RoleEntryView::from(&removed);
 
@@ -231,6 +262,10 @@ pub async fn add_experience(
     payload: web::Json<ExperienceRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    info!(
+        "Adding experience '{}' to guild {}",
+        path.experience, path.guild_id
+    );
     let mut roles_doc = repository.get_or_init_roles(&path.guild_id).await?;
     let settings = repository.get_or_init_settings(&path.guild_id).await?;
 
@@ -252,6 +287,13 @@ pub async fn add_experience(
     roles_doc.experiences.push(experience.to_string());
     repository.persist_roles(&roles_doc).await?;
 
+    debug!(
+        "Experience '{}' added to guild {}; total experiences now {}",
+        request.name,
+        path.guild_id,
+        roles_doc.experiences.len()
+    );
+
     let roles = GuildRolesView::from(&roles_doc);
     Ok(HttpResponse::Ok().json(RolesResponse { roles }))
 }
@@ -262,6 +304,10 @@ pub async fn remove_experience(
     path: web::Path<ExperiencePath>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    info!(
+        "Removing experience '{}' from guild {}",
+        path.experience, path.guild_id
+    );
     let mut roles_doc = repository.get_or_init_roles(&path.guild_id).await?;
 
     if roles_doc.experiences.len() <= 1 {
@@ -314,6 +360,13 @@ pub async fn remove_experience(
     }
 
     repository.persist_roles(&roles_doc).await?;
+
+    debug!(
+        "Experience '{}' removed from guild {}; {} experiences remain",
+        path.experience,
+        path.guild_id,
+        roles_doc.experiences.len()
+    );
 
     let roles = GuildRolesView::from(&roles_doc);
     Ok(HttpResponse::Ok().json(RolesResponse { roles }))
