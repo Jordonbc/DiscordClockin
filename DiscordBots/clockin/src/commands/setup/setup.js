@@ -23,7 +23,11 @@ module.exports = {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     try {
-      const settings = await api.getSettings({ guildId: interaction.guildId });
+      const settingsPayload = await api.getSettings({
+        guildId: interaction.guildId,
+      });
+      const settings = settingsPayload?.settings;
+
       if (!settings?.plan) {
         const embed = createPlanRequiredEmbed();
         await interaction.editReply({ embeds: [embed] });

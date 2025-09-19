@@ -11,7 +11,7 @@ async function refreshSetupStatus(interaction, { api }) {
     const view = buildSetupStatusView({
       guild: interaction.guild,
       settings: settingsPayload?.settings,
-      roles: rolesPayload?.roles,
+      rolesView: rolesPayload,
     });
 
     await interaction.message.edit(view);

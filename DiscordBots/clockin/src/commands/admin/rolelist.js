@@ -21,8 +21,8 @@ module.exports = {
     await interaction.deferReply({ ephemeral: true });
 
     try {
-      const data = await api.getRoles({ guildId: interaction.guildId });
-      const roles = data?.roles?.roles || [];
+      const rolesView = await api.getRoles({ guildId: interaction.guildId });
+      const roles = Array.isArray(rolesView?.roles) ? rolesView.roles : [];
 
       if (roles.length === 0) {
         await interaction.editReply({
@@ -35,7 +35,7 @@ module.exports = {
         buildRolePage({
           roles,
           page: 0,
-          experiences: data.roles.experiences || [],
+          experiences: rolesView?.experiences || [],
         })
       );
     } catch (error) {
@@ -56,13 +56,20 @@ function buildRolePage({ roles, experiences, page }) {
     .setFooter({ text: `Page ${page + 1} of ${totalPages}` });
 
   entries.forEach((role) => {
-    const hourly = Object.entries(role.hourly_salary)
-      .map(([experience, rate]) => `${experience}: £${rate.toFixed(2)}p`)
-      .join("\n");
+    const hourlyEntries = Object.entries(role.hourly_salary || {});
+    const hourly = hourlyEntries.length
+      ? hourlyEntries
+          .map(([experience, rate]) => `${experience}: $${Number(rate).toFixed(2)}`)
+          .join("\n")
+      : "No hourly salary configured";
+
+    const experiencesLabel = Array.isArray(role.experiences) && role.experiences.length
+      ? role.experiences.join(", ")
+      : "None";
 
     embed.addFields({
       name: `${role.name} (${role.id})`,
-      value: `Category: **${role.category}**\nExperiences: ${role.experiences.join(", ")}\n${hourly}`,
+      value: `Category: **${role.category}**\nExperiences: ${experiencesLabel}\n${hourly}`,
     });
   });
 

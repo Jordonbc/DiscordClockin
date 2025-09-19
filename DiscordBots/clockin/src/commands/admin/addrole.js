@@ -44,14 +44,15 @@ module.exports = {
     await interaction.deferReply({ ephemeral: true });
 
     try {
-      const [settings, rolesDoc] = await Promise.all([
+      const [settingsPayload, rolesView] = await Promise.all([
         api.getSettings({ guildId: interaction.guildId }),
         api.getRoles({ guildId: interaction.guildId }),
       ]);
 
-      enforceRoleLimit(settings, rolesDoc);
+      const settings = settingsPayload?.settings;
+      enforceRoleLimit(settings, rolesView);
 
-      const experiences = rolesDoc.experiences || [];
+      const experiences = rolesView?.experiences || [];
 
       if (experiences.length === 0) {
         await interaction.editReply({

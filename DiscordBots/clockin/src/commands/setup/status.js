@@ -20,7 +20,7 @@ module.exports = {
       const view = buildSetupStatusView({
         guild: interaction.guild,
         settings: settingsPayload?.settings,
-        roles: rolesPayload?.roles,
+        rolesView: rolesPayload,
       });
 
       await interaction.editReply(view);

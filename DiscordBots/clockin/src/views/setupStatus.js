@@ -7,7 +7,12 @@ const {
 
 const DEFAULT_COLOR = process.env.DEFAULT_COLOR || "#00FF00";
 
-function buildSetupStatusView({ guild, settings, roles }) {
+function buildSetupStatusView({ guild, settings, rolesView }) {
+  const roles = Array.isArray(rolesView?.roles) ? rolesView.roles : [];
+  const experiences = Array.isArray(rolesView?.experiences)
+    ? rolesView.experiences
+    : [];
+
   const embed = new EmbedBuilder()
     .setColor(DEFAULT_COLOR)
     .setTitle("Current setup status")
@@ -68,7 +73,12 @@ function buildSetupStatusView({ guild, settings, roles }) {
       },
       {
         name: "Configured roles",
-        value: rolesSummary(roles?.roles || []),
+        value: rolesSummary(roles),
+        inline: false,
+      },
+      {
+        name: "Experiences",
+        value: experiences.length ? experiences.join(", ") : "None",
         inline: false,
       }
     );
