@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::ApiError,
+    logging::redact_user_id,
     models::{clockins::ClockInMessageDocument, views::WorkerView},
     repository::Repository,
     state::AppState,
@@ -35,7 +36,8 @@ pub async fn start_shift(
     let payload = payload.into_inner();
     info!(
         "Starting shift for worker {} in guild {}",
-        payload.user_id, payload.guild_id
+        redact_user_id(&payload.user_id),
+        payload.guild_id
     );
 
     let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
@@ -60,7 +62,9 @@ pub async fn start_shift(
     if let Some(message_id) = &payload.clock_in_message_id {
         debug!(
             "Associating clock-in message {} for worker {} in guild {}",
-            message_id, payload.user_id, payload.guild_id
+            message_id,
+            redact_user_id(&payload.user_id),
+            payload.guild_id
         );
         let record = ClockInMessageDocument {
             id: None,
@@ -78,7 +82,8 @@ pub async fn start_shift(
 
     debug!(
         "Worker {} clocked in at {now} for guild {}",
-        payload.user_id, payload.guild_id
+        redact_user_id(&payload.user_id),
+        payload.guild_id
     );
 
     Ok(HttpResponse::Ok().json(ShiftEventResponse {
@@ -103,7 +108,8 @@ pub async fn end_shift(
     let payload = payload.into_inner();
     info!(
         "Ending shift for worker {} in guild {}",
-        payload.user_id, payload.guild_id
+        redact_user_id(&payload.user_id),
+        payload.guild_id
     );
 
     let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
@@ -133,7 +139,8 @@ pub async fn end_shift(
 
     debug!(
         "Worker {} clocked out at {now} for guild {}",
-        payload.user_id, payload.guild_id
+        redact_user_id(&payload.user_id),
+        payload.guild_id
     );
 
     Ok(HttpResponse::Ok().json(ShiftEventResponse {
@@ -158,7 +165,8 @@ pub async fn start_break(
     let payload = payload.into_inner();
     info!(
         "Starting break for worker {} in guild {}",
-        payload.user_id, payload.guild_id
+        redact_user_id(&payload.user_id),
+        payload.guild_id
     );
 
     let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
@@ -187,7 +195,8 @@ pub async fn start_break(
 
     debug!(
         "Worker {} started break at {now} for guild {}",
-        payload.user_id, payload.guild_id
+        redact_user_id(&payload.user_id),
+        payload.guild_id
     );
 
     Ok(HttpResponse::Ok().json(ShiftEventResponse {
@@ -206,7 +215,8 @@ pub async fn end_break(
     let payload = payload.into_inner();
     info!(
         "Ending break for worker {} in guild {}",
-        payload.user_id, payload.guild_id
+        redact_user_id(&payload.user_id),
+        payload.guild_id
     );
 
     let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
@@ -235,7 +245,8 @@ pub async fn end_break(
 
     debug!(
         "Worker {} ended break at {now} for guild {}",
-        payload.user_id, payload.guild_id
+        redact_user_id(&payload.user_id),
+        payload.guild_id
     );
 
     Ok(HttpResponse::Ok().json(ShiftEventResponse {

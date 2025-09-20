@@ -8,6 +8,7 @@ use tokio_rusqlite::Connection;
 use crate::{
     config::SqliteConfig,
     error::ApiError,
+    logging::redact_user_id,
     models::{
         clockins::ClockInMessageDocument, guild_worker::GuildWorkersDocument,
         roles::GuildRolesDocument, settings::GuildSettingsDocument,
@@ -197,7 +198,8 @@ impl Repository for SqliteRepository {
     ) -> Result<(), ApiError> {
         debug!(
             "Upserting clock-in message in SQLite for guild {} user {}",
-            record.guild_id, record.user_id
+            record.guild_id,
+            redact_user_id(&record.user_id)
         );
         let payload = record.clone();
         self.connection
@@ -214,7 +216,10 @@ impl Repository for SqliteRepository {
     }
 
     async fn delete_clockin_message(&self, guild_id: &str, user_id: &str) -> Result<(), ApiError> {
-        debug!("Deleting clock-in message from SQLite for guild {guild_id} user {user_id}");
+        debug!(
+            "Deleting clock-in message from SQLite for guild {guild_id} user {}",
+            redact_user_id(user_id)
+        );
         let g = guild_id.to_string();
         let u = user_id.to_string();
         self.connection

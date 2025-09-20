@@ -1,5 +1,6 @@
 mod config;
 mod error;
+mod logging;
 mod models;
 mod repository;
 mod routes;
@@ -33,7 +34,7 @@ async fn main() -> std::io::Result<()> {
     let server = HttpServer::new(move || {
         App::new()
             .app_data(shared_state.clone())
-            .wrap(Logger::default())
+            .wrap(build_access_logger())
             .wrap(Cors::permissive())
             .configure(routes::configure)
     })
@@ -106,4 +107,12 @@ fn init_logging() {
             }
         })
         .init();
+}
+
+fn build_access_logger() -> Logger {
+    Logger::new(r#"%a "%{METHOD}xi %{ROUTE}xi" %s %b %T"#)
+        .custom_request_replace("METHOD", |req| req.method().to_string())
+        .custom_request_replace("ROUTE", |req| {
+            req.match_pattern().unwrap_or_else(|| "-".to_string())
+        })
 }

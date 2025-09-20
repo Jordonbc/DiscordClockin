@@ -5,7 +5,10 @@ use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
-use crate::{error::ApiError, models::views::WorkerView, repository::Repository, state::AppState};
+use crate::{
+    error::ApiError, logging::redact_user_id, models::views::WorkerView, repository::Repository,
+    state::AppState,
+};
 
 #[derive(Debug, Deserialize)]
 pub struct WorkerRequest {
@@ -84,7 +87,7 @@ async fn modify_hours(
         if is_add { "Adding" } else { "Removing" },
         body.hours,
         body.scope,
-        body.user_id,
+        redact_user_id(&body.user_id),
         body.guild_id
     );
 
@@ -123,7 +126,7 @@ async fn modify_hours(
 
     debug!(
         "Updated hours for worker {} in guild {} -> daily: {}, weekly: {}, total: {}",
-        body.user_id,
+        redact_user_id(&body.user_id),
         body.guild_id,
         worker_view.daily_worked_hours,
         worker_view.weekly_worked_hours,
@@ -144,7 +147,10 @@ pub async fn change_role(
     let payload = payload.into_inner();
     info!(
         "Changing role for worker {} in guild {} to {} ({})",
-        payload.user_id, payload.guild_id, payload.role_id, payload.experience
+        redact_user_id(&payload.user_id),
+        payload.guild_id,
+        payload.role_id,
+        payload.experience
     );
     let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
     let roles_doc = repository.get_or_init_roles(&payload.guild_id).await?;
@@ -184,7 +190,7 @@ pub async fn change_role(
 
     debug!(
         "Worker {} in guild {} now assigned to role {} with experience {}",
-        worker_view.user_id,
+        redact_user_id(&worker_view.user_id),
         payload.guild_id,
         worker_view.role_id,
         worker_view.experience.as_deref().unwrap_or("none")
@@ -203,7 +209,8 @@ pub async fn delete_worker(
     let repository: Arc<dyn Repository> = state.repository.clone();
     info!(
         "Deleting worker {} from guild {}",
-        path.user_id, path.guild_id
+        redact_user_id(&path.user_id),
+        path.guild_id
     );
     let mut workers = repository.get_or_init_workers(&path.guild_id).await?;
     let index = workers
@@ -219,7 +226,7 @@ pub async fn delete_worker(
 
     debug!(
         "Worker {} removed from guild {}; remaining workers {}",
-        view.user_id,
+        redact_user_id(&view.user_id),
         path.guild_id,
         workers.workers.len()
     );

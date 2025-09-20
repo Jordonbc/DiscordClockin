@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::ApiError,
+    logging::redact_user_id,
     models::{guild_worker::WorkerRecord, roles::GuildRolesDocument, views::WorkerView},
     repository::Repository,
     state::AppState,
@@ -39,7 +40,9 @@ pub async fn register_worker(
     let payload = payload.into_inner();
     info!(
         "Registering worker {} for guild {} with role {}",
-        payload.user_id, payload.guild_id, payload.role_id
+        redact_user_id(&payload.user_id),
+        payload.guild_id,
+        payload.role_id
     );
 
     let roles_doc = repository
@@ -67,7 +70,7 @@ pub async fn register_worker(
 
     debug!(
         "Worker {} registered for guild {}; total workers now {}",
-        payload.user_id,
+        redact_user_id(&payload.user_id),
         payload.guild_id,
         guild_workers.workers.len()
     );
@@ -126,7 +129,8 @@ pub async fn get_worker(
 
     info!(
         "Retrieving worker {} in guild {}",
-        path.user_id, path.guild_id
+        redact_user_id(&path.user_id),
+        path.guild_id
     );
 
     let doc = repository

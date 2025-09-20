@@ -8,6 +8,7 @@ use mongodb::{
 use crate::{
     config::MongoConfig,
     error::ApiError,
+    logging::redact_user_id,
     models::{
         clockins::ClockInMessageDocument, guild_worker::GuildWorkersDocument,
         roles::GuildRolesDocument, settings::GuildSettingsDocument,
@@ -116,7 +117,8 @@ impl Repository for MongoRepository {
     ) -> Result<(), ApiError> {
         debug!(
             "Upserting clock-in message for guild {} user {}",
-            record.guild_id, record.user_id
+            record.guild_id,
+            redact_user_id(&record.user_id)
         );
         let filter = doc! {
             "guildId": &record.guild_id,
@@ -137,7 +139,10 @@ impl Repository for MongoRepository {
     }
 
     async fn delete_clockin_message(&self, guild_id: &str, user_id: &str) -> Result<(), ApiError> {
-        debug!("Deleting clock-in message for guild {guild_id} user {user_id}");
+        debug!(
+            "Deleting clock-in message for guild {guild_id} user {}",
+            redact_user_id(user_id)
+        );
         self.clockins_collection()
             .delete_one(doc! { "guildId": guild_id, "userId": user_id })
             .await?;
