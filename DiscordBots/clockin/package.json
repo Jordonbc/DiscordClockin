@@ -1,6 +1,6 @@
 {
   "name": "clockin-bot",
-  "version": "3.0.0",
+  "version": "1.0.0",
   "description": "Discord clock-in bot powered by the Rust backend API.",
   "main": "index.js",
   "scripts": {
@@ -11,8 +11,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "discord.js": "^14.18.0",
-    "dotenv": "^16.4.7",
-    "node-fetch": "^2.6.7"
-  }
+    "discord.js": "14.22.1",
+    "dotenv": "16.4.7",
+    "node-fetch": "2.6.7"
+  },
+  "engines": { "node": ">=24 <25" },
+  "engineStrict": true
 }
