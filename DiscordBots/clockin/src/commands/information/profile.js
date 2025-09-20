@@ -3,6 +3,7 @@ const {
   PermissionFlagsBits,
   EmbedBuilder,
 } = require("discord.js");
+const { ApiError } = require("../../apiClient");
 const { createErrorEmbed } = require("../../utils/embeds");
 
 module.exports = {
@@ -30,14 +31,26 @@ module.exports = {
         return;
       }
 
-      const timesheet = await api.getTimesheet({
-        guildId: interaction.guildId,
-        userId: target.id,
-      });
+      const [timesheet, roles] = await Promise.all([
+        api.getTimesheet({
+          guildId: interaction.guildId,
+          userId: target.id,
+        }),
+        api.getRoles({ guildId: interaction.guildId }).catch(() => null),
+      ]);
 
-      const embed = buildProfileEmbed(target, timesheet);
+      const embed = buildProfileEmbed(target, timesheet, roles);
       await interaction.reply({ embeds: [embed], ephemeral: true });
     } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        const notFound = new EmbedBuilder()
+          .setColor("#FF0000")
+          .setDescription("This user isn't a worker here.");
+
+        await interaction.reply({ embeds: [notFound], ephemeral: true });
+        return;
+      }
+
       const embed = createErrorEmbed(error);
       await interaction.reply({ embeds: [embed], ephemeral: true });
     }
@@ -64,85 +77,104 @@ function canViewTarget(interaction, settings, targetId) {
   return false;
 }
 
-function buildProfileEmbed(user, timesheet) {
+function buildProfileEmbed(user, timesheet, roles) {
   const worker = timesheet.worker;
-  const metrics = timesheet.metrics;
+  const metrics = timesheet.metrics || {};
+  const role = Array.isArray(roles)
+    ? roles.find((r) => r.id === worker.role_id)
+    : null;
+
+  const hourlyRate = resolveHourlyRate(timesheet, role, worker.experience);
+  const weeklyHours = typeof metrics.weekly_hours === "number" ? metrics.weekly_hours : 0;
+  const weeklySalary = Math.floor(weeklyHours * hourlyRate * 100) / 100;
+
+  const tag = user.tag || `${user.username}`;
   const embed = new EmbedBuilder()
-    .setColor("Blue")
-    .setTitle(`${user.username}'s profile`)
-    .setThumbnail(user.displayAvatarURL())
+    .setColor("#81e6ff")
+    .setTitle(`${tag}'s Profile`)
     .addFields(
       {
-        name: "Status",
-        value: worker.status,
+        name: "Role:",
+        value: codeBlock(
+          `${worker.experience ? `${worker.experience} ` : ""}${
+            role?.name || "No role found"
+          }`
+        ),
         inline: true,
       },
       {
-        name: "Role",
-        value: worker.role_id,
+        name: "Status:",
+        value: codeBlock(worker.status || "Unknown"),
         inline: true,
       },
       {
-        name: "Experience",
-        value: worker.experience || "Not set",
+        name: "Balance:",
+        value: codeBlock(`£${weeklySalary.toFixed(2)}p`),
         inline: true,
       },
       {
-        name: "Daily worked",
-        value: `${metrics.daily_hours.toFixed(2)}h`,
+        name: "Department:",
+        value: codeBlock(role?.category || "No department set"),
+        inline: false,
+      },
+      {
+        name: "Today worked:",
+        value: codeBlock(formatDuration(metrics.daily_hours)),
         inline: true,
       },
       {
-        name: "Weekly worked",
-        value: `${metrics.weekly_hours.toFixed(2)}h`,
+        name: "This week worked:",
+        value: codeBlock(formatDuration(metrics.weekly_hours)),
         inline: true,
       },
       {
-        name: "Total worked",
-        value: `${metrics.total_hours.toFixed(2)}h`,
+        name: "Total worked:",
+        value: codeBlock(formatDuration(metrics.total_hours)),
         inline: true,
       }
     )
-    .setFooter({ text: user.id })
-    .setTimestamp(new Date());
-
-  if (metrics.break_hours) {
-    embed.addFields({
-      name: "Break time",
-      value: `${metrics.break_hours.toFixed(2)}h`,
-      inline: true,
-    });
-  }
-
-  if (timesheet.payroll) {
-    embed.addFields({
-      name: "Projected pay",
-      value: `Hourly: $${timesheet.payroll.hourly_rate.toFixed(2)}\nWeekly: $${timesheet.payroll.projected_weekly_pay.toFixed(2)}\nOverall: $${timesheet.payroll.projected_total_pay.toFixed(2)}`,
-      inline: false,
-    });
-  }
-
-  if (Array.isArray(timesheet.sessions) && timesheet.sessions.length > 0) {
-    const latest = timesheet.sessions.slice(-3).reverse();
-    const descriptor = latest
-      .map((session) => {
-        if (session.ended_at_ms) {
-          return `• ${formatTimestamp(session.started_at_ms)} → ${formatTimestamp(session.ended_at_ms)} (${session.duration_minutes.toFixed(0)}m)`;
-        }
-        return `• ${formatTimestamp(session.started_at_ms)} → ongoing (${session.duration_minutes.toFixed(0)}m)`;
-      })
-      .join("\n");
-
-    embed.addFields({
-      name: "Recent sessions",
-      value: descriptor,
-      inline: false,
-    });
-  }
+    .setFooter({ text: user.id });
 
   return embed;
 }
 
-function formatTimestamp(ms) {
-  return `<t:${Math.round(ms / 1000)}:f>`;
+function resolveHourlyRate(timesheet, role, experience) {
+  const payrollRate = timesheet?.payroll?.hourly_rate;
+  if (typeof payrollRate === "number") {
+    return payrollRate;
+  }
+
+  if (role?.hourly_salary) {
+    if (experience) {
+      const experienceLower = experience.toLowerCase();
+      const matchedEntry = Object.entries(role.hourly_salary).find(
+        ([key]) => key.toLowerCase() === experienceLower
+      );
+
+      if (matchedEntry && typeof matchedEntry[1] === "number") {
+        return matchedEntry[1];
+      }
+    }
+
+    const firstRate = Object.values(role.hourly_salary)[0];
+    if (typeof firstRate === "number") {
+      return firstRate;
+    }
+  }
+
+  return 0;
+}
+
+function formatDuration(hours) {
+  if (!hours || Number.isNaN(hours)) {
+    return "0h 0m";
+  }
+
+  const wholeHours = Math.floor(hours);
+  const minutes = Math.floor((hours - wholeHours) * 60);
+  return `${wholeHours}h ${minutes}m`;
+}
+
+function codeBlock(text) {
+  return `\`\`\`${text}\`\`\``;
 }

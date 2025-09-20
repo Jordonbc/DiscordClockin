@@ -1,39 +1,83 @@
 const { EmbedBuilder } = require("discord.js");
+const { ApiError } = require("../apiClient");
 const { createErrorEmbed } = require("../utils/embeds");
 
-const DEFAULT_COLOR = process.env.DEFAULT_COLOR || "#00FF00";
+const DEFAULT_COLOR = process.env.DEFAULT_COLOR || "#81e6ff";
+const ERROR_COLOR = "#FF0000";
 
 async function showBalance(interaction, { api }) {
+  await interaction.deferReply({ ephemeral: true });
+
   try {
-    const data = await api.getTimesheet({
+    const timesheet = await api.getTimesheet({
       guildId: interaction.guildId,
       userId: interaction.user.id,
     });
 
-    if (!data?.payroll) {
+    if (!timesheet?.worker) {
       const embed = new EmbedBuilder()
-        .setColor(DEFAULT_COLOR)
-        .setDescription("No payroll information is available for you yet.");
+        .setColor(ERROR_COLOR)
+        .setDescription("This user isn't a worker here.");
 
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.editReply({ embeds: [embed] });
       return;
     }
 
-    const payroll = data.payroll;
+    const { metrics, payroll } = timesheet;
+    const hourlyRate = payroll?.hourly_rate ?? 0;
+
+    const dailyBalance = formatPay(metrics.daily_hours, hourlyRate);
+    const weeklyBalance = formatPay(metrics.weekly_hours, hourlyRate);
+    const totalBalance = formatPay(metrics.total_hours, hourlyRate);
+
     const embed = new EmbedBuilder()
+      .setTitle("Your balance")
       .setColor(DEFAULT_COLOR)
-      .setTitle("Projected balance")
-      .setDescription(
-        `Hourly rate: **$${payroll.hourly_rate.toFixed(2)}**\n` +
-          `Weekly projection: **$${payroll.projected_weekly_pay.toFixed(2)}**\n` +
-          `Total projection: **$${payroll.projected_total_pay.toFixed(2)}**`
+      .addFields(
+        {
+          name: "Today balance:",
+          value: codeBlock(`£${dailyBalance}p`),
+          inline: true,
+        },
+        {
+          name: "Weekly balance:",
+          value: codeBlock(`£${weeklyBalance}p`),
+          inline: true,
+        },
+        {
+          name: "Full balance:",
+          value: codeBlock(`£${totalBalance}p`),
+          inline: true,
+        }
       );
 
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.editReply({ embeds: [embed] });
   } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      const notFoundEmbed = new EmbedBuilder()
+        .setColor(ERROR_COLOR)
+        .setDescription("This user isn't a worker here.");
+
+      await interaction.editReply({ embeds: [notFoundEmbed] });
+      return;
+    }
+
     const embed = createErrorEmbed(error);
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.editReply({ embeds: [embed] });
   }
+}
+
+function formatPay(hoursWorked, hourlyRate) {
+  if (hoursWorked == null || hourlyRate == null) {
+    return "0.00";
+  }
+
+  const raw = Math.floor(hoursWorked * hourlyRate * 100) / 100;
+  return raw.toFixed(2);
+}
+
+function codeBlock(text) {
+  return `\`\`\`${text}\`\`\``;
 }
 
 module.exports = {
