@@ -1,13 +1,14 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
+use log::{debug, info};
 
 use crate::{
     config::{DatabaseBackend, MongoConfig, SqliteConfig},
     error::ApiError,
     models::{
         clockins::ClockInMessageDocument, guild_worker::GuildWorkersDocument,
-        roles::GuildRolesDocument,
+        roles::GuildRolesDocument, settings::GuildSettingsDocument,
     },
 };
 
@@ -31,6 +32,27 @@ pub trait Repository: Send + Sync {
     async fn delete_clockin_message(&self, guild_id: &str, user_id: &str) -> Result<(), ApiError>;
 
     async fn get_roles(&self, guild_id: &str) -> Result<Option<GuildRolesDocument>, ApiError>;
+
+    async fn get_or_init_roles(&self, guild_id: &str) -> Result<GuildRolesDocument, ApiError>;
+
+    async fn persist_roles(&self, roles: &GuildRolesDocument) -> Result<(), ApiError>;
+
+    async fn delete_roles(&self, guild_id: &str) -> Result<Option<GuildRolesDocument>, ApiError>;
+
+    async fn get_or_init_settings(&self, guild_id: &str)
+    -> Result<GuildSettingsDocument, ApiError>;
+
+    async fn persist_settings(&self, settings: &GuildSettingsDocument) -> Result<(), ApiError>;
+
+    async fn delete_settings(
+        &self,
+        guild_id: &str,
+    ) -> Result<Option<GuildSettingsDocument>, ApiError>;
+
+    async fn delete_workers(
+        &self,
+        guild_id: &str,
+    ) -> Result<Option<GuildWorkersDocument>, ApiError>;
 }
 
 pub async fn build_repository(
@@ -38,13 +60,16 @@ pub async fn build_repository(
     mongo: &MongoConfig,
     sqlite: &SqliteConfig,
 ) -> Result<Arc<dyn Repository>, ApiError> {
+    debug!("Selecting repository backend: {backend:?}");
     match backend {
         DatabaseBackend::Mongo => {
             let repo = MongoRepository::new(mongo).await?;
+            info!("MongoDB repository ready");
             Ok(Arc::new(repo))
         }
         DatabaseBackend::Sqlite => {
             let repo = SqliteRepository::new(sqlite).await?;
+            info!("SQLite repository ready");
             Ok(Arc::new(repo))
         }
     }

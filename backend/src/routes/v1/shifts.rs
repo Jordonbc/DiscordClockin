@@ -2,10 +2,12 @@ use std::sync::Arc;
 
 use actix_web::{HttpResponse, post, web};
 use chrono::Utc;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     error::ApiError,
+    logging::redact_user_id,
     models::{clockins::ClockInMessageDocument, views::WorkerView},
     repository::Repository,
     state::AppState,
@@ -31,6 +33,13 @@ pub async fn start_shift(
     payload: web::Json<StartShiftRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    let payload = payload.into_inner();
+    info!(
+        "Starting shift for worker {} in guild {}",
+        redact_user_id(&payload.user_id),
+        payload.guild_id
+    );
+
     let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
     let now = current_timestamp_ms();
 
@@ -51,6 +60,12 @@ pub async fn start_shift(
     repository.persist_workers(&workers).await?;
 
     if let Some(message_id) = &payload.clock_in_message_id {
+        debug!(
+            "Associating clock-in message {} for worker {} in guild {}",
+            message_id,
+            redact_user_id(&payload.user_id),
+            payload.guild_id
+        );
         let record = ClockInMessageDocument {
             id: None,
             guild_id: payload.guild_id.clone(),
@@ -64,6 +79,12 @@ pub async fn start_shift(
         .find_worker(&payload.user_id)
         .map(WorkerView::from)
         .ok_or(ApiError::Internal)?;
+
+    debug!(
+        "Worker {} clocked in at {now} for guild {}",
+        redact_user_id(&payload.user_id),
+        payload.guild_id
+    );
 
     Ok(HttpResponse::Ok().json(ShiftEventResponse {
         action: "clock_in".into(),
@@ -84,6 +105,13 @@ pub async fn end_shift(
     payload: web::Json<EndShiftRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    let payload = payload.into_inner();
+    info!(
+        "Ending shift for worker {} in guild {}",
+        redact_user_id(&payload.user_id),
+        payload.guild_id
+    );
+
     let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
     let now = current_timestamp_ms();
 
@@ -109,6 +137,12 @@ pub async fn end_shift(
         .map(WorkerView::from)
         .ok_or(ApiError::Internal)?;
 
+    debug!(
+        "Worker {} clocked out at {now} for guild {}",
+        redact_user_id(&payload.user_id),
+        payload.guild_id
+    );
+
     Ok(HttpResponse::Ok().json(ShiftEventResponse {
         action: "clock_out".into(),
         timestamp_ms: now,
@@ -128,6 +162,13 @@ pub async fn start_break(
     payload: web::Json<BreakRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    let payload = payload.into_inner();
+    info!(
+        "Starting break for worker {} in guild {}",
+        redact_user_id(&payload.user_id),
+        payload.guild_id
+    );
+
     let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
     let now = current_timestamp_ms();
 
@@ -152,6 +193,12 @@ pub async fn start_break(
         .map(WorkerView::from)
         .ok_or(ApiError::Internal)?;
 
+    debug!(
+        "Worker {} started break at {now} for guild {}",
+        redact_user_id(&payload.user_id),
+        payload.guild_id
+    );
+
     Ok(HttpResponse::Ok().json(ShiftEventResponse {
         action: "break_start".into(),
         timestamp_ms: now,
@@ -165,6 +212,13 @@ pub async fn end_break(
     payload: web::Json<BreakRequest>,
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
+    let payload = payload.into_inner();
+    info!(
+        "Ending break for worker {} in guild {}",
+        redact_user_id(&payload.user_id),
+        payload.guild_id
+    );
+
     let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
     let now = current_timestamp_ms();
 
@@ -188,6 +242,12 @@ pub async fn end_break(
         .find_worker(&payload.user_id)
         .map(WorkerView::from)
         .ok_or(ApiError::Internal)?;
+
+    debug!(
+        "Worker {} ended break at {now} for guild {}",
+        redact_user_id(&payload.user_id),
+        payload.guild_id
+    );
 
     Ok(HttpResponse::Ok().json(ShiftEventResponse {
         action: "break_end".into(),
