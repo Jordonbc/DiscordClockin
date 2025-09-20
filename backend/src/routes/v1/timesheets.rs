@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::ApiError,
+    logging::redact_user_id,
     models::{guild_worker::WorkerRecord, roles::GuildRolesDocument, views::WorkerView},
     repository::Repository,
     state::AppState,
@@ -65,7 +66,8 @@ pub async fn get_timesheet(
 
     info!(
         "Retrieving timesheet for worker {} in guild {}",
-        path.user_id, path.guild_id
+        redact_user_id(&path.user_id),
+        path.guild_id
     );
 
     let guild_workers = repository
@@ -94,7 +96,7 @@ pub async fn get_timesheet(
     debug!(
         "Calculated {} historical sessions for worker {} in guild {}",
         sessions.len(),
-        path.user_id,
+        redact_user_id(&path.user_id),
         path.guild_id
     );
 
