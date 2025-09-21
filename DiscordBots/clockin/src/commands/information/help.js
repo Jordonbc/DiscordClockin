@@ -16,7 +16,8 @@ module.exports = {
         },
         {
           name: "Admin setup",
-          value: "`/setup`, `/setup-status`, `/addrole`, `/addexperience`, `/removeexperience`, `/setplan` (coming soon)",
+          value:
+            "`/setup`, `/setup-status`, `/setup-log`, `/addrole`, `/addexperience`, `/removeexperience`, `/setplan` (coming soon)",
         },
         {
           name: "Admin management",
