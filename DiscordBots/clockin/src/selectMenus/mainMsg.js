@@ -64,7 +64,7 @@ module.exports = {
 
 async function handleClockIn(interaction, { api }) {
   try {
-    await api.startShift({
+    const response = await api.startShift({
       guildId: interaction.guildId,
       userId: interaction.user.id,
       clockInMessageId: interaction.message.id,
@@ -79,6 +79,7 @@ async function handleClockIn(interaction, { api }) {
     const dmView = buildClockedInView({
       guildName,
       guildId: interaction.guildId,
+      worker: response?.worker,
     });
 
     await notifyUserDm(interaction, dmView);

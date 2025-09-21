@@ -113,7 +113,7 @@ async function handleBreak(interaction, api, guildId, subcommand) {
       }
     }
 
-    await api.endBreak({ guildId, userId: interaction.user.id });
+    const response = await api.endBreak({ guildId, userId: interaction.user.id });
 
     await interaction.reply({
       content: "Welcome back! You're clocked in again. I've refreshed your DM controls.",
@@ -121,7 +121,11 @@ async function handleBreak(interaction, api, guildId, subcommand) {
     });
 
     const guildName = interaction.guild?.name || "this server";
-    const dmView = buildClockedInView({ guildName, guildId });
+    const dmView = buildClockedInView({
+      guildName,
+      guildId,
+      worker: response?.worker,
+    });
     await notifyUserDm(interaction, dmView);
     return;
   }
@@ -149,7 +153,11 @@ async function handleClockIn(interaction, api, guildId) {
   });
 
   const guildName = interaction.guild?.name || "this server";
-  const dmView = buildClockedInView({ guildName, guildId });
+  const dmView = buildClockedInView({
+    guildName,
+    guildId,
+    worker: response.worker,
+  });
   await notifyUserDm(interaction, dmView);
 }
 
