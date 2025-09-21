@@ -8,6 +8,7 @@ const { emergencyLeaveHandler } = require("../workflows/emergency");
 const { submitIssueModal, submitSuggestionModal } = require("../workflows/support");
 const { buildClockedInView } = require("../views/dmShiftControls");
 const { buildMainClockSelectRow } = require("../views/mainClockSelectMenu");
+const { triggerAvailabilityRefresh } = require("../utils/availabilitySnapshots");
 
 const DEFAULT_COLOR = process.env.DEFAULT_COLOR || "#5865F2";
 
@@ -83,6 +84,7 @@ async function handleClockIn(interaction, { api }) {
     });
 
     await notifyUserDm(interaction, dmView);
+    await triggerAvailabilityRefresh({ client: interaction.client, guildId: interaction.guildId });
   } catch (error) {
     const embed = createErrorEmbed(error);
     await interaction.reply({ embeds: [embed], ephemeral: true });

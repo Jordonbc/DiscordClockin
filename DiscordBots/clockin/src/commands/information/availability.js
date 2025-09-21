@@ -1,6 +1,11 @@
 const { SlashCommandBuilder, EmbedBuilder, time } = require("discord.js");
 const { ApiError } = require("../../apiClient");
 const { createErrorEmbed, applyInteractionBranding } = require("../../utils/embeds");
+const { buildAvailabilityEmbed } = require("../../utils/availabilityEmbeds");
+const {
+  registerAvailabilitySnapshot,
+  triggerAvailabilityRefresh,
+} = require("../../utils/availabilitySnapshots");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -20,7 +25,7 @@ module.exports = {
             .setRequired(false)
         )
     ),
-  async execute(interaction, { api }) {
+  async execute(interaction, { api, client }) {
     const guildId = interaction.guildId;
     if (!guildId) {
       await interaction.reply({
@@ -37,7 +42,24 @@ module.exports = {
         const response = await api.listWorkers({ guildId });
         const workers = Array.isArray(response?.workers) ? response.workers : [];
         const embed = buildAvailabilityEmbed(interaction, workers);
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed] });
+
+        try {
+          const message = await interaction.fetchReply();
+          registerAvailabilitySnapshot({
+            client,
+            guildId,
+            channelId: message.channelId,
+            messageId: message.id,
+            api,
+          });
+          await triggerAvailabilityRefresh({ client, guildId, api });
+        } catch (error) {
+          console.warn(
+            `Failed to register availability snapshot for guild ${guildId}:`,
+            error
+          );
+        }
         return;
       }
 
@@ -70,48 +92,6 @@ module.exports = {
     }
   },
 };
-
-function buildAvailabilityEmbed(interaction, workers) {
-  if (!workers || workers.length === 0) {
-    const embed = new EmbedBuilder()
-      .setTitle("Availability snapshot")
-      .setDescription("No workers registered for this guild yet.")
-      .setTimestamp(new Date());
-
-    return applyInteractionBranding(embed, interaction);
-  }
-
-  const grouped = workers.reduce((acc, worker) => {
-    const status = worker.status || "Unknown";
-    if (!acc[status]) {
-      acc[status] = [];
-    }
-
-    acc[status].push(`<@${worker.user_id}>`);
-    return acc;
-  }, {});
-
-  const fields = Object.entries(grouped)
-    .sort((a, b) => b[1].length - a[1].length)
-    .slice(0, 6)
-    .map(([status, users]) => ({
-      name: `${status} (${users.length})`,
-      value: users.slice(0, 15).join(", ") || "—",
-    }));
-
-  const embed = new EmbedBuilder()
-    .setTitle(
-      `Availability snapshot for ${interaction.guild?.name || "this guild"}`
-    )
-    .setDescription(`Backend contains **${workers.length}** registered workers.`)
-    .setTimestamp(new Date());
-
-  if (fields.length > 0) {
-    embed.addFields(fields);
-  }
-
-  return applyInteractionBranding(embed, interaction);
-}
 
 function buildWorkerStatusEmbed(interaction, user, data) {
   const worker = data.worker || {};

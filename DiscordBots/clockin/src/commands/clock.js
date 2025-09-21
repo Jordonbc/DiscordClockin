@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, time } = require("discord.js");
 const { createErrorEmbed } = require("../utils/embeds");
 const { notifyUserDm } = require("../utils/dm");
+const { triggerAvailabilityRefresh } = require("../utils/availabilitySnapshots");
 const { isPrivilegedMember } = require("../utils/permissions");
 const {
   buildClockedInView,
@@ -101,6 +102,7 @@ async function handleBreak(interaction, api, guildId, subcommand) {
       worker: response?.worker,
     });
     await notifyUserDm(interaction, dmView);
+    await triggerAvailabilityRefresh({ client: interaction.client, guildId });
     return;
   }
 
@@ -131,6 +133,7 @@ async function handleBreak(interaction, api, guildId, subcommand) {
       worker: response?.worker,
     });
     await notifyUserDm(interaction, dmView);
+    await triggerAvailabilityRefresh({ client: interaction.client, guildId });
     return;
   }
 
@@ -163,6 +166,7 @@ async function handleClockIn(interaction, api, guildId) {
     worker: response.worker,
   });
   await notifyUserDm(interaction, dmView);
+  await triggerAvailabilityRefresh({ client: interaction.client, guildId });
 }
 
 async function handleClockOut(interaction, api, guildId) {
@@ -194,6 +198,7 @@ async function handleClockOut(interaction, api, guildId) {
     totalWorkedHours: response.worker.total_worked_hours,
   });
   await notifyUserDm(interaction, dmView);
+  await triggerAvailabilityRefresh({ client: interaction.client, guildId });
 }
 
 async function handleStatus(interaction, api, guildId) {

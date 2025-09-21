@@ -3,6 +3,7 @@ const { notifyUserDm } = require("../utils/dm");
 const { getGuildIdFromInteraction, resolveGuildName } = require("../utils/interactions");
 const { isPrivilegedMember } = require("../utils/permissions");
 const { buildClockedOutView } = require("../views/dmShiftControls");
+const { triggerAvailabilityRefresh } = require("../utils/availabilitySnapshots");
 
 module.exports = {
   id: "clock_out",
@@ -49,12 +50,14 @@ module.exports = {
           totalWorkedHours: response.worker.total_worked_hours,
         });
         await notifyUserDm(interaction, dmView);
+        await triggerAvailabilityRefresh({ client: interaction.client, guildId });
       } else {
         const dmView = buildClockedOutView({
           guildName,
           totalWorkedHours: response.worker.total_worked_hours,
         });
         await interaction.update(dmView);
+        await triggerAvailabilityRefresh({ client: interaction.client, guildId });
       }
     } catch (error) {
       const embed = createErrorEmbed(error);

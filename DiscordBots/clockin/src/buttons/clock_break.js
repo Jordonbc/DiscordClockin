@@ -4,6 +4,7 @@ const { notifyUserDm } = require("../utils/dm");
 const { getGuildIdFromInteraction, resolveGuildName } = require("../utils/interactions");
 const { isPrivilegedMember } = require("../utils/permissions");
 const { buildOnBreakView } = require("../views/dmShiftControls");
+const { triggerAvailabilityRefresh } = require("../utils/availabilitySnapshots");
 
 module.exports = {
   id: "clock_break",
@@ -62,6 +63,7 @@ module.exports = {
           worker: response?.worker,
         });
         await notifyUserDm(interaction, dmView);
+        await triggerAvailabilityRefresh({ client: interaction.client, guildId });
       } else {
         const dmView = buildOnBreakView({
           guildName,
@@ -69,6 +71,7 @@ module.exports = {
           worker: response?.worker,
         });
         await interaction.update(dmView);
+        await triggerAvailabilityRefresh({ client: interaction.client, guildId });
       }
     } catch (error) {
       const embed = createErrorEmbed(error);
