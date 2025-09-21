@@ -1,5 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
+const { ApiError } = require("../apiClient");
 const { createErrorEmbed } = require("../utils/embeds");
+const {
+  buildWorkerEmbed,
+  buildAlreadyRegisteredEmbed,
+} = require("../utils/workers");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -32,6 +37,29 @@ module.exports = {
     const experience = experienceRaw?.trim() || undefined;
 
     try {
+      const existingWorker = await api.getWorker({
+        guildId,
+        userId: interaction.user.id,
+      });
+
+      if (existingWorker) {
+        await interaction.reply({
+          embeds: [buildAlreadyRegisteredEmbed(interaction.user, existingWorker)],
+          ephemeral: true,
+        });
+        return;
+      }
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        // Not registered yet; continue with registration.
+      } else {
+        const embed = createErrorEmbed(error);
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+        return;
+      }
+    }
+
+    try {
       const response = await api.registerWorker({
         guildId,
         userId: interaction.user.id,
@@ -49,16 +77,3 @@ module.exports = {
     }
   },
 };
-
-function buildWorkerEmbed(user, worker) {
-  const experienceText = worker.experience ? worker.experience : "Not set";
-  return new EmbedBuilder()
-    .setTitle("Worker registered")
-    .setDescription(`${user} is ready to start working!`)
-    .addFields(
-      { name: "Role", value: worker.role_id, inline: true },
-      { name: "Experience", value: experienceText, inline: true },
-      { name: "Status", value: worker.status, inline: true }
-    )
-    .setTimestamp(new Date());
-}
