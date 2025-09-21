@@ -45,7 +45,7 @@ function buildAvailabilityEmbed(context, workers) {
     return applyInteractionBranding(embed, context);
   }
 
-  const grouped = groupWorkersByCategory(safeWorkers);
+  const categories = groupWorkersByCategory(safeWorkers);
   const embed = new EmbedBuilder()
     .setTitle("List of working members and those on leave")
     .setDescription(
@@ -53,20 +53,13 @@ function buildAvailabilityEmbed(context, workers) {
     );
 
   CATEGORY_DEFINITIONS.forEach((category) => {
-    const workersForCategory = grouped.categories.get(category.key) || [];
+    const workersForCategory = categories.get(category.key) || [];
     embed.addFields({
       name: category.label,
       value: formatWorkerList(workersForCategory, category.prefix),
       inline: true,
     });
   });
-
-  if (grouped.others.length > 0) {
-    embed.addFields({
-      name: "ℹ️ Other statuses",
-      value: formatOtherStatuses(grouped.others),
-    });
-  }
 
   return applyInteractionBranding(embed, context);
 }
@@ -75,7 +68,6 @@ function groupWorkersByCategory(workers) {
   const categories = new Map(
     CATEGORY_DEFINITIONS.map((category) => [category.key, []])
   );
-  const others = [];
 
   workers.forEach((worker) => {
     const status = typeof worker.status === "string" ? worker.status.trim() : "Unknown";
@@ -88,11 +80,9 @@ function groupWorkersByCategory(workers) {
       categories.get(matchingCategory.key).push(worker);
       return;
     }
-
-    others.push({ status, worker });
   });
 
-  return { categories, others };
+  return categories;
 }
 
 function formatWorkerList(workers, prefix) {
@@ -116,29 +106,6 @@ function formatWorkerMention(worker) {
   }
 
   return "Unknown member";
-}
-
-function formatOtherStatuses(entries) {
-  const grouped = entries.reduce((acc, entry) => {
-    const status = entry.status || "Unknown";
-    if (!acc[status]) {
-      acc[status] = [];
-    }
-
-    acc[status].push(entry.worker);
-    return acc;
-  }, {});
-
-  return Object.entries(grouped)
-    .map(([status, workers]) => {
-      const mentions = workers
-        .slice(0, 15)
-        .map((worker) => formatWorkerMention(worker))
-        .join(", ");
-      return `• **${status}** — ${mentions || "`None`"}`;
-    })
-    .join("\n")
-    .slice(0, 1024);
 }
 
 module.exports = {
