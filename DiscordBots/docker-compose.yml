@@ -13,15 +13,3 @@ services:
     container_name: bot1_container
     env_file:
       - /home/gitlab-runner/envs/clockin.env
-
-  holiday_bot:
-    build: ./Holiday Segritude
-    container_name: bot2_container
-    env_file:
-      - /home/gitlab-runner/envs/holiday.env
-
-  reporter_bot:
-    build: ./Report Segritude
-    container_name: bot3_container
-    env_file:
-      - /home/gitlab-runner/envs/reporter.env
