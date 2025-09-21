@@ -44,7 +44,7 @@ function buildClockedInView({ guildName, guildId, worker }) {
   };
 }
 
-function buildSessionField(worker) {
+function buildSessionField(worker, { activeBreakMinutes = 0 } = {}) {
   if (!worker) {
     return null;
   }
@@ -61,9 +61,10 @@ function buildSessionField(worker) {
     0,
     Math.round((Number(worker.break_time_hours) || 0) * 60)
   );
+  const activeBreakMins = Math.max(0, Number(activeBreakMinutes) || 0);
   const sessionMinutes = Math.max(
     0,
-    Math.round((now - latestClockIn) / 60000) - breakMinutes
+    Math.round((now - latestClockIn) / 60000) - breakMinutes - activeBreakMins
   );
 
   const lines = [
@@ -78,7 +79,7 @@ function buildSessionField(worker) {
     ? worker.breaks_count
     : null;
   if (breaksTaken !== null) {
-    const breakDuration = formatDuration(breakMinutes);
+    const breakDuration = formatDuration(breakMinutes + activeBreakMins);
     lines.push(`• Breaks taken: ${breaksTaken} (${breakDuration})`);
   }
 
@@ -117,6 +118,54 @@ function buildTotalsField(worker) {
   };
 }
 
+function buildBreakField(worker, activeBreak) {
+  if (!worker || !activeBreak) {
+    return null;
+  }
+
+  const lines = [];
+
+  if (activeBreak.startedAt) {
+    lines.push(
+      `• Started ${formatTimestamp(activeBreak.startedAt, "t")} (${formatTimestamp(
+        activeBreak.startedAt,
+        "R"
+      )})`
+    );
+  }
+
+  lines.push(`• Time on break: ${formatDuration(activeBreak.minutes)}`);
+
+  return {
+    name: "Current break",
+    value: lines.join("\n"),
+  };
+}
+
+function getActiveBreakContext(worker) {
+  if (!worker) {
+    return null;
+  }
+
+  const breakStarts = worker.afk_dates?.afk_in;
+  if (!Array.isArray(breakStarts) || breakStarts.length === 0) {
+    return null;
+  }
+
+  const latestBreakStart = Number(breakStarts[breakStarts.length - 1]);
+  if (!Number.isFinite(latestBreakStart) || latestBreakStart <= 0) {
+    return null;
+  }
+
+  const now = Date.now();
+  const minutes = Math.max(0, Math.round((now - latestBreakStart) / 60000));
+
+  return {
+    startedAt: latestBreakStart,
+    minutes,
+  };
+}
+
 function formatTimestamp(timestampMs, style) {
   const seconds = Math.floor(Number(timestampMs) / 1000);
   if (!Number.isFinite(seconds) || seconds <= 0) {
@@ -142,16 +191,35 @@ function formatDuration(totalMinutes) {
   return parts.join(" ");
 }
 
-function buildOnBreakView({ guildName, guildId }) {
+function buildOnBreakView({ guildName, guildId, worker }) {
+  const activeBreak = getActiveBreakContext(worker);
+
+  const embed = new EmbedBuilder()
+    .setColor(DEFAULT_COLOR)
+    .setTitle("Break in progress")
+    .setDescription(
+      `Break in progress for **${guildName}**. Tap **Return to work** when you're ready to jump back in.`
+    );
+
+  const breakField = buildBreakField(worker, activeBreak);
+  if (breakField) {
+    embed.addFields(breakField);
+  }
+
+  const sessionField = buildSessionField(worker, {
+    activeBreakMinutes: activeBreak?.minutes || 0,
+  });
+  if (sessionField) {
+    embed.addFields(sessionField);
+  }
+
+  const totalsField = buildTotalsField(worker);
+  if (totalsField) {
+    embed.addFields(totalsField);
+  }
+
   return {
-    embeds: [
-      new EmbedBuilder()
-        .setColor(DEFAULT_COLOR)
-        .setTitle("Break in progress")
-        .setDescription(
-          `You're on break for **${guildName}**. I'll keep the timer paused until you tap **Return to work**.`
-        ),
-    ],
+    embeds: [embed],
     components: [
       new ActionRowBuilder().addComponents(
         new ButtonBuilder()

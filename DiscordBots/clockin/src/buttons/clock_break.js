@@ -30,7 +30,7 @@ module.exports = {
         }
       }
 
-      await api.startBreak({
+      const response = await api.startBreak({
         guildId,
         userId: interaction.user.id,
       });
@@ -56,10 +56,18 @@ module.exports = {
           await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
         }
 
-        const dmView = buildOnBreakView({ guildName, guildId });
+        const dmView = buildOnBreakView({
+          guildName,
+          guildId,
+          worker: response?.worker,
+        });
         await notifyUserDm(interaction, dmView);
       } else {
-        const dmView = buildOnBreakView({ guildName, guildId });
+        const dmView = buildOnBreakView({
+          guildName,
+          guildId,
+          worker: response?.worker,
+        });
         await interaction.update(dmView);
       }
     } catch (error) {

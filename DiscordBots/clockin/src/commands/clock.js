@@ -87,7 +87,7 @@ async function handleBreak(interaction, api, guildId, subcommand) {
       }
     }
 
-    await api.startBreak({ guildId, userId: interaction.user.id });
+    const response = await api.startBreak({ guildId, userId: interaction.user.id });
 
     await interaction.reply({
       content: "Enjoy your break! I've updated your DM controls.",
@@ -95,7 +95,11 @@ async function handleBreak(interaction, api, guildId, subcommand) {
     });
 
     const guildName = interaction.guild?.name || "this server";
-    const dmView = buildOnBreakView({ guildName, guildId });
+    const dmView = buildOnBreakView({
+      guildName,
+      guildId,
+      worker: response?.worker,
+    });
     await notifyUserDm(interaction, dmView);
     return;
   }
