@@ -58,6 +58,9 @@ client.once("ready", async () => {
         { body }
       );
       console.log("Registered guild commands for clock bot");
+
+      const commandNames = slashCommandData.map((command) => command.name);
+      await removeDuplicateGlobalCommands(rest, commandNames);
     } else {
       await rest.put(Routes.applicationCommands(CLIENT_ID), { body });
       console.log("Registered global commands for clock bot");
@@ -122,6 +125,7 @@ function loadSlashCommands(collection) {
 
   const files = walkJsFiles(commandsDir);
   const slashCommands = [];
+  const registeredNames = new Set();
 
   for (const file of files) {
     const command = require(file);
@@ -131,6 +135,17 @@ function loadSlashCommands(collection) {
     }
 
     const name = command.data.name;
+    if (!name) {
+      console.warn(`Skipped command with missing name at ${file}`);
+      continue;
+    }
+
+    if (registeredNames.has(name)) {
+      console.warn(`Skipped duplicate command "${name}" from ${file}`);
+      continue;
+    }
+
+    registeredNames.add(name);
     collection.set(name, command);
     slashCommands.push(command.data);
   }
@@ -207,4 +222,30 @@ function walkJsFiles(dir) {
   }
 
   return files;
+}
+
+async function removeDuplicateGlobalCommands(rest, commandNames) {
+  if (!Array.isArray(commandNames) || commandNames.length === 0) {
+    return;
+  }
+
+  try {
+    const existing = await rest.get(Routes.applicationCommands(CLIENT_ID));
+    const duplicates = existing.filter((command) =>
+      commandNames.includes(command.name)
+    );
+
+    if (duplicates.length === 0) {
+      return;
+    }
+
+    for (const command of duplicates) {
+      await rest.delete(Routes.applicationCommand(CLIENT_ID, command.id));
+      console.log(
+        `Removed duplicate global command "${command.name}" (${command.id})`
+      );
+    }
+  } catch (error) {
+    console.warn("Failed to clean up duplicate global commands", error);
+  }
 }

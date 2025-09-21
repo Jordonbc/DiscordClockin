@@ -7,6 +7,7 @@ const { requestTimeOffModal } = require("../workflows/timeOff");
 const { emergencyLeaveHandler } = require("../workflows/emergency");
 const { submitIssueModal, submitSuggestionModal } = require("../workflows/support");
 const { buildClockedInView } = require("../views/dmShiftControls");
+const { buildMainClockSelectRow } = require("../views/mainClockSelectMenu");
 
 const DEFAULT_COLOR = process.env.DEFAULT_COLOR || "#5865F2";
 
@@ -15,43 +16,55 @@ module.exports = {
   async execute(interaction, context) {
     const choice = interaction.values[0];
 
-    switch (choice) {
-      case "clockin":
-        await handleClockIn(interaction, context);
-        break;
-      case "register":
-        await showRegistrationFlow(interaction, context);
-        break;
-      case "timeoff":
-        await requestTimeOffModal(interaction, context);
-        break;
-      case "emergency":
-        await emergencyLeaveHandler(interaction, context);
-        break;
-      case "balance":
-        await showBalance(interaction, context);
-        break;
-      case "contacthr":
-        await handleContactHr(interaction);
-        break;
-      case "issue":
-        await submitIssueModal(interaction, context);
-        break;
-      case "suggestion":
-        await submitSuggestionModal(interaction, context);
-        break;
-      default:
-        await interaction.reply({
-          content: "Unsupported option selected.",
-          ephemeral: true,
-        });
+    try {
+      switch (choice) {
+        case "clockin":
+          await handleClockIn(interaction, context);
+          break;
+        case "register":
+          await showRegistrationFlow(interaction, context);
+          break;
+        case "timeoff":
+          await requestTimeOffModal(interaction, context);
+          break;
+        case "emergency":
+          await emergencyLeaveHandler(interaction, context);
+          break;
+        case "balance":
+          await showBalance(interaction, context);
+          break;
+        case "contacthr":
+          await handleContactHr(interaction);
+          break;
+        case "issue":
+          await submitIssueModal(interaction, context);
+          break;
+        case "suggestion":
+          await submitSuggestionModal(interaction, context);
+          break;
+        default:
+          await interaction.reply({
+            content: "Unsupported option selected.",
+            ephemeral: true,
+          });
+      }
+    } catch (error) {
+      const embed = createErrorEmbed(error);
+
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({ embeds: [embed], ephemeral: true });
+      } else {
+        await interaction.reply({ embeds: [embed], ephemeral: true });
+      }
+    } finally {
+      await resetMainClockSelectMenu(interaction);
     }
   },
 };
 
 async function handleClockIn(interaction, { api }) {
   try {
-    await api.startShift({
+    const response = await api.startShift({
       guildId: interaction.guildId,
       userId: interaction.user.id,
       clockInMessageId: interaction.message.id,
@@ -66,6 +79,7 @@ async function handleClockIn(interaction, { api }) {
     const dmView = buildClockedInView({
       guildName,
       guildId: interaction.guildId,
+      worker: response?.worker,
     });
 
     await notifyUserDm(interaction, dmView);
@@ -100,4 +114,44 @@ async function handleContactHr(interaction) {
   });
 
   await interaction.reply({ embeds: [embed], ephemeral: true });
+}
+
+async function resetMainClockSelectMenu(interaction) {
+  const message = interaction.message;
+
+  if (!message?.editable) {
+    return;
+  }
+
+  const hasMainMenu = message.components?.some((row) =>
+    row.components?.some(
+      (component) =>
+        component.customId === "mainMsg_selectMenu" ||
+        component.data?.custom_id === "mainMsg_selectMenu"
+    )
+  );
+
+  if (!hasMainMenu) {
+    return;
+  }
+
+  const components = message.components.map((row) => {
+    const containsMainMenu = row.components?.some(
+      (component) =>
+        component.customId === "mainMsg_selectMenu" ||
+        component.data?.custom_id === "mainMsg_selectMenu"
+    );
+
+    if (!containsMainMenu) {
+      return row;
+    }
+
+    return buildMainClockSelectRow({ guildId: interaction.guildId });
+  });
+
+  try {
+    await message.edit({ components });
+  } catch (error) {
+    console.warn("Failed to reset main clock select menu", error);
+  }
 }
