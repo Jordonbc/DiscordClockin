@@ -6,11 +6,14 @@ const {
   StringSelectMenuOptionBuilder,
   PermissionFlagsBits,
   MessageFlags,
+  AttachmentBuilder,
 } = require("discord.js");
 const { createErrorEmbed } = require("../../utils/embeds");
 const { buildMainClockEmbed } = require("../../views/setupEmbeds");
+const path = require("path");
+const fs = require("fs");
 
-const DEFAULT_COLOR = process.env.DEFAULT_COLOR || "#00FF00";
+const DEFAULT_COLOR = process.env.DEFAULT_COLOR || "#81e6ff";
 const TARGET_GUILD_ID = process.env.GUILD_ID;
 
 module.exports = {
@@ -34,7 +37,10 @@ module.exports = {
         return;
       }
 
-      const embedImage = await buildBannerEmbed(client);
+      const { embed: bannerEmbed, attachments } = await buildBannerEmbed(
+        client,
+        interaction.guildId
+      );
       const embedMain = buildMainClockEmbed({
         color: DEFAULT_COLOR,
         guildId: interaction.guildId,
@@ -49,8 +55,9 @@ module.exports = {
       const row = new ActionRowBuilder().addComponents(selectMenu);
 
       await interaction.channel.send({
-        embeds: [embedImage, embedMain],
+        embeds: [bannerEmbed, embedMain],
         components: [row],
+        files: attachments,
       });
 
       await interaction.editReply({
@@ -71,16 +78,50 @@ function createPlanRequiredEmbed() {
     );
 }
 
-async function buildBannerEmbed(client) {
+async function buildBannerEmbed(client, guildId) {
+  const attachments = [];
+  const isTargetGuild = TARGET_GUILD_ID && guildId === TARGET_GUILD_ID;
+  const localFileName = isTargetGuild
+    ? "banner_clockedIn_segritude.PNG"
+    : "banner_clockedIn.png";
+  const localPath = path.join(__dirname, "..", "..", "..", localFileName);
+
+  if (fs.existsSync(localPath)) {
+    const attachmentName = isTargetGuild
+      ? "segritude_clockin_banner.png"
+      : "clockin_banner.png";
+    attachments.push(
+      new AttachmentBuilder(localPath, { name: attachmentName })
+    );
+
+    return {
+      embed: new EmbedBuilder()
+        .setColor(DEFAULT_COLOR)
+        .setImage(`attachment://${attachmentName}`),
+      attachments,
+    };
+  }
+
   try {
     const user = await client.users.fetch(client.user.id, { force: true });
-    const bannerURL = user.bannerURL({ format: "png", size: 1024 }) || "https://i.imgur.com/abKnqEb.jpeg";
-    return new EmbedBuilder().setColor(DEFAULT_COLOR).setImage(bannerURL);
+    const bannerURL =
+      user.bannerURL({ format: "png", size: 1024 }) ||
+      "https://i.imgur.com/abKnqEb.jpeg";
+
+    return {
+      embed: new EmbedBuilder()
+        .setColor(DEFAULT_COLOR)
+        .setImage(bannerURL),
+      attachments,
+    };
   } catch (error) {
     console.warn("Failed to fetch bot banner", error);
-    return new EmbedBuilder()
-      .setColor(DEFAULT_COLOR)
-      .setImage("https://i.imgur.com/abKnqEb.jpeg");
+    return {
+      embed: new EmbedBuilder()
+        .setColor(DEFAULT_COLOR)
+        .setImage("https://i.imgur.com/abKnqEb.jpeg"),
+      attachments,
+    };
   }
 }
 
