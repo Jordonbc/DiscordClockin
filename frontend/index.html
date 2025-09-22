@@ -46,15 +46,55 @@
             <button id="login-button" class="button button--primary">
               Login with Discord
             </button>
-            <div id="user-summary" class="user-summary" hidden>
-              <img id="user-avatar" alt="" class="user-summary__avatar" />
-              <div>
-                <p id="user-name" class="user-summary__name"></p>
-                <p id="user-roles" class="user-summary__roles"></p>
-              </div>
-              <button id="logout-button" class="button button--ghost">
-                Sign out
+            <div id="user-menu" class="user-menu" hidden>
+              <button
+                id="user-menu-button"
+                class="user-menu__trigger"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <img id="user-avatar" alt="" class="user-menu__avatar" />
+                <span class="user-menu__indicator" aria-hidden="true"></span>
               </button>
+              <div
+                id="user-menu-dropdown"
+                class="user-menu__dropdown"
+                role="menu"
+              >
+                <div class="user-menu__header">
+                  <p id="user-name" class="user-menu__name"></p>
+                  <p id="user-roles" class="user-menu__roles"></p>
+                </div>
+                <div class="user-menu__divider" role="presentation"></div>
+                <button
+                  class="user-menu__item"
+                  type="button"
+                  data-user-menu-action="profile"
+                  role="menuitem"
+                >
+                  Profile
+                </button>
+                <button
+                  id="user-menu-admin"
+                  class="user-menu__item"
+                  type="button"
+                  data-user-menu-action="admin"
+                  data-requires-role="admin"
+                  role="menuitem"
+                >
+                  Admin
+                </button>
+                <div class="user-menu__divider" role="presentation"></div>
+                <button
+                  id="logout-button"
+                  class="user-menu__item user-menu__item--danger"
+                  type="button"
+                  role="menuitem"
+                >
+                  Sign out
+                </button>
+              </div>
             </div>
           </div>
         </div>

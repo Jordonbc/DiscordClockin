@@ -34,8 +34,12 @@ const heroLoginButton = document.querySelector("[data-hero-action='login']");
 const connectionIndicator = document.querySelector("#connection-indicator");
 
 const loginButton = document.querySelector("#login-button");
+const userMenu = document.querySelector("#user-menu");
+const userMenuButton = document.querySelector("#user-menu-button");
+const userMenuDropdown = document.querySelector("#user-menu-dropdown");
+const userMenuProfile = document.querySelector("[data-user-menu-action='profile']");
+const userMenuAdmin = document.querySelector("#user-menu-admin");
 const logoutButton = document.querySelector("#logout-button");
-const userSummary = document.querySelector("#user-summary");
 const userName = document.querySelector("#user-name");
 const userRoles = document.querySelector("#user-roles");
 const userAvatar = document.querySelector("#user-avatar");
@@ -77,6 +81,25 @@ const clockOutModalDismissButtons = clockOutModal
 
 let eventSource = null;
 let eventStreamReconnectTimer = null;
+let userMenuIsOpen = false;
+
+function setUserMenuOpen(open) {
+  userMenuIsOpen = Boolean(open);
+  if (userMenu) {
+    userMenu.classList.toggle("user-menu--open", userMenuIsOpen);
+  }
+  if (userMenuButton) {
+    userMenuButton.setAttribute("aria-expanded", userMenuIsOpen ? "true" : "false");
+  }
+}
+
+function closeUserMenu() {
+  setUserMenuOpen(false);
+}
+
+function toggleUserMenu() {
+  setUserMenuOpen(!userMenuIsOpen);
+}
 
 function hasActiveSession() {
   if (!state.user) return false;
@@ -686,12 +709,19 @@ function renderAuthState() {
   if (loginButton) loginButton.hidden = authed;
   if (heroLoginButton) heroLoginButton.hidden = authed;
 
-  if (userSummary) {
-    userSummary.hidden = !authed;
+  if (userMenu) {
+    userMenu.hidden = !authed;
+    if (!authed) {
+      closeUserMenu();
+    }
   }
 
   if (logoutButton) {
     logoutButton.hidden = !authed;
+  }
+
+  if (userMenuAdmin) {
+    userMenuAdmin.hidden = !(authed && canAccessAdmin());
   }
 
   if (authed) {
@@ -712,6 +742,11 @@ function renderAuthState() {
     } else {
       userAvatar.removeAttribute("src");
       userAvatar.alt = "";
+    }
+    if (userMenuButton) {
+      const label = state.user.displayName || state.user.username || "Profile";
+      userMenuButton.setAttribute("aria-label", label);
+      userMenuButton.setAttribute("title", label);
     }
   } else {
     userName.textContent = "";
@@ -1087,8 +1122,60 @@ function bindEvents() {
     loginButton.addEventListener("click", initiateLogin);
   }
 
+  if (userMenuButton) {
+    userMenuButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (!state.user) return;
+      toggleUserMenu();
+    });
+  }
+
+  if (userMenuDropdown) {
+    userMenuDropdown.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+  }
+
+  if (userMenuProfile) {
+    userMenuProfile.addEventListener("click", () => {
+      if (!state.user) {
+        closeUserMenu();
+        showToast("Sign in to view your profile.", "info");
+        return;
+      }
+      closeUserMenu();
+      switchView("my-time");
+    });
+  }
+
+  if (userMenuAdmin) {
+    userMenuAdmin.addEventListener("click", () => {
+      closeUserMenu();
+      if (!canAccessAdmin()) {
+        showToast("Admin access is required.", "info");
+        return;
+      }
+      switchView("admin");
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    if (!userMenuIsOpen) return;
+    if (userMenu && event.target instanceof Node && userMenu.contains(event.target)) {
+      return;
+    }
+    closeUserMenu();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeUserMenu();
+    }
+  });
+
   if (logoutButton) {
     logoutButton.addEventListener("click", () => {
+      closeUserMenu();
       clearDiscordSession();
       renderAuthState();
       showToast("Signed out.", "info");
