@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ClockIn Operations Console</title>
+    <title>Discord ClockIn</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,650 +13,328 @@
     />
   </head>
   <body>
-    <div class="dashboard">
-      <aside class="sidebar">
-        <div class="sidebar__brand">
-          <span class="sidebar__badge">DC</span>
+    <div class="app">
+      <header class="site-header">
+        <div class="brand">
+          <span class="brand__icon">⏱️</span>
           <div>
-            <h1>ClockIn Console</h1>
-            <p>Guild administration toolkit</p>
+            <p class="brand__eyebrow">Discord ClockIn</p>
+            <h1 class="brand__title">Team time tracking</h1>
           </div>
         </div>
-        <nav class="sidebar__nav">
-          <button class="sidebar__link is-active" data-target="dashboard">
-            <span>Dashboard</span>
+        <nav class="main-nav" aria-label="Primary">
+          <button class="main-nav__link is-active" data-view-button="home">
+            Home
           </button>
-          <button class="sidebar__link" data-target="guild-settings">
-            <span>Guild Settings</span>
+          <button
+            class="main-nav__link"
+            data-view-button="my-time"
+            data-requires-auth="true"
+          >
+            My time
           </button>
-          <button class="sidebar__link" data-target="roles">
-            <span>Roles</span>
-          </button>
-          <button class="sidebar__link" data-target="workers">
-            <span>Workers</span>
-          </button>
-          <button class="sidebar__link" data-target="shifts">
-            <span>Shifts</span>
-          </button>
-          <button class="sidebar__link" data-target="timesheets">
-            <span>Timesheets</span>
-          </button>
-          <button class="sidebar__link" data-target="admin">
-            <span>Admin Tools</span>
-          </button>
-          <button class="sidebar__link" data-target="activity">
-            <span>Activity</span>
+          <button
+            class="main-nav__link"
+            data-view-button="admin"
+            data-requires-role="admin"
+          >
+            Admin
           </button>
         </nav>
-        <div class="sidebar__footer">
-          <button id="clear-log" type="button" class="sidebar__clear">
-            Clear activity
-          </button>
-          <p>Reset counters and wipe the historical log.</p>
-        </div>
-      </aside>
-
-      <main class="main">
-        <header class="topbar">
-          <div class="topbar__intro">
-            <p class="eyebrow">Discord ClockIn</p>
-            <h2>Operations Center</h2>
-            <p class="muted">
-              Monitor the API in real-time and orchestrate the workforce with
-              focused tools.
-            </p>
+        <div class="header-actions">
+          <div class="connection-status">
+            <span class="sr-only">Backend status:</span>
+            <span id="connection-indicator" class="status-pill status-pill--error"
+              >Connecting…</span
+            >
           </div>
-          <div class="topbar__actions">
-            <div class="topbar__clock">
-              <span id="live-date"></span>
-              <span id="live-time"></span>
+          <div class="auth-controls">
+            <button id="login-button" class="button button--primary">
+              Login with Discord
+            </button>
+            <div id="user-summary" class="user-summary" hidden>
+              <img id="user-avatar" alt="" class="user-summary__avatar" />
+              <div>
+                <p id="user-name" class="user-summary__name"></p>
+                <p id="user-roles" class="user-summary__roles"></p>
+              </div>
+              <button id="logout-button" class="button button--ghost">
+                Sign out
+              </button>
             </div>
-            <form id="base-url-form" class="connect" autocomplete="off">
-              <label class="sr-only" for="base-url">API base URL</label>
-              <div class="connect__fields">
+          </div>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <section class="view view--active" data-view="home">
+          <div class="hero">
+            <h2>Welcome to the ClockIn portal</h2>
+            <p>
+              Track your day, request time off, and keep your team informed – all
+              in one place.
+            </p>
+            <div class="hero__actions">
+              <button class="button button--primary" data-hero-action="login">
+                Get started
+              </button>
+              <button class="button button--ghost" data-view-jump="my-time">
+                View my time
+              </button>
+            </div>
+          </div>
+          <div class="home-grid">
+            <article class="panel">
+              <h3>How it works</h3>
+              <ol class="steps">
+                <li>Connect with Discord to verify your identity.</li>
+                <li>Clock in and out as you begin and end work.</li>
+                <li>Submit holiday requests directly to your managers.</li>
+                <li>Admins review, approve, and keep everyone on track.</li>
+              </ol>
+            </article>
+            <article class="panel">
+              <h3>Why teams choose ClockIn</h3>
+              <ul class="benefits">
+                <li>Clear visibility into active shifts and attendance.</li>
+                <li>Automated timesheets ready for export.</li>
+                <li>Role-based access so everyone sees the right tools.</li>
+                <li>Holiday approval flows that keep communication in Discord.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" data-view="my-time" data-requires-auth="true">
+          <header class="view-header">
+            <h2>My time</h2>
+            <p>Stay on top of your current shift and recent activity.</p>
+          </header>
+
+          <article class="panel">
+            <div class="panel__header">
+              <h3>Shift controls</h3>
+              <span id="clock-state" class="status-pill status-pill--idle"
+                >Waiting</span
+              >
+            </div>
+            <p id="clock-message" class="muted">
+              Connect to the backend and sign in to see your current status.
+            </p>
+            <div class="clock-controls">
+              <button id="clock-in" class="button button--primary">
+                Clock in
+              </button>
+              <button id="clock-out" class="button button--danger">
+                Clock out
+              </button>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel__header">
+              <h3>Recent shifts</h3>
+              <button id="refresh-my-time" class="button button--ghost">
+                Refresh
+              </button>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Start</th>
+                    <th scope="col">End</th>
+                    <th scope="col">Duration</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="my-time-entries">
+                  <tr>
+                    <td colspan="4" class="muted">No shifts to display.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel__header">
+              <h3>Holiday requests</h3>
+              <button id="refresh-holidays" class="button button--ghost">
+                Refresh
+              </button>
+            </div>
+            <form id="holiday-form" class="form-grid">
+              <label>
+                Start date
+                <input type="date" name="startDate" required />
+              </label>
+              <label>
+                End date
+                <input type="date" name="endDate" required />
+              </label>
+              <label class="form-grid__full">
+                Reason
+                <textarea
+                  name="reason"
+                  rows="3"
+                  placeholder="Let your manager know what you need"
+                ></textarea>
+              </label>
+              <button type="submit" class="button button--primary">
+                Request holiday
+              </button>
+            </form>
+            <ul id="holiday-list" class="timeline">
+              <li class="timeline__item muted">No holiday requests yet.</li>
+            </ul>
+          </article>
+        </section>
+
+        <section class="view" data-view="admin" data-requires-role="admin">
+          <header class="view-header">
+            <h2>Admin workspace</h2>
+            <p>Review timesheets, handle time off, and manage team roles.</p>
+          </header>
+
+          <article class="panel">
+            <div class="panel__header">
+              <h3>Review team timesheets</h3>
+              <button id="refresh-admin-timesheets" class="button button--ghost">
+                Refresh
+              </button>
+            </div>
+            <form id="admin-timesheet-form" class="form-grid">
+              <label>
+                Member ID
+                <input name="memberId" placeholder="Discord ID" />
+              </label>
+              <label>
+                From
+                <input type="date" name="from" />
+              </label>
+              <label>
+                To
+                <input type="date" name="to" />
+              </label>
+              <button type="submit" class="button button--primary">
+                Fetch timesheets
+              </button>
+            </form>
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Member</th>
+                    <th scope="col">Start</th>
+                    <th scope="col">End</th>
+                    <th scope="col">Duration</th>
+                    <th scope="col">Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-timesheet-rows">
+                  <tr>
+                    <td colspan="5" class="muted">
+                      Submit a search to view entries.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h3>Modify logged hours</h3>
+            <form id="admin-modify-hours-form" class="form-grid">
+              <label>
+                Entry ID
+                <input name="entryId" placeholder="Timesheet entry ID" required />
+              </label>
+              <label>
+                New start
+                <input type="datetime-local" name="start" />
+              </label>
+              <label>
+                New end
+                <input type="datetime-local" name="end" />
+              </label>
+              <label>
+                Notes
+                <input name="notes" placeholder="Adjustment reason" />
+              </label>
+              <button type="submit" class="button button--primary">
+                Update entry
+              </button>
+            </form>
+          </article>
+
+          <article class="panel">
+            <div class="panel__header">
+              <h3>Holiday approvals</h3>
+              <button id="refresh-admin-holidays" class="button button--ghost">
+                Refresh
+              </button>
+            </div>
+            <ul id="admin-holiday-requests" class="timeline">
+              <li class="timeline__item muted">No pending requests.</li>
+            </ul>
+            <form id="admin-holiday-form" class="form-grid">
+              <label>
+                Request ID
+                <input name="requestId" placeholder="Holiday request ID" required />
+              </label>
+              <label>
+                Action
+                <select name="status" required>
+                  <option value="approved">Approve</option>
+                  <option value="denied">Deny</option>
+                </select>
+              </label>
+              <label class="form-grid__full">
+                Manager note
+                <textarea name="managerNote" rows="2"></textarea>
+              </label>
+              <button type="submit" class="button button--primary">
+                Submit decision
+              </button>
+            </form>
+          </article>
+
+          <article class="panel">
+            <h3>Role management</h3>
+            <form id="admin-role-form" class="form-grid">
+              <label>
+                Member ID
+                <input name="memberId" placeholder="Discord ID" required />
+              </label>
+              <label>
+                Roles
                 <input
-                  id="base-url"
-                  name="base-url"
-                  type="url"
-                  placeholder="https://example.com/api/v1"
+                  name="roles"
+                  placeholder="comma,separated,roles"
                   required
                 />
-                <button type="submit">Connect</button>
-              </div>
-              <span
-                id="connection-status"
-                class="connect__status connect__status--error"
-                >Not connected</span
-              >
+              </label>
+              <label>
+                Action
+                <select name="action" required>
+                  <option value="set">Replace existing</option>
+                  <option value="add">Add roles</option>
+                  <option value="remove">Remove roles</option>
+                </select>
+              </label>
+              <button type="submit" class="button button--primary">
+                Update roles
+              </button>
             </form>
-          </div>
-        </header>
-
-        <div class="content">
-          <section class="view view--active" data-view="dashboard">
-            <div class="grid grid--dashboard">
-              <article class="card card--highlight">
-                <div class="card__header">
-                  <h3>Service status</h3>
-                  <span id="last-response-pill" class="pill pill--idle"
-                    >Idle</span
-                  >
-                </div>
-                <p class="muted">
-                  Check backend availability and track the result of the last
-                  request.
-                </p>
-                <div class="status-block">
-                  <h4 id="last-response-title">Awaiting first request</h4>
-                  <p id="last-response-status" class="muted">
-                    Trigger any action to populate this summary.
-                  </p>
-                  <p class="muted" id="last-response-time">No activity yet.</p>
-                </div>
-                <button data-action="healthcheck" class="primary">
-                  Run healthcheck
-                </button>
-              </article>
-
-              <article class="card">
-                <h3>Request insights</h3>
-                <div class="stats">
-                  <div class="stats__item">
-                    <p>Total requests</p>
-                    <strong id="stat-total">0</strong>
-                  </div>
-                  <div class="stats__item">
-                    <p>Successful</p>
-                    <strong id="stat-success">0</strong>
-                  </div>
-                  <div class="stats__item">
-                    <p>Errors</p>
-                    <strong id="stat-error">0</strong>
-                  </div>
-                </div>
-              </article>
-
-              <article class="card">
-                <h3>Quick actions</h3>
-                <p class="muted">
-                  Jump directly to the workspace you need to unblock your team.
-                </p>
-                <div class="quick-actions">
-                  <button data-quick-view="guild-settings">Guild settings</button>
-                  <button data-quick-view="roles">Roles</button>
-                  <button data-quick-view="workers">Workers</button>
-                  <button data-quick-view="activity">View activity</button>
-                </div>
-              </article>
-
-              <article class="card card--wide">
-                <div class="card__header">
-                  <h3>Recent activity</h3>
-                  <span class="muted">Live feed</span>
-                </div>
-                <div id="activity-feed" class="activity-feed">
-                  <p class="muted">No requests yet. Activity will appear here.</p>
-                </div>
-              </article>
-            </div>
-          </section>
-
-          <section class="view" data-view="guild-settings">
-            <header class="view__header">
-              <h2>Guild settings</h2>
-              <p class="muted">
-                Fetch or update guild configuration, schedules, and automation
-                preferences.
-              </p>
-            </header>
-            <div class="grid">
-              <article class="card form-card">
-                <h3>Fetch configuration</h3>
-                <form id="settings-get-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <button type="submit">Fetch settings</button>
-                </form>
-              </article>
-
-              <article class="card form-card card--wide">
-                <h3>Update configuration</h3>
-                <p class="muted">
-                  Only populated fields are sent with the request.
-                </p>
-                <form id="settings-update-form" class="stack stack--split">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    Plan
-                    <input name="plan" placeholder="premium" />
-                  </label>
-                  <label>
-                    Log channel ID
-                    <input name="logChannelId" placeholder="123456789" />
-                  </label>
-                  <label>
-                    Weekly report channel ID
-                    <input
-                      name="weeklyReportChannelId"
-                      placeholder="987654321"
-                    />
-                  </label>
-                  <label>
-                    Time zone
-                    <input name="timeZone" placeholder="America/New_York" />
-                  </label>
-                  <label>
-                    Target hours
-                    <input name="targetHours" type="number" min="0" step="1" />
-                  </label>
-                  <label>
-                    Max AFK hours
-                    <input name="maxAfkHours" type="number" min="0" step="1" />
-                  </label>
-                  <label>
-                    AFK reminder interval (hours)
-                    <input name="afkReminders" type="number" min="0" step="1" />
-                  </label>
-                  <label>
-                    Worker voice chats (comma separated)
-                    <input name="workerVoiceChats" placeholder="channel1,channel2" />
-                  </label>
-                  <label>
-                    Voice exempt roles (comma separated)
-                    <input name="voiceExemptRole" placeholder="role1,role2" />
-                  </label>
-                  <label>
-                    Bot admin roles (comma separated)
-                    <input name="botAdminRole" placeholder="role1,role2" />
-                  </label>
-                  <label>
-                    Weekly exempt role
-                    <input name="weeklyExemptRole" placeholder="role_id" />
-                  </label>
-                  <button type="submit" class="primary">Apply updates</button>
-                </form>
-              </article>
-            </div>
-          </section>
-
-          <section class="view" data-view="roles">
-            <header class="view__header">
-              <h2>Role management</h2>
-              <p class="muted">
-                Create, edit, and retire worker roles along with their experience
-                ladders.
-              </p>
-            </header>
-            <div class="grid">
-              <article class="card form-card">
-                <h3>List roles</h3>
-                <form id="roles-get-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <button type="submit">Fetch roles</button>
-                </form>
-              </article>
-
-              <article class="card form-card card--wide">
-                <h3>Create or update role</h3>
-                <form id="roles-create-form" class="stack stack--split">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    Role ID (optional)
-                    <input name="roleId" />
-                  </label>
-                  <label>
-                    Name
-                    <input name="name" required />
-                  </label>
-                  <label>
-                    Category
-                    <input name="category" placeholder="support" required />
-                  </label>
-                  <label>
-                    Experiences (comma separated)
-                    <input name="experiences" placeholder="jr,mid,sr" required />
-                  </label>
-                  <label>
-                    Hourly salary (experience:rate per line)
-                    <textarea
-                      name="hourlySalary"
-                      rows="4"
-                      placeholder="jr: 15\nmid: 18\nsr: 22"
-                      required
-                    ></textarea>
-                  </label>
-                  <button type="submit" class="primary">Save role</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Delete role</h3>
-                <form id="roles-delete-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    Role ID
-                    <input name="roleId" required />
-                  </label>
-                  <button type="submit" class="danger">Delete role</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Add experience</h3>
-                <form id="roles-add-exp-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    Experience name
-                    <input name="name" placeholder="sr" required />
-                  </label>
-                  <button type="submit">Add experience</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Remove experience</h3>
-                <form id="roles-remove-exp-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    Experience name
-                    <input name="experience" placeholder="sr" required />
-                  </label>
-                  <button type="submit" class="danger">Remove experience</button>
-                </form>
-              </article>
-            </div>
-          </section>
-
-          <section class="view" data-view="workers">
-            <header class="view__header">
-              <h2>Worker directory</h2>
-              <p class="muted">
-                Onboard, reassign, and manage worker state directly from the
-                console.
-              </p>
-            </header>
-            <div class="grid">
-              <article class="card form-card">
-                <h3>Register worker</h3>
-                <form id="worker-register-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    User ID
-                    <input name="userId" required />
-                  </label>
-                  <label>
-                    Role ID
-                    <input name="roleId" required />
-                  </label>
-                  <label>
-                    Experience (optional)
-                    <input name="experience" placeholder="jr" />
-                  </label>
-                  <button type="submit" class="primary">Register worker</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>List workers</h3>
-                <form id="workers-list-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <button type="submit">Fetch workers</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Lookup worker</h3>
-                <form id="worker-get-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    User ID
-                    <input name="userId" required />
-                  </label>
-                  <button type="submit">Get worker</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Change worker role</h3>
-                <form id="worker-change-role-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    User ID
-                    <input name="userId" required />
-                  </label>
-                  <label>
-                    Role ID
-                    <input name="roleId" required />
-                  </label>
-                  <label>
-                    Experience
-                    <input name="experience" placeholder="mid" />
-                  </label>
-                  <button type="submit">Update role</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Delete worker</h3>
-                <form id="worker-delete-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    User ID
-                    <input name="userId" required />
-                  </label>
-                  <button type="submit" class="danger">Delete worker</button>
-                </form>
-              </article>
-            </div>
-          </section>
-
-          <section class="view" data-view="shifts">
-            <header class="view__header">
-              <h2>Shift control</h2>
-              <p class="muted">
-                Simulate clock-ins, breaks, and clock-outs without leaving the
-                dashboard.
-              </p>
-            </header>
-            <div class="grid">
-              <article class="card form-card">
-                <h3>Clock in</h3>
-                <form id="shift-start-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    User ID
-                    <input name="userId" required />
-                  </label>
-                  <label>
-                    Clock-in message ID (optional)
-                    <input name="messageId" />
-                  </label>
-                  <button type="submit" class="primary">Start shift</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Clock out</h3>
-                <form id="shift-end-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    User ID
-                    <input name="userId" required />
-                  </label>
-                  <button type="submit">End shift</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Start break</h3>
-                <form id="break-start-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    User ID
-                    <input name="userId" required />
-                  </label>
-                  <button type="submit">Start break</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>End break</h3>
-                <form id="break-end-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    User ID
-                    <input name="userId" required />
-                  </label>
-                  <button type="submit">End break</button>
-                </form>
-              </article>
-            </div>
-          </section>
-
-          <section class="view" data-view="timesheets">
-            <header class="view__header">
-              <h2>Timesheet tools</h2>
-              <p class="muted">
-                Inspect or adjust tracked hours for any worker across reporting
-                scopes.
-              </p>
-            </header>
-            <div class="grid">
-              <article class="card form-card">
-                <h3>Get timesheet</h3>
-                <form id="timesheet-get-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    User ID
-                    <input name="userId" required />
-                  </label>
-                  <button type="submit">Fetch timesheet</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Add hours</h3>
-                <form id="hours-add-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    User ID
-                    <input name="userId" required />
-                  </label>
-                  <label>
-                    Hours
-                    <input name="hours" type="number" min="0" step="0.25" required />
-                  </label>
-                  <label>
-                    Scope
-                    <input name="scope" placeholder="weekly" required />
-                  </label>
-                  <button type="submit">Add hours</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Remove hours</h3>
-                <form id="hours-remove-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <label>
-                    User ID
-                    <input name="userId" required />
-                  </label>
-                  <label>
-                    Hours
-                    <input name="hours" type="number" min="0" step="0.25" required />
-                  </label>
-                  <label>
-                    Scope
-                    <input name="scope" placeholder="weekly" required />
-                  </label>
-                  <button type="submit">Remove hours</button>
-                </form>
-              </article>
-            </div>
-          </section>
-
-          <section class="view" data-view="admin">
-            <header class="view__header">
-              <h2>Administrative tools</h2>
-              <p class="muted">
-                Use destructive operations with caution — they permanently erase
-                data.
-              </p>
-            </header>
-            <div class="grid">
-              <article class="card form-card">
-                <h3>Delete all workers</h3>
-                <form id="workers-delete-all-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <button type="submit" class="danger">Delete workers</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Delete all roles</h3>
-                <form id="roles-delete-all-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <button type="submit" class="danger">Delete roles</button>
-                </form>
-              </article>
-
-              <article class="card form-card">
-                <h3>Purge guild data</h3>
-                <form id="guild-delete-all-form" class="stack">
-                  <label>
-                    Guild ID
-                    <input name="guildId" required />
-                  </label>
-                  <button type="submit" class="danger">Delete everything</button>
-                </form>
-              </article>
-            </div>
-          </section>
-
-          <section class="view" data-view="activity">
-            <header class="view__header">
-              <h2>Activity log</h2>
-              <p class="muted">
-                Every request executed from this console streams into the log
-                with payload details.
-              </p>
-            </header>
-            <article class="card card--wide">
-              <div class="card__header">
-                <h3>Live log</h3>
-                <span class="muted">Newest first</span>
-              </div>
-              <div id="log-container" class="log"></div>
-            </article>
-          </section>
-        </div>
+          </article>
+        </section>
       </main>
     </div>
 
+    <div id="notifications" class="notifications" aria-live="polite"></div>
+
     <script src="config.js"></script>
-    <script src="app.js" type="module"></script>
+    <script src="app.js"></script>
   </body>
 </html>
