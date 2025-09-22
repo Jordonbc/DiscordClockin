@@ -115,17 +115,6 @@
             <p id="clock-message" class="muted">
               Connect to the backend and sign in to see your current status.
             </p>
-            <div class="shift-summary" data-requires-auth="true" hidden>
-              <label for="clock-out-summary">Clock-out summary</label>
-              <textarea
-                id="clock-out-summary"
-                rows="3"
-                placeholder="Share a quick summary of your progress."
-              ></textarea>
-              <p class="shift-summary__hint muted">
-                This summary is required when clocking out.
-              </p>
-            </div>
             <div class="clock-controls">
               <button id="clock-in" class="button button--primary">
                 Clock in
@@ -339,6 +328,54 @@
           </article>
         </section>
       </main>
+    </div>
+
+    <div
+      id="clockout-modal"
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="clockout-modal-title"
+      hidden
+    >
+      <div class="modal__overlay" data-modal-dismiss></div>
+      <div class="modal__content">
+        <form id="clockout-modal-form" class="modal__form">
+          <header class="modal__header">
+            <h2 id="clockout-modal-title">Clock out</h2>
+            <button
+              type="button"
+              class="modal__close"
+              aria-label="Close"
+              data-modal-dismiss
+            >
+              &times;
+            </button>
+          </header>
+          <div class="modal__body">
+            <p class="modal__description">
+              Share a quick summary of what you accomplished during this shift.
+            </p>
+            <label class="modal__field" for="clock-out-summary">
+              Summary
+              <textarea
+                id="clock-out-summary"
+                rows="4"
+                placeholder="This summary is required before clocking out."
+                required
+              ></textarea>
+            </label>
+          </div>
+          <footer class="modal__footer">
+            <button type="button" class="button button--ghost" data-modal-dismiss>
+              Cancel
+            </button>
+            <button type="submit" class="button button--danger">
+              Submit clock out
+            </button>
+          </footer>
+        </form>
+      </div>
     </div>
 
     <div id="notifications" class="notifications" aria-live="polite"></div>

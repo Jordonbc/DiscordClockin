@@ -44,7 +44,6 @@ const clockState = document.querySelector("#clock-state");
 const clockMessage = document.querySelector("#clock-message");
 const clockInButton = document.querySelector("#clock-in");
 const clockOutButton = document.querySelector("#clock-out");
-const shiftSummaryContainer = document.querySelector(".shift-summary");
 const clockSummaryInput = document.querySelector("#clock-out-summary");
 const refreshMyTimeButton = document.querySelector("#refresh-my-time");
 const myTimeEntries = document.querySelector("#my-time-entries");
@@ -70,8 +69,77 @@ const adminRoleForm = document.querySelector("#admin-role-form");
 
 const notifications = document.querySelector("#notifications");
 
+const clockOutModal = document.querySelector("#clockout-modal");
+const clockOutModalForm = document.querySelector("#clockout-modal-form");
+const clockOutModalDismissButtons = clockOutModal
+  ? Array.from(clockOutModal.querySelectorAll("[data-modal-dismiss]"))
+  : [];
+
 let eventSource = null;
 let eventStreamReconnectTimer = null;
+
+function hasActiveSession() {
+  if (!state.user) return false;
+  if (state.activeSession) return true;
+  return state.userEntries.some((entry) => !entry.end);
+}
+
+function updateClockControlsVisibility() {
+  const authed = Boolean(state.user);
+  const active = authed && hasActiveSession();
+
+  if (clockOutButton) {
+    clockOutButton.hidden = !active;
+    clockOutButton.disabled = !active;
+  }
+
+  if (clockSummaryInput) {
+    clockSummaryInput.disabled = !active;
+    if (!active) {
+      clockSummaryInput.value = "";
+    }
+  }
+
+  if (!active) {
+    closeClockOutModal();
+  }
+}
+
+function handleClockOutModalKeydown(event) {
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeClockOutModal();
+  }
+}
+
+function openClockOutModal() {
+  if (!clockOutModal) return;
+  clockOutModal.hidden = false;
+  if (document.body) {
+    document.body.classList.add("modal-open");
+  }
+  document.addEventListener("keydown", handleClockOutModalKeydown);
+  if (clockSummaryInput) {
+    clockSummaryInput.disabled = false;
+    clockSummaryInput.focus();
+  }
+}
+
+function closeClockOutModal() {
+  if (!clockOutModal || clockOutModal.hidden) return;
+  clockOutModal.hidden = true;
+  if (document.body) {
+    document.body.classList.remove("modal-open");
+  }
+  document.removeEventListener("keydown", handleClockOutModalKeydown);
+  if (clockSummaryInput) {
+    clockSummaryInput.blur();
+    if (!hasActiveSession()) {
+      clockSummaryInput.value = "";
+      clockSummaryInput.disabled = true;
+    }
+  }
+}
 
 function formatDateTime(value) {
   if (!value) return "—";
@@ -653,15 +721,7 @@ function renderAuthState() {
     }
   }
 
-  if (shiftSummaryContainer) {
-    shiftSummaryContainer.hidden = !authed;
-  }
-  if (clockSummaryInput) {
-    clockSummaryInput.disabled = !authed;
-    if (!authed) {
-      clockSummaryInput.value = "";
-    }
-  }
+  updateClockControlsVisibility();
 
   navButtons.forEach((button) => {
     const requiresAuth = button.dataset.requiresAuth === "true";
@@ -742,6 +802,8 @@ function renderHolidayRequests() {
 
 function updateClockStatus() {
   if (!clockState || !clockMessage) return;
+
+  updateClockControlsVisibility();
 
   if (!state.user) {
     clockState.textContent = "Waiting";
@@ -1064,7 +1126,7 @@ function bindEvents() {
   }
 
   if (clockOutButton) {
-    clockOutButton.addEventListener("click", async () => {
+    clockOutButton.addEventListener("click", () => {
       if (!state.user) {
         showToast("Sign in before clocking out.", "info");
         return;
@@ -1072,6 +1134,33 @@ function bindEvents() {
       try {
         ensureGuildConfigured();
       } catch (error) {
+        return;
+      }
+      if (!hasActiveSession()) {
+        showToast("No active shift to clock out from.", "info");
+        return;
+      }
+      openClockOutModal();
+    });
+  }
+
+  if (clockOutModalForm) {
+    clockOutModalForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!state.user) {
+        showToast("Sign in before clocking out.", "info");
+        closeClockOutModal();
+        return;
+      }
+      try {
+        ensureGuildConfigured();
+      } catch (error) {
+        closeClockOutModal();
+        return;
+      }
+      if (!hasActiveSession()) {
+        showToast("No active shift to clock out from.", "info");
+        closeClockOutModal();
         return;
       }
       const summary = clockSummaryInput ? clockSummaryInput.value.trim() : "";
@@ -1097,10 +1186,19 @@ function bindEvents() {
         if (clockSummaryInput) {
           clockSummaryInput.value = "";
         }
+        closeClockOutModal();
         await refreshMyTime();
       } catch (error) {
         // handled globally
       }
+    });
+  }
+
+  if (clockOutModalDismissButtons.length) {
+    clockOutModalDismissButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        closeClockOutModal();
+      });
     });
   }
 
