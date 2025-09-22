@@ -209,16 +209,11 @@
                 Member ID
                 <input name="memberId" placeholder="Discord ID" />
               </label>
-              <label>
-                From
-                <input type="date" name="from" />
-              </label>
-              <label>
-                To
-                <input type="date" name="to" />
-              </label>
+              <p class="form-grid__full muted">
+                Enter a member's Discord ID to load their current timesheet summary.
+              </p>
               <button type="submit" class="button button--primary">
-                Fetch timesheets
+                Fetch timesheet
               </button>
             </form>
             <div class="table-wrapper">
@@ -229,7 +224,7 @@
                     <th scope="col">Start</th>
                     <th scope="col">End</th>
                     <th scope="col">Duration</th>
-                    <th scope="col">Notes</th>
+                    <th scope="col">Status</th>
                   </tr>
                 </thead>
                 <tbody id="admin-timesheet-rows">
@@ -247,23 +242,37 @@
             <h3>Modify logged hours</h3>
             <form id="admin-modify-hours-form" class="form-grid">
               <label>
-                Entry ID
-                <input name="entryId" placeholder="Timesheet entry ID" required />
+                Member ID
+                <input name="memberId" placeholder="Discord ID" required />
               </label>
               <label>
-                New start
-                <input type="datetime-local" name="start" />
+                Hours
+                <input
+                  type="number"
+                  name="hours"
+                  min="0.25"
+                  step="0.25"
+                  placeholder="e.g. 1.5"
+                  required
+                />
               </label>
               <label>
-                New end
-                <input type="datetime-local" name="end" />
+                Scope
+                <select name="scope" required>
+                  <option value="daily">Daily total</option>
+                  <option value="weekly">Weekly total</option>
+                  <option value="total">All-time total</option>
+                </select>
               </label>
               <label>
-                Notes
-                <input name="notes" placeholder="Adjustment reason" />
+                Action
+                <select name="action" required>
+                  <option value="add">Add hours</option>
+                  <option value="remove">Remove hours</option>
+                </select>
               </label>
               <button type="submit" class="button button--primary">
-                Update entry
+                Apply adjustment
               </button>
             </form>
           </article>
@@ -308,23 +317,18 @@
                 <input name="memberId" placeholder="Discord ID" required />
               </label>
               <label>
-                Roles
-                <input
-                  name="roles"
-                  placeholder="comma,separated,roles"
-                  required
-                />
+                Role ID
+                <input name="roleId" placeholder="Backend role identifier" required />
               </label>
               <label>
-                Action
-                <select name="action" required>
-                  <option value="set">Replace existing</option>
-                  <option value="add">Add roles</option>
-                  <option value="remove">Remove roles</option>
-                </select>
+                Experience
+                <input
+                  name="experience"
+                  placeholder="Experience label (optional)"
+                />
               </label>
               <button type="submit" class="button button--primary">
-                Update roles
+                Change role
               </button>
             </form>
           </article>
