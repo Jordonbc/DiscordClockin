@@ -42,12 +42,6 @@
           </button>
         </nav>
         <div class="header-actions">
-          <div class="connection-status">
-            <span class="sr-only">Backend status:</span>
-            <span id="connection-indicator" class="status-pill status-pill--error"
-              >Connecting…</span
-            >
-          </div>
           <div class="auth-controls">
             <button id="login-button" class="button button--primary">
               Login with Discord
@@ -121,6 +115,17 @@
             <p id="clock-message" class="muted">
               Connect to the backend and sign in to see your current status.
             </p>
+            <div class="shift-summary" data-requires-auth="true" hidden>
+              <label for="clock-out-summary">Clock-out summary</label>
+              <textarea
+                id="clock-out-summary"
+                rows="3"
+                placeholder="Share a quick summary of your progress."
+              ></textarea>
+              <p class="shift-summary__hint muted">
+                This summary is required when clocking out.
+              </p>
+            </div>
             <div class="clock-controls">
               <button id="clock-in" class="button button--primary">
                 Clock in

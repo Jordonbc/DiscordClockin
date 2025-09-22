@@ -97,6 +97,7 @@ pub async fn start_shift(
 pub struct EndShiftRequest {
     pub guild_id: String,
     pub user_id: String,
+    pub summary: String,
 }
 
 #[post("/shifts/end")]
@@ -113,6 +114,11 @@ pub async fn end_shift(
     );
 
     let mut workers = repository.get_or_init_workers(&payload.guild_id).await?;
+    let summary_trimmed = payload.summary.trim();
+    if summary_trimmed.is_empty() {
+        return Err(ApiError::Validation("Clock-out summary is required".into()));
+    }
+    let summary = summary_trimmed.to_owned();
     let now = current_timestamp_ms();
 
     {
@@ -124,7 +130,7 @@ pub async fn end_shift(
             return Err(ApiError::Conflict("Worker is not clocked in".into()));
         }
 
-        worker.mark_clock_out(now);
+        worker.mark_clock_out(now, summary.clone());
     }
 
     repository.persist_workers(&workers).await?;

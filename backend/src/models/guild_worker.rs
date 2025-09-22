@@ -51,6 +51,8 @@ pub struct ClockDates {
     pub clock_in: Vec<i64>,
     #[serde(default, rename = "clockOut")]
     pub clock_out: Vec<i64>,
+    #[serde(default, rename = "clockSummary")]
+    pub clock_summary: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -108,12 +110,13 @@ impl WorkerRecord {
         }
     }
 
-    pub fn mark_clock_out(&mut self, timestamp_ms: i64) {
+    pub fn mark_clock_out(&mut self, timestamp_ms: i64, summary: String) {
         self.status = "Offline".to_string();
         self.breaks_count = 0;
         self.worked = Some(0.0);
         self.break_time = 0.0;
         self.clock_dates.clock_out.push(timestamp_ms);
+        self.clock_dates.clock_summary.push(summary);
         self.afk_dates.afk_in.clear();
         self.afk_dates.afk_out.clear();
     }

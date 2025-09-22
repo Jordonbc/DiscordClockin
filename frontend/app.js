@@ -44,6 +44,8 @@ const clockState = document.querySelector("#clock-state");
 const clockMessage = document.querySelector("#clock-message");
 const clockInButton = document.querySelector("#clock-in");
 const clockOutButton = document.querySelector("#clock-out");
+const shiftSummaryContainer = document.querySelector(".shift-summary");
+const clockSummaryInput = document.querySelector("#clock-out-summary");
 const refreshMyTimeButton = document.querySelector("#refresh-my-time");
 const myTimeEntries = document.querySelector("#my-time-entries");
 
@@ -107,7 +109,7 @@ function showToast(message, type = "info") {
 
 function updateConnectionIndicator(status) {
   if (!connectionIndicator) return;
-  const message = status.ok ? "Connected" : status.message || "Offline";
+  const message = status.ok ? "" : status.message || "Offline";
   connectionIndicator.textContent = message;
   if (status.ok) {
     connectionIndicator.title = state.baseUrl
@@ -577,6 +579,16 @@ function renderAuthState() {
     }
   }
 
+  if (shiftSummaryContainer) {
+    shiftSummaryContainer.hidden = !authed;
+  }
+  if (clockSummaryInput) {
+    clockSummaryInput.disabled = !authed;
+    if (!authed) {
+      clockSummaryInput.value = "";
+    }
+  }
+
   navButtons.forEach((button) => {
     const requiresAuth = button.dataset.requiresAuth === "true";
     const requiresRole = button.dataset.requiresRole;
@@ -799,6 +811,10 @@ async function refreshMyTime() {
         start: session.started_at_ms ?? null,
         end: session.ended_at_ms ?? null,
         status: session.ended_at_ms ? "Completed" : "Active",
+        summary:
+          typeof session.summary === "string" && session.summary.trim()
+            ? session.summary.trim()
+            : null,
       }))
       .sort((a, b) => {
         const aTime = a.start ? new Date(a.start).getTime() : 0;
@@ -983,6 +999,14 @@ function bindEvents() {
       } catch (error) {
         return;
       }
+      const summary = clockSummaryInput ? clockSummaryInput.value.trim() : "";
+      if (!summary) {
+        showToast("Add a summary before clocking out.", "info");
+        if (clockSummaryInput) {
+          clockSummaryInput.focus();
+        }
+        return;
+      }
       try {
         await apiRequest({
           path: "shifts/end",
@@ -990,9 +1014,13 @@ function bindEvents() {
           body: {
             guild_id: state.guildId,
             user_id: state.user.id,
+            summary,
           },
         });
         showToast("Clocked out.", "success");
+        if (clockSummaryInput) {
+          clockSummaryInput.value = "";
+        }
         await refreshMyTime();
       } catch (error) {
         // handled globally

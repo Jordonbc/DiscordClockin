@@ -106,17 +106,6 @@ body {
   gap: 1rem;
 }
 
-.connection-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0.8rem;
-  background: rgba(15, 23, 42, 0.75);
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.15);
-  color: var(--text-muted);
-}
-
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -311,6 +300,36 @@ body {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+.shift-summary {
+  display: grid;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.shift-summary label {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.shift-summary textarea {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--text);
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  resize: vertical;
+  min-height: 90px;
+}
+
+.shift-summary textarea:disabled {
+  opacity: 0.6;
+}
+
+.shift-summary__hint {
+  font-size: 0.85rem;
 }
 
 .steps,

@@ -28,10 +28,12 @@ class ApiClient {
     });
   }
 
-  async endShift({ guildId, userId }) {
+  async endShift({ guildId, userId, summary }) {
+    const summaryValue = typeof summary === "string" ? summary.trim() : "";
     return this.#postJson("shifts/end", {
       guild_id: guildId,
       user_id: userId,
+      summary: summaryValue,
     });
   }
 
