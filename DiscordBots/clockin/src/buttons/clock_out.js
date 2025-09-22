@@ -1,9 +1,7 @@
-const { createErrorEmbed, createSuccessEmbed } = require("../utils/embeds");
-const { notifyUserDm } = require("../utils/dm");
-const { getGuildIdFromInteraction, resolveGuildName } = require("../utils/interactions");
+const { createErrorEmbed } = require("../utils/embeds");
+const { getGuildIdFromInteraction } = require("../utils/interactions");
 const { isPrivilegedMember } = require("../utils/permissions");
-const { buildClockedOutView } = require("../views/dmShiftControls");
-const { triggerAvailabilityRefresh } = require("../utils/availabilitySnapshots");
+const { buildClockOutSummaryModal } = require("../views/clockOutSummaryModal");
 
 module.exports = {
   id: "clock_out",
@@ -30,35 +28,11 @@ module.exports = {
         }
       }
 
-      const response = await api.endShift({
+      const modal = buildClockOutSummaryModal({
         guildId,
-        userId: interaction.user.id,
+        origin: interaction.inGuild() ? "guild_button" : "dm_button",
       });
-
-      const guildName = await resolveGuildName(interaction, guildId);
-
-      if (interaction.inGuild()) {
-        const embed = createSuccessEmbed("You are now clocked out. Have a great rest of your day!").addFields({
-          name: "Total worked",
-          value: `${response.worker.total_worked_hours.toFixed(2)}h`,
-        });
-
-        await interaction.reply({ embeds: [embed], ephemeral: true });
-
-        const dmView = buildClockedOutView({
-          guildName,
-          totalWorkedHours: response.worker.total_worked_hours,
-        });
-        await notifyUserDm(interaction, dmView);
-        await triggerAvailabilityRefresh({ client: interaction.client, guildId });
-      } else {
-        const dmView = buildClockedOutView({
-          guildName,
-          totalWorkedHours: response.worker.total_worked_hours,
-        });
-        await interaction.update(dmView);
-        await triggerAvailabilityRefresh({ client: interaction.client, guildId });
-      }
+      await interaction.showModal(modal);
     } catch (error) {
       const embed = createErrorEmbed(error);
       await interaction.reply({ embeds: [embed], ephemeral: true });

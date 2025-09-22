@@ -8,6 +8,8 @@ const {
   buildOnBreakView,
   buildClockedOutView,
 } = require("../views/dmShiftControls");
+const { buildClockOutSummaryModal } = require("../views/clockOutSummaryModal");
+const { buildShiftEmbed } = require("../views/shiftEmbeds");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -182,23 +184,8 @@ async function handleClockOut(interaction, api, guildId) {
     }
   }
 
-  const response = await api.endShift({
-    guildId,
-    userId: interaction.user.id,
-  });
-
-  await interaction.reply({
-    embeds: [buildShiftEmbed("Clocked out", response.worker)],
-    ephemeral: true,
-  });
-
-  const guildName = interaction.guild?.name || "this server";
-  const dmView = buildClockedOutView({
-    guildName,
-    totalWorkedHours: response.worker.total_worked_hours,
-  });
-  await notifyUserDm(interaction, dmView);
-  await triggerAvailabilityRefresh({ client: interaction.client, guildId });
+  const modal = buildClockOutSummaryModal({ guildId, origin: "slash" });
+  await interaction.showModal(modal);
 }
 
 async function handleStatus(interaction, api, guildId) {
@@ -221,26 +208,6 @@ async function replyWithApiError(interaction, error) {
   } else {
     await interaction.reply({ embeds: [embed], ephemeral: true });
   }
-}
-
-function buildShiftEmbed(title, worker) {
-  return new EmbedBuilder()
-    .setTitle(title)
-    .setDescription(`Status: **${worker.status}**`)
-    .addFields(
-      { name: "Breaks taken", value: `${worker.breaks_count}`, inline: true },
-      {
-        name: "Break hours",
-        value: worker.break_time_hours.toFixed(2),
-        inline: true,
-      },
-      {
-        name: "Total worked hours",
-        value: worker.total_worked_hours.toFixed(2),
-        inline: true,
-      }
-    )
-    .setTimestamp(new Date());
 }
 
 function buildTimesheetEmbed(user, data) {
