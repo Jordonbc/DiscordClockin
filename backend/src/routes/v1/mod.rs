@@ -1,3 +1,4 @@
+mod events;
 mod health;
 mod roles;
 mod settings;
@@ -18,6 +19,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .service(shifts::end_shift)
             .service(shifts::start_break)
             .service(shifts::end_break)
+            .service(events::stream_events)
             .service(timesheets::get_timesheet)
             .service(workers::register_worker)
             .service(workers::list_workers)

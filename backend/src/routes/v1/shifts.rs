@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     error::ApiError,
+    events::HookEvent,
     logging::redact_user_id,
     models::{clockins::ClockInMessageDocument, views::WorkerView},
     repository::Repository,
@@ -18,6 +19,8 @@ pub struct StartShiftRequest {
     pub guild_id: String,
     pub user_id: String,
     pub clock_in_message_id: Option<String>,
+    #[serde(default)]
+    pub source: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -34,6 +37,14 @@ pub async fn start_shift(
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
     let payload = payload.into_inner();
+    let event_source = payload.source.as_ref().and_then(|value| {
+        let trimmed = value.trim();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed.to_string())
+        }
+    });
     info!(
         "Starting shift for worker {} in guild {}",
         redact_user_id(&payload.user_id),
@@ -86,11 +97,23 @@ pub async fn start_shift(
         payload.guild_id
     );
 
-    Ok(HttpResponse::Ok().json(ShiftEventResponse {
+    let response = ShiftEventResponse {
         action: "clock_in".into(),
         timestamp_ms: now,
+        worker: worker_view.clone(),
+    };
+
+    state.events.publish(HookEvent {
+        action: "clock_in".into(),
+        guild_id: payload.guild_id,
+        user_id: payload.user_id,
+        timestamp_ms: now,
         worker: worker_view,
-    }))
+        summary: None,
+        source: event_source,
+    });
+
+    Ok(HttpResponse::Ok().json(response))
 }
 
 #[derive(Debug, Deserialize)]
@@ -98,6 +121,8 @@ pub struct EndShiftRequest {
     pub guild_id: String,
     pub user_id: String,
     pub summary: String,
+    #[serde(default)]
+    pub source: Option<String>,
 }
 
 #[post("/shifts/end")]
@@ -107,6 +132,14 @@ pub async fn end_shift(
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
     let payload = payload.into_inner();
+    let event_source = payload.source.as_ref().and_then(|value| {
+        let trimmed = value.trim();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed.to_string())
+        }
+    });
     info!(
         "Ending shift for worker {} in guild {}",
         redact_user_id(&payload.user_id),
@@ -149,17 +182,31 @@ pub async fn end_shift(
         payload.guild_id
     );
 
-    Ok(HttpResponse::Ok().json(ShiftEventResponse {
+    let response = ShiftEventResponse {
         action: "clock_out".into(),
         timestamp_ms: now,
+        worker: worker_view.clone(),
+    };
+
+    state.events.publish(HookEvent {
+        action: "clock_out".into(),
+        guild_id: payload.guild_id,
+        user_id: payload.user_id,
+        timestamp_ms: now,
         worker: worker_view,
-    }))
+        summary: Some(summary),
+        source: event_source,
+    });
+
+    Ok(HttpResponse::Ok().json(response))
 }
 
 #[derive(Debug, Deserialize)]
 pub struct BreakRequest {
     pub guild_id: String,
     pub user_id: String,
+    #[serde(default)]
+    pub source: Option<String>,
 }
 
 #[post("/shifts/break/start")]
@@ -169,6 +216,14 @@ pub async fn start_break(
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
     let payload = payload.into_inner();
+    let event_source = payload.source.as_ref().and_then(|value| {
+        let trimmed = value.trim();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed.to_string())
+        }
+    });
     info!(
         "Starting break for worker {} in guild {}",
         redact_user_id(&payload.user_id),
@@ -205,11 +260,23 @@ pub async fn start_break(
         payload.guild_id
     );
 
-    Ok(HttpResponse::Ok().json(ShiftEventResponse {
+    let response = ShiftEventResponse {
         action: "break_start".into(),
         timestamp_ms: now,
+        worker: worker_view.clone(),
+    };
+
+    state.events.publish(HookEvent {
+        action: "break_start".into(),
+        guild_id: payload.guild_id,
+        user_id: payload.user_id,
+        timestamp_ms: now,
         worker: worker_view,
-    }))
+        summary: None,
+        source: event_source,
+    });
+
+    Ok(HttpResponse::Ok().json(response))
 }
 
 #[post("/shifts/break/end")]
@@ -219,6 +286,14 @@ pub async fn end_break(
 ) -> Result<HttpResponse, ApiError> {
     let repository: Arc<dyn Repository> = state.repository.clone();
     let payload = payload.into_inner();
+    let event_source = payload.source.as_ref().and_then(|value| {
+        let trimmed = value.trim();
+        if trimmed.is_empty() {
+            None
+        } else {
+            Some(trimmed.to_string())
+        }
+    });
     info!(
         "Ending break for worker {} in guild {}",
         redact_user_id(&payload.user_id),
@@ -255,11 +330,23 @@ pub async fn end_break(
         payload.guild_id
     );
 
-    Ok(HttpResponse::Ok().json(ShiftEventResponse {
+    let response = ShiftEventResponse {
         action: "break_end".into(),
         timestamp_ms: now,
+        worker: worker_view.clone(),
+    };
+
+    state.events.publish(HookEvent {
+        action: "break_end".into(),
+        guild_id: payload.guild_id,
+        user_id: payload.user_id,
+        timestamp_ms: now,
         worker: worker_view,
-    }))
+        summary: None,
+        source: event_source,
+    });
+
+    Ok(HttpResponse::Ok().json(response))
 }
 
 fn current_timestamp_ms() -> i64 {

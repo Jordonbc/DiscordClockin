@@ -70,6 +70,9 @@ const adminRoleForm = document.querySelector("#admin-role-form");
 
 const notifications = document.querySelector("#notifications");
 
+let eventSource = null;
+let eventStreamReconnectTimer = null;
+
 function formatDateTime(value) {
   if (!value) return "—";
   const date = new Date(value);
@@ -105,6 +108,77 @@ function showToast(message, type = "info") {
     toast.classList.remove("toast--visible");
     setTimeout(() => toast.remove(), 250);
   }, 4500);
+}
+
+function disconnectEventStream() {
+  if (eventSource) {
+    eventSource.close();
+    eventSource = null;
+  }
+  if (eventStreamReconnectTimer) {
+    clearTimeout(eventStreamReconnectTimer);
+    eventStreamReconnectTimer = null;
+  }
+}
+
+function scheduleEventStreamReconnect(delayMs = 5000) {
+  if (eventStreamReconnectTimer) {
+    return;
+  }
+  eventStreamReconnectTimer = setTimeout(() => {
+    eventStreamReconnectTimer = null;
+    connectEventStream();
+  }, Math.max(1000, delayMs));
+}
+
+function connectEventStream() {
+  if (typeof EventSource === "undefined") {
+    return;
+  }
+
+  if (!state.baseUrl || !state.guildId) {
+    disconnectEventStream();
+    return;
+  }
+
+  const url = new URL("events/stream", state.baseUrl);
+  url.searchParams.set("guild_id", state.guildId);
+  url.searchParams.set("event", "clock_in,clock_out");
+
+  disconnectEventStream();
+
+  eventSource = new EventSource(url.toString());
+  eventSource.onmessage = (event) => {
+    if (!event?.data) return;
+    try {
+      const payload = JSON.parse(event.data);
+      handleHookEvent(payload);
+    } catch (error) {
+      console.warn("Failed to parse hook event payload", error);
+    }
+  };
+  eventSource.onerror = () => {
+    disconnectEventStream();
+    scheduleEventStreamReconnect();
+  };
+}
+
+function handleHookEvent(event) {
+  if (!event || typeof event !== "object") return;
+  if (event.guild_id && state.guildId && event.guild_id !== state.guildId) {
+    return;
+  }
+
+  if (event.source === "web_app") {
+    return;
+  }
+
+  const isSelf = state.user && event.user_id === state.user.id;
+  if (!isSelf) {
+    return;
+  }
+
+  refreshMyTime().catch(() => {});
 }
 
 function updateConnectionIndicator(status) {
@@ -978,6 +1052,7 @@ function bindEvents() {
           body: {
             guild_id: state.guildId,
             user_id: state.user.id,
+            source: "web_app",
           },
         });
         showToast("Clocked in.", "success");
@@ -1015,6 +1090,7 @@ function bindEvents() {
             guild_id: state.guildId,
             user_id: state.user.id,
             summary,
+            source: "web_app",
           },
         });
         showToast("Clocked out.", "success");
@@ -1216,6 +1292,7 @@ function initialize() {
   configureBaseUrl();
   configureDiscordLogin();
   configureGuild();
+  connectEventStream();
   if (!state.baseUrl) {
     showToast("Backend connection is not configured.", "error");
   }
