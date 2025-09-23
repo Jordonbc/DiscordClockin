@@ -28,6 +28,20 @@
           </button>
           <button
             class="main-nav__link"
+            data-view-button="time-clock"
+            data-requires-auth="true"
+          >
+            Time clock
+          </button>
+          <button
+            class="main-nav__link"
+            data-view-button="hours-report"
+            data-requires-auth="true"
+          >
+            Hours report
+          </button>
+          <button
+            class="main-nav__link"
             data-view-button="my-time"
             data-requires-auth="true"
           >
@@ -102,38 +116,317 @@
 
       <main class="main-content">
         <section class="view view--active" data-view="home">
-          <div class="hero">
-            <h2>Welcome to the ClockIn portal</h2>
-            <p>
-              Track your day, request time off, and keep your team informed – all
-              in one place.
-            </p>
-            <div class="hero__actions">
-              <button class="button button--primary" data-hero-action="login">
-                Get started
-              </button>
+          <header class="dashboard-header">
+            <div class="dashboard-header__copy">
+              <p class="dashboard-header__eyebrow">Dashboard</p>
+              <h2 id="dashboard-greeting">Welcome to the ClockIn portal</h2>
+              <p id="dashboard-subtitle">
+                Track your day, request time off, and keep your team informed – all
+                in one place.
+              </p>
+            </div>
+            <div class="dashboard-header__actions">
               <button class="button button--ghost" data-view-jump="my-time">
                 View my time
               </button>
+              <button class="button button--primary" data-hero-action="login">
+                Get started
+              </button>
             </div>
+          </header>
+
+          <div class="dashboard-grid">
+            <section class="dashboard-main">
+              <div class="stat-grid">
+                <article class="stat-card stat-card--clock">
+                  <header class="stat-card__header">
+                    <p class="stat-card__label">Time clock</p>
+                    <span
+                      id="dashboard-clock-status"
+                      class="status-pill status-pill--idle"
+                      >Waiting</span
+                    >
+                  </header>
+                  <p id="dashboard-clock-message" class="stat-card__value">
+                    Sign in to manage your shift.
+                  </p>
+                  <button class="button button--primary button--small" data-view-jump="my-time">
+                    Manage shift
+                  </button>
+                </article>
+                <article class="stat-card">
+                  <p class="stat-card__label">Today's hours</p>
+                  <p id="dashboard-daily-hours" class="stat-card__value">0h 00m</p>
+                  <p class="stat-card__hint">Includes active session time.</p>
+                </article>
+                <article class="stat-card">
+                  <p class="stat-card__label">This week</p>
+                  <p id="dashboard-weekly-hours" class="stat-card__value">0h 00m</p>
+                  <p class="stat-card__hint">Resets Monday at midnight.</p>
+                </article>
+                <article class="stat-card">
+                  <p class="stat-card__label">Break balance</p>
+                  <p id="dashboard-break-hours" class="stat-card__value">0h 00m</p>
+                  <p class="stat-card__hint">Tracked across your shifts.</p>
+                </article>
+              </div>
+
+              <article class="panel">
+                <div class="panel__header">
+                  <h3>Recent activity</h3>
+                  <button class="button button--ghost button--small" data-view-jump="my-time">
+                    Open detailed log
+                  </button>
+                </div>
+                <ul id="dashboard-activity" class="activity-list">
+                  <li class="activity-list__empty muted">Sign in to see your latest updates.</li>
+                </ul>
+              </article>
+            </section>
+
+            <aside class="dashboard-sidebar">
+              <article class="panel panel--compact">
+                <h3>Quick actions</h3>
+                <ul class="quick-actions">
+                  <li>
+                    <button class="quick-actions__button" data-view-jump="my-time">
+                      <span class="quick-actions__icon">🕒</span>
+                      <div>
+                        <p class="quick-actions__title">Clock in / out</p>
+                        <p class="quick-actions__hint">Jump to your live shift controls.</p>
+                      </div>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="quick-actions__button" data-view-jump="hours-report">
+                      <span class="quick-actions__icon">📈</span>
+                      <div>
+                        <p class="quick-actions__title">Hours report</p>
+                        <p class="quick-actions__hint">Analyze totals and daily trends.</p>
+                      </div>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="quick-actions__button" data-view-jump="my-time">
+                      <span class="quick-actions__icon">🗓️</span>
+                      <div>
+                        <p class="quick-actions__title">Request holiday</p>
+                        <p class="quick-actions__hint">Send dates without leaving the dashboard.</p>
+                      </div>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="quick-actions__button" data-view-jump="admin" data-requires-role="admin">
+                      <span class="quick-actions__icon">🛠️</span>
+                      <div>
+                        <p class="quick-actions__title">Admin tools</p>
+                        <p class="quick-actions__hint">Review timesheets and manage roles.</p>
+                      </div>
+                    </button>
+                  </li>
+                </ul>
+              </article>
+
+              <article class="panel panel--compact">
+                <h3>Payroll snapshot</h3>
+                <div class="payroll-card">
+                  <div class="payroll-card__row">
+                    <span class="payroll-card__label">Hourly rate</span>
+                    <span id="dashboard-payroll-rate" class="payroll-card__value">—</span>
+                  </div>
+                  <div class="payroll-card__row">
+                    <span class="payroll-card__label">Weekly projection</span>
+                    <span id="dashboard-payroll-weekly" class="payroll-card__value">—</span>
+                  </div>
+                  <div class="payroll-card__row">
+                    <span class="payroll-card__label">All-time total</span>
+                    <span id="dashboard-payroll-total" class="payroll-card__value">—</span>
+                  </div>
+                  <p id="dashboard-payroll-note" class="payroll-card__note muted">
+                    Add your hourly rate in Discord to calculate payroll estimates.
+                  </p>
+                </div>
+              </article>
+            </aside>
           </div>
-          <div class="home-grid">
-            <article class="panel">
-              <h3>How it works</h3>
-              <ol class="steps">
-                <li>Connect with Discord to verify your identity.</li>
-                <li>Clock in and out as you begin and end work.</li>
-                <li>Submit holiday requests directly to your managers.</li>
-                <li>Admins review, approve, and keep everyone on track.</li>
-              </ol>
+        </section>
+
+        <section class="view" data-view="time-clock" data-requires-auth="true">
+          <header class="view-header">
+            <h2>Time clock</h2>
+            <p>Track your working hours with precision time and break management.</p>
+          </header>
+
+          <div class="time-clock-layout">
+            <div class="time-clock-main">
+              <article class="time-clock-card">
+                <div class="time-clock-card__header">
+                  <h3>Current time</h3>
+                  <span id="time-clock-status" class="status-pill status-pill--idle"
+                    >Waiting</span
+                  >
+                </div>
+                <p id="time-clock-display" class="time-clock-card__time">--:--:--</p>
+                <p id="time-clock-date" class="time-clock-card__date"></p>
+                <p id="time-clock-message" class="time-clock-card__message">
+                  Sign in to start tracking your hours.
+                </p>
+                <button id="time-clock-action" class="button button--primary">
+                  Sign in with Discord
+                </button>
+              </article>
+
+              <article class="panel">
+                <div class="panel__header">
+                  <h3>Today's sessions</h3>
+                  <button class="button button--ghost button--small" data-view-jump="my-time">
+                    View full history
+                  </button>
+                </div>
+                <ul id="time-clock-sessions" class="time-clock-session-list">
+                  <li class="muted">No time entries for today yet.</li>
+                </ul>
+              </article>
+            </div>
+
+            <aside class="time-clock-sidebar">
+              <article class="panel panel--compact time-clock-summary">
+                <h3>Today's summary</h3>
+                <p id="time-clock-summary-total" class="time-clock-summary__total">
+                  0.0h total working hours
+                </p>
+                <dl class="time-clock-summary__details">
+                  <div>
+                    <dt>Sessions</dt>
+                    <dd id="time-clock-summary-sessions">0</dd>
+                  </div>
+                  <div>
+                    <dt>Break time</dt>
+                    <dd id="time-clock-summary-break">0h 00m</dd>
+                  </div>
+                  <div>
+                    <dt>Overtime</dt>
+                    <dd id="time-clock-summary-overtime">0h 00m</dd>
+                  </div>
+                </dl>
+              </article>
+
+              <article class="panel panel--compact">
+                <h3>Quick actions</h3>
+                <ul class="quick-actions quick-actions--stacked">
+                  <li>
+                    <button class="quick-actions__button" data-view-jump="my-time">
+                      <span class="quick-actions__icon">📊</span>
+                      <div>
+                        <p class="quick-actions__title">Shift controls</p>
+                        <p class="quick-actions__hint">Jump straight to clock in and out.</p>
+                      </div>
+                    </button>
+                  </li>
+                  <li>
+                    <button class="quick-actions__button" data-view-jump="hours-report">
+                      <span class="quick-actions__icon">📈</span>
+                      <div>
+                        <p class="quick-actions__title">View hours report</p>
+                        <p class="quick-actions__hint">Review totals and recent sessions.</p>
+                      </div>
+                    </button>
+                  </li>
+                </ul>
+              </article>
+
+              <article class="panel panel--compact time-clock-tips">
+                <h3>Tips</h3>
+                <ul class="time-clock-tips__list">
+                  <li>Take regular breaks to stay energized throughout your shift.</li>
+                  <li>Use quick actions for fast access to reports and dashboards.</li>
+                  <li>Add short summaries when clocking out to improve records.</li>
+                </ul>
+              </article>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" data-view="hours-report" data-requires-auth="true">
+          <header class="view-header report-header">
+            <div class="report-header__copy">
+              <p class="report-header__eyebrow">Reports</p>
+              <h2>Hours report</h2>
+              <p>View and analyze your time tracking data.</p>
+            </div>
+            <div class="report-header__actions">
+              <div class="report-range" role="group" aria-label="Report range">
+                <button
+                  class="report-range__button is-active"
+                  type="button"
+                  data-report-range="weekly"
+                >
+                  Weekly
+                </button>
+                <button
+                  class="report-range__button"
+                  type="button"
+                  data-report-range="monthly"
+                >
+                  Monthly
+                </button>
+                <button
+                  class="report-range__button"
+                  type="button"
+                  data-report-range="yearly"
+                >
+                  Yearly
+                </button>
+              </div>
+              <div class="report-header__meta">
+                <span id="hours-report-range" class="report-header__range">—</span>
+                <button id="hours-report-export" class="button button--ghost" type="button">
+                  <span aria-hidden="true">⬇️</span>
+                  Export CSV
+                </button>
+              </div>
+            </div>
+          </header>
+
+          <div class="report-summary-grid">
+            <article class="report-summary-card report-summary-card--primary">
+              <p class="report-summary-card__label">Total hours</p>
+              <p id="hours-report-total" class="report-summary-card__value">0.0h</p>
+              <p class="report-summary-card__hint">Logged in this period</p>
             </article>
+            <article class="report-summary-card">
+              <p class="report-summary-card__label">Break time</p>
+              <p id="hours-report-break" class="report-summary-card__value">0.0h</p>
+              <p class="report-summary-card__hint">Recorded downtime</p>
+            </article>
+            <article class="report-summary-card">
+              <p class="report-summary-card__label">Sessions</p>
+              <p id="hours-report-sessions" class="report-summary-card__value">0</p>
+              <p class="report-summary-card__hint">Completed in range</p>
+            </article>
+            <article class="report-summary-card">
+              <p class="report-summary-card__label">Average/day</p>
+              <p id="hours-report-average" class="report-summary-card__value">0.0h</p>
+              <p class="report-summary-card__hint">Based on active days</p>
+            </article>
+          </div>
+
+          <div class="report-content-grid">
             <article class="panel">
-              <h3>Why teams choose ClockIn</h3>
-              <ul class="benefits">
-                <li>Clear visibility into active shifts and attendance.</li>
-                <li>Automated timesheets ready for export.</li>
-                <li>Role-based access so everyone sees the right tools.</li>
-                <li>Holiday approval flows that keep communication in Discord.</li>
+              <div class="panel__header">
+                <h3>Daily breakdown</h3>
+              </div>
+              <ul id="hours-report-daily" class="report-breakdown">
+                <li class="report-breakdown__empty muted">Sign in to view your tracked hours.</li>
+              </ul>
+            </article>
+
+            <article class="panel panel--compact">
+              <div class="panel__header">
+                <h3>Recent sessions</h3>
+              </div>
+              <ul id="hours-report-recent" class="report-session-list">
+                <li class="report-session-list__empty muted">Sign in to load your recent sessions.</li>
               </ul>
             </article>
           </div>
