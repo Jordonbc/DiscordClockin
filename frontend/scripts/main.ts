@@ -1,121 +1,111 @@
-const config = window.CLOCKIN_FRONTEND_CONFIG || {};
-const DEFAULT_DISCORD_AUTHORIZE_URL = "https://discord.com/api/oauth2/authorize";
-const DISCORD_USER_API_URL = "https://discord.com/api/users/@me";
-const DISCORD_STORAGE_KEY = "clockin.discordSession";
-const DISCORD_OAUTH_STATE_KEY = "clockin.discordOAuthState";
+import {
+  DEFAULT_DISCORD_AUTHORIZE_URL,
+  DISCORD_OAUTH_STATE_KEY,
+  DISCORD_STORAGE_KEY,
+  DISCORD_USER_API_URL,
+} from "./constants.js";
+import { getRuntimeConfig } from "./runtimeConfig.js";
+import { state } from "./state.js";
 
-const state = {
-  baseUrl: "",
-  guildId: "",
-  discordAuthorizeUrl: DEFAULT_DISCORD_AUTHORIZE_URL,
-  discordClientId: "",
-  discordRedirectUri: "",
-  discordScopes: ["identify"],
-  adminUserIds: [],
-  discordToken: null,
-  user: null,
-  workerProfile: null,
-  activeSession: null,
-  timeMetrics: null,
-  workerError: null,
-  userEntries: [],
-  userHolidays: [],
-  adminTimesheets: [],
-  adminTimesheetWorker: null,
-  adminTimesheetMemberId: null,
-  adminHolidayRequests: [],
-  payroll: null,
-  hoursReportRange: "weekly",
-};
+const config = getRuntimeConfig();
 
-const navButtons = Array.from(document.querySelectorAll("[data-view-button]"));
-const views = Array.from(document.querySelectorAll(".view"));
-const viewJumpButtons = document.querySelectorAll("[data-view-jump]");
-const heroLoginButton = document.querySelector("[data-hero-action='login']");
+function query<T extends Element = HTMLElement>(selector: string): T | null {
+  return document.querySelector(selector) as T | null;
+}
 
-const connectionIndicator = document.querySelector("#connection-indicator");
+function queryAll<T extends Element = HTMLElement>(selector: string): T[] {
+  return Array.from(document.querySelectorAll(selector) as NodeListOf<T>);
+}
 
-const loginButton = document.querySelector("#login-button");
-const userMenu = document.querySelector("#user-menu");
-const userMenuButton = document.querySelector("#user-menu-button");
-const userMenuDropdown = document.querySelector("#user-menu-dropdown");
-const userMenuProfile = document.querySelector("[data-user-menu-action='profile']");
-const userMenuAdmin = document.querySelector("#user-menu-admin");
-const logoutButton = document.querySelector("#logout-button");
-const userName = document.querySelector("#user-name");
-const userRoles = document.querySelector("#user-roles");
-const userAvatar = document.querySelector("#user-avatar");
+interface ApiRequestOptions {
+  path: string;
+  method?: string;
+  body?: unknown;
+  expectJson?: boolean;
+  silent?: boolean;
+}
 
-const clockState = document.querySelector("#clock-state");
-const clockMessage = document.querySelector("#clock-message");
-const clockInButton = document.querySelector("#clock-in");
-const clockOutButton = document.querySelector("#clock-out");
-const clockSummaryInput = document.querySelector("#clock-out-summary");
-const refreshMyTimeButton = document.querySelector("#refresh-my-time");
-const myTimeEntries = document.querySelector("#my-time-entries");
+const navButtons = queryAll<HTMLElement>("[data-view-button]");
+const views = queryAll<HTMLElement>(".view");
+const viewJumpButtons = document.querySelectorAll<HTMLElement>("[data-view-jump]");
+const heroLoginButton = query<HTMLElement>("[data-hero-action='login']");
 
-const holidayForm = document.querySelector("#holiday-form");
-const refreshHolidaysButton = document.querySelector("#refresh-holidays");
-const holidayList = document.querySelector("#holiday-list");
+const connectionIndicator = query<HTMLElement>("#connection-indicator");
 
-const adminTimesheetForm = document.querySelector("#admin-timesheet-form");
-const adminTimesheetRows = document.querySelector("#admin-timesheet-rows");
-const refreshAdminTimesheets = document.querySelector(
-  "#refresh-admin-timesheets",
-);
-const adminModifyHoursForm = document.querySelector(
-  "#admin-modify-hours-form",
-);
+const loginButton = query<HTMLButtonElement>("#login-button");
+const userMenu = query<HTMLElement>("#user-menu");
+const userMenuButton = query<HTMLButtonElement>("#user-menu-button");
+const userMenuDropdown = query<HTMLElement>("#user-menu-dropdown");
+const userMenuProfile = query<HTMLElement>("[data-user-menu-action='profile']");
+const userMenuAdmin = query<HTMLElement>("#user-menu-admin");
+const logoutButton = query<HTMLButtonElement>("#logout-button");
+const userName = query<HTMLElement>("#user-name");
+const userRoles = query<HTMLElement>("#user-roles");
+const userAvatar = query<HTMLImageElement>("#user-avatar");
 
-const adminHolidayList = document.querySelector("#admin-holiday-requests");
-const refreshAdminHolidays = document.querySelector("#refresh-admin-holidays");
-const adminHolidayForm = document.querySelector("#admin-holiday-form");
+const clockState = query<HTMLElement>("#clock-state");
+const clockMessage = query<HTMLElement>("#clock-message");
+const clockInButton = query<HTMLButtonElement>("#clock-in");
+const clockOutButton = query<HTMLButtonElement>("#clock-out");
+const clockSummaryInput = query<HTMLTextAreaElement>("#clock-out-summary");
+const refreshMyTimeButton = query<HTMLButtonElement>("#refresh-my-time");
+const myTimeEntries = query<HTMLElement>("#my-time-entries");
 
-const adminRoleForm = document.querySelector("#admin-role-form");
+const holidayForm = query<HTMLFormElement>("#holiday-form");
+const refreshHolidaysButton = query<HTMLButtonElement>("#refresh-holidays");
+const holidayList = query<HTMLElement>("#holiday-list");
 
-const notifications = document.querySelector("#notifications");
+const adminTimesheetForm = query<HTMLFormElement>("#admin-timesheet-form");
+const adminTimesheetRows = query<HTMLElement>("#admin-timesheet-rows");
+const refreshAdminTimesheets = query<HTMLButtonElement>("#refresh-admin-timesheets");
+const adminModifyHoursForm = query<HTMLFormElement>("#admin-modify-hours-form");
 
-const dashboardGreeting = document.querySelector("#dashboard-greeting");
-const dashboardSubtitle = document.querySelector("#dashboard-subtitle");
-const dashboardClockStatus = document.querySelector("#dashboard-clock-status");
-const dashboardClockMessage = document.querySelector("#dashboard-clock-message");
-const dashboardDailyHours = document.querySelector("#dashboard-daily-hours");
-const dashboardWeeklyHours = document.querySelector("#dashboard-weekly-hours");
-const dashboardBreakHours = document.querySelector("#dashboard-break-hours");
-const dashboardActivity = document.querySelector("#dashboard-activity");
-const dashboardPayrollRate = document.querySelector("#dashboard-payroll-rate");
-const dashboardPayrollWeekly = document.querySelector("#dashboard-payroll-weekly");
-const dashboardPayrollTotal = document.querySelector("#dashboard-payroll-total");
-const dashboardPayrollNote = document.querySelector("#dashboard-payroll-note");
+const adminHolidayList = query<HTMLElement>("#admin-holiday-requests");
+const refreshAdminHolidays = query<HTMLButtonElement>("#refresh-admin-holidays");
+const adminHolidayForm = query<HTMLFormElement>("#admin-holiday-form");
 
-const timeClockStatusBadge = document.querySelector("#time-clock-status");
-const timeClockDisplay = document.querySelector("#time-clock-display");
-const timeClockDate = document.querySelector("#time-clock-date");
-const timeClockMessage = document.querySelector("#time-clock-message");
-const timeClockActionButton = document.querySelector("#time-clock-action");
-const timeClockSummaryTotal = document.querySelector("#time-clock-summary-total");
-const timeClockSummarySessions = document.querySelector("#time-clock-summary-sessions");
-const timeClockSummaryBreak = document.querySelector("#time-clock-summary-break");
-const timeClockSummaryOvertime = document.querySelector("#time-clock-summary-overtime");
-const timeClockSessionsList = document.querySelector("#time-clock-sessions");
+const adminRoleForm = query<HTMLFormElement>("#admin-role-form");
 
-const hoursReportRangeButtons = Array.from(
-  document.querySelectorAll("[data-report-range]"),
-);
-const hoursReportRangeLabel = document.querySelector("#hours-report-range");
-const hoursReportTotal = document.querySelector("#hours-report-total");
-const hoursReportBreak = document.querySelector("#hours-report-break");
-const hoursReportSessions = document.querySelector("#hours-report-sessions");
-const hoursReportAverage = document.querySelector("#hours-report-average");
-const hoursReportDailyList = document.querySelector("#hours-report-daily");
-const hoursReportRecentList = document.querySelector("#hours-report-recent");
-const hoursReportExportButton = document.querySelector("#hours-report-export");
+const notifications = query<HTMLElement>("#notifications");
 
+const dashboardGreeting = query<HTMLElement>("#dashboard-greeting");
+const dashboardSubtitle = query<HTMLElement>("#dashboard-subtitle");
+const dashboardClockStatus = query<HTMLElement>("#dashboard-clock-status");
+const dashboardClockMessage = query<HTMLElement>("#dashboard-clock-message");
+const dashboardDailyHours = query<HTMLElement>("#dashboard-daily-hours");
+const dashboardWeeklyHours = query<HTMLElement>("#dashboard-weekly-hours");
+const dashboardBreakHours = query<HTMLElement>("#dashboard-break-hours");
+const dashboardActivity = query<HTMLElement>("#dashboard-activity");
+const dashboardPayrollRate = query<HTMLElement>("#dashboard-payroll-rate");
+const dashboardPayrollWeekly = query<HTMLElement>("#dashboard-payroll-weekly");
+const dashboardPayrollTotal = query<HTMLElement>("#dashboard-payroll-total");
+const dashboardPayrollNote = query<HTMLElement>("#dashboard-payroll-note");
 
-const clockOutModal = document.querySelector("#clockout-modal");
-const clockOutModalForm = document.querySelector("#clockout-modal-form");
+const timeClockStatusBadge = query<HTMLElement>("#time-clock-status");
+const timeClockDisplay = query<HTMLElement>("#time-clock-display");
+const timeClockDate = query<HTMLElement>("#time-clock-date");
+const timeClockMessage = query<HTMLElement>("#time-clock-message");
+const timeClockActionButton = query<HTMLButtonElement>("#time-clock-action");
+const timeClockSummaryTotal = query<HTMLElement>("#time-clock-summary-total");
+const timeClockSummarySessions = query<HTMLElement>("#time-clock-summary-sessions");
+const timeClockSummaryBreak = query<HTMLElement>("#time-clock-summary-break");
+const timeClockSummaryOvertime = query<HTMLElement>("#time-clock-summary-overtime");
+const timeClockSessionsList = query<HTMLElement>("#time-clock-sessions");
+
+const hoursReportRangeButtons = queryAll<HTMLButtonElement>("[data-report-range]");
+const hoursReportRangeLabel = query<HTMLElement>("#hours-report-range");
+const hoursReportTotal = query<HTMLElement>("#hours-report-total");
+const hoursReportBreak = query<HTMLElement>("#hours-report-break");
+const hoursReportSessions = query<HTMLElement>("#hours-report-sessions");
+const hoursReportAverage = query<HTMLElement>("#hours-report-average");
+const hoursReportDailyList = query<HTMLElement>("#hours-report-daily");
+const hoursReportRecentList = query<HTMLElement>("#hours-report-recent");
+const hoursReportExportButton = query<HTMLButtonElement>("#hours-report-export");
+
+const clockOutModal = query<HTMLElement>("#clockout-modal");
+const clockOutModalForm = query<HTMLFormElement>("#clockout-modal-form");
 const clockOutModalDismissButtons = clockOutModal
-  ? Array.from(clockOutModal.querySelectorAll("[data-modal-dismiss]"))
+  ? Array.from(clockOutModal.querySelectorAll<HTMLButtonElement>("[data-modal-dismiss]"))
   : [];
 
 let eventSource = null;
@@ -213,10 +203,14 @@ function formatDateTime(value) {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  const options: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  };
+  return date.toLocaleString(undefined, options);
 }
 
 function formatDuration(start, end) {
@@ -267,7 +261,7 @@ function formatDecimalHours(hours) {
 function formatTimeRange(start, end) {
   const startDate = start ? new Date(start) : null;
   const endDate = end ? new Date(end) : null;
-  const options = { hour: "numeric", minute: "2-digit" };
+  const options: Intl.DateTimeFormatOptions = { hour: "numeric", minute: "2-digit" };
   const startText =
     startDate && !Number.isNaN(startDate.getTime())
       ? startDate.toLocaleTimeString(undefined, options)
@@ -324,8 +318,8 @@ function formatReportRangeLabel(start, end) {
   if (!(end instanceof Date) || Number.isNaN(end.getTime())) return "—";
 
   const inclusiveEnd = new Date(end.getTime() - 1);
-  const startOptions = { month: "short", day: "numeric" };
-  const endOptions = { month: "short", day: "numeric", year: "numeric" };
+  const startOptions: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  const endOptions: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" };
 
   if (start.getFullYear() !== inclusiveEnd.getFullYear()) {
     startOptions.year = "numeric";
@@ -387,19 +381,21 @@ function buildDailyBreakdown(entries, start, end) {
 
 function updateTimeClockTicker() {
   if (timeClockDisplay) {
-    timeClockDisplay.textContent = new Date().toLocaleTimeString(undefined, {
+    const timeOptions: Intl.DateTimeFormatOptions = {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
-    });
+    };
+    timeClockDisplay.textContent = new Date().toLocaleTimeString(undefined, timeOptions);
   }
   if (timeClockDate) {
-    timeClockDate.textContent = new Date().toLocaleDateString(undefined, {
+    const dateOptions: Intl.DateTimeFormatOptions = {
       weekday: "long",
       month: "long",
       day: "numeric",
       year: "numeric",
-    });
+    };
+    timeClockDate.textContent = new Date().toLocaleDateString(undefined, dateOptions);
   }
 }
 
@@ -1161,7 +1157,7 @@ function extractTokenFromHash() {
   };
 }
 
-function clearDiscordSession(options = {}) {
+function clearDiscordSession(options: { skipStorage?: boolean } = {}) {
   state.discordToken = null;
   state.user = null;
   if (!options.skipStorage) {
@@ -1270,22 +1266,25 @@ async function apiRequest({
   body,
   expectJson = true,
   silent = false,
-}) {
+}: ApiRequestOptions) {
   requireBaseUrl();
   const sanitizedPath = typeof path === "string" ? path.replace(/^\/+/, "") : "";
   const url = new URL(sanitizedPath, state.baseUrl);
-  const options = {
+  const options: RequestInit & { headers: Record<string, string> } = {
     method,
     headers: { Accept: "application/json" },
     credentials: "include",
   };
-  if (body && method !== "GET") {
+  if (body !== undefined && method !== "GET") {
     options.body = JSON.stringify(body);
     options.headers["Content-Type"] = "application/json";
   }
 
   try {
-    const response = await fetch(url, options);
+    const response = await fetch(url, {
+      ...options,
+      credentials: "include",
+    });
     const contentType = response.headers.get("content-type") || "";
     const isJson = expectJson && contentType.includes("application/json");
     const data = isJson ? await response.json() : await response.text();
@@ -1297,7 +1296,7 @@ async function apiRequest({
           : typeof data === "string"
           ? data
           : "Request failed";
-      const error = new Error(message || "Request failed");
+      const error: any = new Error(message || "Request failed");
       error.status = response.status;
       error.data = data;
       throw error;
@@ -1305,7 +1304,7 @@ async function apiRequest({
 
     updateConnectionIndicator({ ok: true });
     return data;
-  } catch (error) {
+  } catch (error: any) {
     const message =
       error instanceof Error ? error.message : "Unable to reach the backend";
     if (error && typeof error === "object" && "status" in error) {
@@ -1737,7 +1736,7 @@ async function refreshHolidays() {
   renderHolidayRequests();
 }
 
-async function loadAdminTimesheets(memberId) {
+async function loadAdminTimesheets(memberId?: string) {
   if (!canAccessAdmin()) return;
 
   if (typeof memberId === "string") {
@@ -1986,7 +1985,7 @@ function bindEvents() {
         return;
       }
       const formData = new FormData(adminTimesheetForm);
-      const memberId = (formData.get("memberId") || "").trim();
+      const memberId = String(formData.get("memberId") ?? "").trim();
       if (!memberId) {
         state.adminTimesheetMemberId = null;
         state.adminTimesheets = [];
@@ -2022,10 +2021,10 @@ function bindEvents() {
         return;
       }
       const formData = new FormData(adminModifyHoursForm);
-      const memberId = (formData.get("memberId") || "").trim();
+      const memberId = String(formData.get("memberId") ?? "").trim();
       const hours = Number(formData.get("hours"));
-      const scope = (formData.get("scope") || "").toString().toLowerCase();
-      const action = (formData.get("action") || "add").toString().toLowerCase();
+      const scope = String(formData.get("scope") ?? "").toLowerCase();
+      const action = String(formData.get("action") ?? "add").toLowerCase();
 
       if (!memberId) {
         showToast("Provide a member ID.", "error");
@@ -2089,9 +2088,9 @@ function bindEvents() {
       } catch (error) {
         return;
       }
-      const memberId = (formData.get("memberId") || "").trim();
-      const roleId = (formData.get("roleId") || "").trim();
-      const experience = (formData.get("experience") || "").trim();
+      const memberId = String(formData.get("memberId") ?? "").trim();
+      const roleId = String(formData.get("roleId") ?? "").trim();
+      const experience = String(formData.get("experience") ?? "").trim();
 
       if (!memberId || !roleId) {
         showToast("Provide both a member ID and role ID.", "error");

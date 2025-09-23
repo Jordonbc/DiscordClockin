@@ -7,13 +7,16 @@ touching Postman or cURL.
 
 ## Configuration
 
-1. Copy `config.example.js` to `config.js` (or edit the existing file) and set
+1. Copy `config.example.ts` to `config.ts` (or edit the existing file) and set
    `apiBaseUrl` to the full URL of your backend, e.g.
    `https://clockin.example.com/api` or `http://localhost:3000`.
-2. Redeploy or refresh the page after updating the configuration.
+2. Run `npm install` followed by `npm run build` to compile the TypeScript
+   sources under `scripts/` and the runtime configuration into `dist/`.
+3. Redeploy or refresh the page after updating the configuration.
 
-The file is loaded as a regular script tag so you can also replace it with your
-own build step that injects environment-specific values.
+The build step emits ES modules into `dist/`. You can integrate the compile
+step into your existing deployment tooling or run `npm run watch` during local
+development for automatic rebuilds.
 
 ## Running locally or hosting
 
