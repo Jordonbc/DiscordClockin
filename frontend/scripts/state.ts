@@ -23,4 +23,10 @@ export const state: AppState = {
   adminHolidayRequests: [],
   payroll: null,
   hoursReportRange: "weekly",
+  hoursReportReference: (() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    today.setDate(today.getDate() - today.getDay());
+    return today.getTime();
+  })(),
 };

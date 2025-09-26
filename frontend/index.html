@@ -355,36 +355,79 @@
               <p>View and analyze your time tracking data.</p>
             </div>
             <div class="report-header__actions">
-              <div class="report-range" role="group" aria-label="Report range">
+              <div class="report-range-picker" data-range-selector>
                 <button
-                  class="report-range__button is-active"
+                  id="hours-report-picker-toggle"
+                  class="report-range-picker__toggle"
                   type="button"
-                  data-report-range="weekly"
+                  aria-haspopup="dialog"
+                  aria-expanded="false"
+                  aria-controls="hours-report-picker-panel"
                 >
-                  Weekly
+                  <span id="hours-report-range-type" class="report-range-picker__type">Weekly</span>
+                  <span id="hours-report-range" class="report-range-picker__value">—</span>
+                  <span class="report-range-picker__icon" aria-hidden="true">▾</span>
                 </button>
-                <button
-                  class="report-range__button"
-                  type="button"
-                  data-report-range="monthly"
+                <div
+                  id="hours-report-picker-panel"
+                  class="report-range-picker__popover"
+                  role="dialog"
+                  aria-modal="false"
+                  hidden
                 >
-                  Monthly
-                </button>
-                <button
-                  class="report-range__button"
-                  type="button"
-                  data-report-range="yearly"
-                >
-                  Yearly
-                </button>
+                  <div class="report-range-picker__ranges" aria-label="Report range">
+                    <button
+                      class="report-range__button is-active"
+                      type="button"
+                      data-report-range="weekly"
+                    >
+                      Weekly
+                    </button>
+                    <button
+                      class="report-range__button"
+                      type="button"
+                      data-report-range="monthly"
+                    >
+                      Monthly
+                    </button>
+                    <button
+                      class="report-range__button"
+                      type="button"
+                      data-report-range="yearly"
+                    >
+                      Yearly
+                    </button>
+                  </div>
+                  <div class="report-range-picker__controls">
+                    <button
+                      class="report-range-picker__nav"
+                      type="button"
+                      data-range-nav="previous"
+                      aria-label="Previous period"
+                    >
+                      &lsaquo;
+                    </button>
+                    <input
+                      id="hours-report-date-picker"
+                      class="report-range-picker__date"
+                      type="date"
+                      aria-label="Anchor date"
+                    />
+                    <button
+                      class="report-range-picker__nav"
+                      type="button"
+                      data-range-nav="next"
+                      aria-label="Next period"
+                    >
+                      &rsaquo;
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div class="report-header__meta">
-                <span id="hours-report-range" class="report-header__range">—</span>
-                <button id="hours-report-export" class="button button--ghost" type="button">
-                  <span aria-hidden="true">⬇️</span>
-                  Export CSV
-                </button>
-              </div>
+              <button id="hours-report-export" class="button button--ghost" type="button">
+                <span aria-hidden="true">⬇️</span>
+                Export CSV
+              </button>
             </div>
           </header>
 

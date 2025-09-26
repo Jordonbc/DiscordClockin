@@ -110,4 +110,5 @@ export interface AppState {
   adminHolidayRequests: HolidayRequest[];
   payroll: PayrollSummary | null;
   hoursReportRange: string;
+  hoursReportReference: number;
 }

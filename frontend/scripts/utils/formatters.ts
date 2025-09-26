@@ -69,21 +69,27 @@ export function formatTimeRange(start?: number | null, end?: number | null): str
   return `${startText} – ${endText}`;
 }
 
-export function getReportWindow(range: string): { start: Date; end: Date } {
-  const now = new Date();
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
+export function getReportWindow(range: string, reference?: number | Date): { start: Date; end: Date } {
+  const base = reference !== undefined ? new Date(reference) : new Date();
+  if (Number.isNaN(base.getTime())) {
+    return getReportWindow(range);
+  }
+
+  base.setHours(0, 0, 0, 0);
+  const start = new Date(base);
   let end: Date;
 
   switch (range) {
     case "monthly": {
       start.setDate(1);
-      end = new Date(start.getFullYear(), start.getMonth() + 1, 1);
+      end = new Date(start);
+      end.setMonth(start.getMonth() + 1);
       break;
     }
     case "yearly": {
       start.setMonth(0, 1);
-      end = new Date(start.getFullYear() + 1, 0, 1);
+      end = new Date(start);
+      end.setFullYear(start.getFullYear() + 1);
       break;
     }
     case "weekly":
@@ -98,6 +104,55 @@ export function getReportWindow(range: string): { start: Date; end: Date } {
 
   end.setHours(0, 0, 0, 0);
   return { start, end };
+}
+
+export function normalizeReportReference(range: string, reference?: number | Date): number {
+  return getReportWindow(range, reference).start.getTime();
+}
+
+export function shiftReportReference(range: string, reference: number, direction: 1 | -1): number {
+  const { start } = getReportWindow(range, reference);
+  const next = new Date(start);
+
+  switch (range) {
+    case "monthly":
+      next.setMonth(next.getMonth() + direction);
+      break;
+    case "yearly":
+      next.setFullYear(next.getFullYear() + direction);
+      break;
+    case "weekly":
+    default:
+      next.setDate(next.getDate() + direction * 7);
+      break;
+  }
+
+  return getReportWindow(range, next).start.getTime();
+}
+
+export function formatDateInputValue(date: Date): string {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function parseDateInputValue(value: string): Date | null {
+  if (!value) return null;
+  const parts = value.split("-");
+  if (parts.length !== 3) return null;
+  const [yearStr, monthStr, dayStr] = parts;
+  const year = Number.parseInt(yearStr, 10);
+  const month = Number.parseInt(monthStr, 10);
+  const day = Number.parseInt(dayStr, 10);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+    return null;
+  }
+  const date = new Date(year, month - 1, day);
+  if (Number.isNaN(date.getTime())) return null;
+  date.setHours(0, 0, 0, 0);
+  return date;
 }
 
 export function formatReportRangeLabel(start: Date, end: Date): string {

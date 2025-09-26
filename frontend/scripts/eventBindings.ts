@@ -13,8 +13,13 @@ import {
   holidayForm,
   hoursReportExportButton,
   hoursReportRangeButtons,
+  hoursReportNavButtons,
   loginButton,
   logoutButton,
+  hoursReportDatePicker,
+  hoursReportPickerToggle,
+  hoursReportPickerPanel,
+  hoursReportRangePicker,
   refreshAdminHolidays,
   refreshAdminTimesheets,
   refreshHolidaysButton,
@@ -48,6 +53,11 @@ import { ensureGuildConfigured, apiRequest } from "./apiClient.js";
 import { renderAuthState } from "./authState.js";
 import { renderHoursReport } from "./ui/dashboard.js";
 import { canAccessAdmin } from "./permissions.js";
+import {
+  normalizeReportReference,
+  parseDateInputValue,
+  shiftReportReference,
+} from "./utils/formatters.js";
 
 export function bindEvents(): void {
   bindNavigation();
@@ -68,6 +78,54 @@ export function bindEvents(): void {
 
   if (authRequiredLoginButton) {
     authRequiredLoginButton.addEventListener("click", initiateLogin);
+  }
+
+  const rangePickerElementsReady =
+    Boolean(hoursReportPickerToggle) &&
+    Boolean(hoursReportPickerPanel) &&
+    Boolean(hoursReportRangePicker);
+
+  const isRangePickerOpen = () =>
+    Boolean(hoursReportPickerPanel && !hoursReportPickerPanel.hidden);
+
+  const openRangePicker = () => {
+    if (!rangePickerElementsReady || !hoursReportPickerToggle || !hoursReportPickerPanel || !hoursReportRangePicker) {
+      return;
+    }
+    hoursReportPickerPanel.hidden = false;
+    hoursReportPickerToggle.setAttribute("aria-expanded", "true");
+    hoursReportRangePicker.classList.add("report-range-picker--open");
+    if (hoursReportDatePicker) {
+      hoursReportDatePicker.focus();
+    }
+  };
+
+  const closeRangePicker = () => {
+    if (!rangePickerElementsReady || !hoursReportPickerToggle || !hoursReportPickerPanel || !hoursReportRangePicker) {
+      return;
+    }
+    if (hoursReportPickerPanel.hidden) return;
+    hoursReportPickerPanel.hidden = true;
+    hoursReportPickerToggle.setAttribute("aria-expanded", "false");
+    hoursReportRangePicker.classList.remove("report-range-picker--open");
+    if (hoursReportDatePicker) {
+      hoursReportDatePicker.blur();
+    }
+  };
+
+  if (rangePickerElementsReady && hoursReportPickerToggle && hoursReportPickerPanel) {
+    hoursReportPickerToggle.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (isRangePickerOpen()) {
+        closeRangePicker();
+      } else {
+        openRangePicker();
+      }
+    });
+
+    hoursReportPickerPanel.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
   }
 
   if (userMenuButton) {
@@ -108,6 +166,18 @@ export function bindEvents(): void {
   }
 
   document.addEventListener("click", (event) => {
+    if (isRangePickerOpen()) {
+      if (
+        hoursReportRangePicker &&
+        event.target instanceof Node &&
+        hoursReportRangePicker.contains(event.target)
+      ) {
+        // internal click keeps picker open
+      } else {
+        closeRangePicker();
+      }
+    }
+
     if (!isUserMenuOpen()) return;
     if (userMenu && event.target instanceof Node && userMenu.contains(event.target)) {
       return;
@@ -119,12 +189,27 @@ export function bindEvents(): void {
     if (event.key === "Escape") {
       closeUserMenu();
       closeClockOutModal();
+      closeRangePicker();
     }
+  });
+
+  document.addEventListener("focusin", (event) => {
+    if (!isRangePickerOpen()) return;
+    if (event.target instanceof Node) {
+      if (hoursReportRangePicker && hoursReportRangePicker.contains(event.target)) {
+        return;
+      }
+      if (hoursReportPickerToggle && hoursReportPickerToggle.contains(event.target as Node)) {
+        return;
+      }
+    }
+    closeRangePicker();
   });
 
   if (logoutButton) {
     logoutButton.addEventListener("click", () => {
       closeUserMenu();
+      closeRangePicker();
       clearDiscordSession();
       renderAuthState();
       showToast("Signed out.", "info");
@@ -388,9 +473,33 @@ export function bindEvents(): void {
       const { reportRange } = button.dataset;
       if (!reportRange || state.hoursReportRange === reportRange) return;
       state.hoursReportRange = reportRange;
+      state.hoursReportReference = normalizeReportReference(reportRange, state.hoursReportReference);
       renderHoursReport();
     });
   });
+
+  hoursReportNavButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const direction: 1 | -1 = button.dataset.rangeNav === "next" ? 1 : -1;
+      const range = state.hoursReportRange || "weekly";
+      const anchor = normalizeReportReference(range, state.hoursReportReference);
+      state.hoursReportReference = shiftReportReference(range, anchor, direction);
+      renderHoursReport();
+    });
+  });
+
+  if (hoursReportDatePicker) {
+    const applyDateSelection = () => {
+      if (!hoursReportDatePicker.value) return;
+      const activeRange = state.hoursReportRange || "weekly";
+      const date = parseDateInputValue(hoursReportDatePicker.value);
+      if (!date) return;
+      state.hoursReportReference = normalizeReportReference(activeRange, date);
+      renderHoursReport();
+    };
+    hoursReportDatePicker.addEventListener("change", applyDateSelection);
+    hoursReportDatePicker.addEventListener("blur", applyDateSelection);
+  }
 
   if (hoursReportExportButton) {
     hoursReportExportButton.addEventListener("click", () => {

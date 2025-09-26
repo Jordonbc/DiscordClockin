@@ -840,6 +840,128 @@ body {
   box-shadow: 0 8px 18px rgba(99, 102, 241, 0.18);
 }
 
+.report-range-picker {
+  position: relative;
+  display: inline-flex;
+}
+
+.report-range-picker__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(148, 163, 184, 0.08);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.report-range-picker__toggle:hover,
+.report-range-picker__toggle:focus-visible {
+  background: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 12px 28px rgba(99, 102, 241, 0.18);
+  outline: none;
+}
+
+.report-range-picker__toggle[aria-expanded="true"] {
+  background: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 12px 28px rgba(99, 102, 241, 0.2);
+}
+
+.report-range-picker--open .report-range-picker__icon {
+  transform: rotate(180deg);
+}
+
+.report-range-picker__type {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.report-range-picker__value {
+  font-weight: 600;
+}
+
+.report-range-picker__icon {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  transition: transform 0.2s ease;
+}
+
+.report-range-picker__popover {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  right: 0;
+  width: min(320px, 80vw);
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow);
+  z-index: 30;
+}
+
+.report-range-picker__popover[hidden] {
+  display: none;
+}
+
+.report-range-picker__ranges {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.report-range-picker__controls {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.report-range-picker__nav {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 23, 42, 0.4);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  line-height: 1;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.report-range-picker__nav:hover {
+  background: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.15);
+}
+
+.report-range-picker__date {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--text);
+  padding: 0.4rem 0.75rem;
+  font: inherit;
+  width: 100%;
+}
+
+.report-range-picker__date::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
 .report-header__meta {
   display: inline-flex;
   align-items: center;

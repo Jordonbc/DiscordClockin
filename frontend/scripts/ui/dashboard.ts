@@ -18,9 +18,11 @@ import {
   hoursReportExportButton,
   hoursReportRangeButtons,
   hoursReportRangeLabel,
+  hoursReportRangeType,
   hoursReportRecentList,
   hoursReportSessions,
   hoursReportTotal,
+  hoursReportDatePicker,
   timeClockActionButton,
   timeClockDate,
   timeClockDisplay,
@@ -39,9 +41,11 @@ import {
   formatDecimalHours,
   formatDuration,
   formatHours,
+  formatDateInputValue,
   formatReportRangeLabel,
   formatTimeRange,
   getReportWindow,
+  normalizeReportReference,
   filterEntriesByRange,
   buildDailyBreakdown,
 } from "../utils/formatters.js";
@@ -322,7 +326,16 @@ export function renderTimeClockPage(): void {
 
 export function renderHoursReport(): void {
   const range = state.hoursReportRange || "weekly";
-  const { start, end } = getReportWindow(range);
+  const referenceTime = normalizeReportReference(range, state.hoursReportReference);
+  if (state.hoursReportReference !== referenceTime) {
+    state.hoursReportReference = referenceTime;
+  }
+
+  const currentWindow = getReportWindow(range, referenceTime);
+  const weeklyWindow = getReportWindow("weekly", referenceTime);
+  const monthlyWindow = getReportWindow("monthly", referenceTime);
+  const yearlyWindow = getReportWindow("yearly", referenceTime);
+  const { start, end } = currentWindow;
   const authed = Boolean(state.user);
   const metrics = authed ? state.timeMetrics : null;
   const workerError = authed ? state.workerError : null;
@@ -335,6 +348,22 @@ export function renderHoursReport(): void {
 
   if (hoursReportRangeLabel) {
     hoursReportRangeLabel.textContent = formatReportRangeLabel(start, end);
+  }
+
+  if (hoursReportRangeType) {
+    const formattedRange =
+      range === "monthly" ? "Monthly" : range === "yearly" ? "Yearly" : "Weekly";
+    hoursReportRangeType.textContent = formattedRange;
+  }
+
+  if (hoursReportDatePicker) {
+    let pickerValue = weeklyWindow.start;
+    if (range === "monthly") {
+      pickerValue = monthlyWindow.start;
+    } else if (range === "yearly") {
+      pickerValue = yearlyWindow.start;
+    }
+    hoursReportDatePicker.value = formatDateInputValue(pickerValue);
   }
 
   const defaultSummary = {
