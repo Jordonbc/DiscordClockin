@@ -1,6 +1,18 @@
 import { DEFAULT_DISCORD_AUTHORIZE_URL } from "./constants.js";
 import type { AppState } from "./types";
 
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const defaultRangeStart = new Date(today);
+defaultRangeStart.setDate(today.getDate() - today.getDay());
+
+const defaultRangeEnd = new Date(defaultRangeStart);
+defaultRangeEnd.setDate(defaultRangeStart.getDate() + 7);
+
+const defaultCalendarMonth = new Date(defaultRangeStart);
+defaultCalendarMonth.setDate(1);
+
 export const state: AppState = {
   baseUrl: "",
   guildId: "",
@@ -22,11 +34,8 @@ export const state: AppState = {
   adminTimesheetMemberId: null,
   adminHolidayRequests: [],
   payroll: null,
-  hoursReportRange: "weekly",
-  hoursReportReference: (() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    today.setDate(today.getDate() - today.getDay());
-    return today.getTime();
-  })(),
+  hoursReportRangeStart: defaultRangeStart.getTime(),
+  hoursReportRangeEnd: defaultRangeEnd.getTime(),
+  hoursReportCalendarMonth: defaultCalendarMonth.getTime(),
+  hoursReportCalendarFollowSelection: true,
 };

@@ -809,37 +809,6 @@ body {
   flex-wrap: wrap;
 }
 
-.report-range {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.08);
-}
-
-.report-range__button {
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-weight: 500;
-  padding: 0.45rem 1.2rem;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.report-range__button:hover {
-  color: var(--text);
-  background: rgba(99, 102, 241, 0.12);
-}
-
-.report-range__button.is-active {
-  background: rgba(99, 102, 241, 0.2);
-  color: var(--text);
-  box-shadow: 0 8px 18px rgba(99, 102, 241, 0.18);
-}
-
 .report-range-picker {
   position: relative;
   display: inline-flex;
@@ -911,56 +880,151 @@ body {
   display: none;
 }
 
-.report-range-picker__ranges {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem;
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.08);
-}
-
-.report-range-picker__controls {
+.report-range-picker__calendar {
+  position: relative;
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
   gap: 0.75rem;
 }
 
-.report-range-picker__nav {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  background: rgba(15, 23, 42, 0.4);
-  color: var(--text);
-  cursor: pointer;
-  display: inline-flex;
+.report-range-picker__calendar-header {
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  line-height: 1;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
+  gap: 0.75rem;
 }
 
-.report-range-picker__nav:hover {
-  background: rgba(99, 102, 241, 0.18);
-  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.15);
+.report-range-picker__calendar-field {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 7.5rem;
 }
 
-.report-range-picker__date {
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: rgba(15, 23, 42, 0.6);
-  color: var(--text);
-  padding: 0.4rem 0.75rem;
-  font: inherit;
+.report-range-picker__field-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(148, 163, 184, 0.75);
+}
+
+.report-range-picker__select {
   width: 100%;
+  padding: 0.4rem 0.55rem;
+  border-radius: 0.65rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.65);
+  color: var(--text);
+  font: inherit;
 }
 
-.report-range-picker__date::-webkit-calendar-picker-indicator {
-  filter: invert(1);
+.report-range-picker__calendar-grid {
+  display: grid;
+  gap: 0.35rem;
 }
+
+.report-range-picker__weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.report-range-picker__days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.35rem;
+}
+
+.report-range-picker__day {
+  position: relative;
+  border: none;
+  background: rgba(15, 23, 42, 0.4);
+  color: var(--text);
+  font: inherit;
+  padding: 0.5rem 0;
+  border-radius: 0.65rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.report-range-picker__day:hover,
+.report-range-picker__day:focus-visible {
+  background: rgba(99, 102, 241, 0.22);
+  outline: none;
+}
+
+.report-range-picker__day.is-outside {
+  color: rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.25);
+}
+
+.report-range-picker__day.is-today::after {
+  content: "";
+  position: absolute;
+  bottom: 0.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: rgba(99, 102, 241, 0.85);
+}
+
+.report-range-picker__day.is-selected {
+  background: rgba(99, 102, 241, 0.28);
+  color: var(--text);
+}
+
+.report-range-picker__day.is-range-start,
+.report-range-picker__day.is-range-end {
+  background: rgba(99, 102, 241, 0.52);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.85);
+}
+
+.report-range-picker__day.is-range-start.is-range-end {
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.85);
+}
+
+.report-range-picker__hint {
+  font-size: 0.75rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.report-range-picker__quick-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.report-range-picker__quick-button {
+  flex: 1;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(148, 163, 184, 0.14);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.report-range-picker__quick-button:hover,
+.report-range-picker__quick-button:focus-visible {
+  background: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 10px 24px rgba(99, 102, 241, 0.18);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.report-range-picker__quick-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
 
 .report-header__meta {
   display: inline-flex;

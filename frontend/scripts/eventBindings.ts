@@ -12,11 +12,13 @@ import {
   authRequiredLoginButton,
   holidayForm,
   hoursReportExportButton,
-  hoursReportRangeButtons,
-  hoursReportNavButtons,
+  hoursReportCalendarGrid,
+  hoursReportMonthSelect,
+  hoursReportYearSelect,
+  hoursReportThisMonthButton,
+  hoursReportThisWeekButton,
   loginButton,
   logoutButton,
-  hoursReportDatePicker,
   hoursReportPickerToggle,
   hoursReportPickerPanel,
   hoursReportRangePicker,
@@ -53,11 +55,8 @@ import { ensureGuildConfigured, apiRequest } from "./apiClient.js";
 import { renderAuthState } from "./authState.js";
 import { renderHoursReport } from "./ui/dashboard.js";
 import { canAccessAdmin } from "./permissions.js";
-import {
-  normalizeReportReference,
-  parseDateInputValue,
-  shiftReportReference,
-} from "./utils/formatters.js";
+
+const DAY_IN_MS = 86400000;
 
 export function bindEvents(): void {
   bindNavigation();
@@ -88,6 +87,23 @@ export function bindEvents(): void {
   const isRangePickerOpen = () =>
     Boolean(hoursReportPickerPanel && !hoursReportPickerPanel.hidden);
 
+  const focusCalendarDay = () => {
+    if (!hoursReportCalendarGrid) return;
+    const activeDay =
+      hoursReportCalendarGrid.querySelector<HTMLButtonElement>(
+        ".report-range-picker__day.is-range-start"
+      ) ||
+      hoursReportCalendarGrid.querySelector<HTMLButtonElement>(
+        ".report-range-picker__day.is-selected"
+      ) ||
+      hoursReportCalendarGrid.querySelector<HTMLButtonElement>(
+        ".report-range-picker__day:not(.is-outside)"
+      );
+    if (activeDay) {
+      activeDay.focus();
+    }
+  };
+
   const openRangePicker = () => {
     if (!rangePickerElementsReady || !hoursReportPickerToggle || !hoursReportPickerPanel || !hoursReportRangePicker) {
       return;
@@ -95,9 +111,7 @@ export function bindEvents(): void {
     hoursReportPickerPanel.hidden = false;
     hoursReportPickerToggle.setAttribute("aria-expanded", "true");
     hoursReportRangePicker.classList.add("report-range-picker--open");
-    if (hoursReportDatePicker) {
-      hoursReportDatePicker.focus();
-    }
+    focusCalendarDay();
   };
 
   const closeRangePicker = () => {
@@ -108,9 +122,6 @@ export function bindEvents(): void {
     hoursReportPickerPanel.hidden = true;
     hoursReportPickerToggle.setAttribute("aria-expanded", "false");
     hoursReportRangePicker.classList.remove("report-range-picker--open");
-    if (hoursReportDatePicker) {
-      hoursReportDatePicker.blur();
-    }
   };
 
   if (rangePickerElementsReady && hoursReportPickerToggle && hoursReportPickerPanel) {
@@ -468,37 +479,217 @@ export function bindEvents(): void {
     });
   }
 
-  hoursReportRangeButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const { reportRange } = button.dataset;
-      if (!reportRange || state.hoursReportRange === reportRange) return;
-      state.hoursReportRange = reportRange;
-      state.hoursReportReference = normalizeReportReference(reportRange, state.hoursReportReference);
-      renderHoursReport();
-    });
-  });
+  const applyHoursReportRange = (startTime: number, endTime: number): boolean => {
+    if (!Number.isFinite(startTime) || !Number.isFinite(endTime)) {
+      return false;
+    }
 
-  hoursReportNavButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const direction: 1 | -1 = button.dataset.rangeNav === "next" ? 1 : -1;
-      const range = state.hoursReportRange || "weekly";
-      const anchor = normalizeReportReference(range, state.hoursReportReference);
-      state.hoursReportReference = shiftReportReference(range, anchor, direction);
-      renderHoursReport();
-    });
-  });
+    if (endTime <= startTime) {
+      endTime = startTime + DAY_IN_MS;
+    }
 
-  if (hoursReportDatePicker) {
-    const applyDateSelection = () => {
-      if (!hoursReportDatePicker.value) return;
-      const activeRange = state.hoursReportRange || "weekly";
-      const date = parseDateInputValue(hoursReportDatePicker.value);
-      if (!date) return;
-      state.hoursReportReference = normalizeReportReference(activeRange, date);
+    const month = new Date(startTime);
+    month.setHours(0, 0, 0, 0);
+    month.setDate(1);
+    const monthTime = month.getTime();
+
+    const rangeChanged =
+      state.hoursReportRangeStart !== startTime || state.hoursReportRangeEnd !== endTime;
+    const monthChanged = state.hoursReportCalendarMonth !== monthTime;
+    const followChanged = !state.hoursReportCalendarFollowSelection;
+
+    state.hoursReportRangeStart = startTime;
+    state.hoursReportRangeEnd = endTime;
+
+    if (monthChanged) {
+      state.hoursReportCalendarMonth = monthTime;
+    }
+
+    if (followChanged) {
+      state.hoursReportCalendarFollowSelection = true;
+    }
+
+    if (rangeChanged || monthChanged || followChanged) {
       renderHoursReport();
+      return true;
+    }
+
+    return false;
+  };
+
+  const shiftCalendarMonth = (direction: 1 | -1) => {
+    const base =
+      typeof state.hoursReportCalendarMonth === "number"
+        ? new Date(state.hoursReportCalendarMonth)
+        : new Date(state.hoursReportRangeStart);
+    if (Number.isNaN(base.getTime())) return;
+    base.setHours(0, 0, 0, 0);
+    base.setDate(1);
+    base.setMonth(base.getMonth() + direction);
+    const newTime = base.getTime();
+    if (state.hoursReportCalendarMonth === newTime) return;
+    state.hoursReportCalendarFollowSelection = false;
+    state.hoursReportCalendarMonth = newTime;
+    renderHoursReport();
+    focusCalendarDay();
+  };
+
+  const handleCalendarMonthYearChange = () => {
+    if (!hoursReportMonthSelect || !hoursReportYearSelect) return;
+    const month = Number(hoursReportMonthSelect.value);
+    const year = Number(hoursReportYearSelect.value);
+    if (!Number.isInteger(month) || !Number.isInteger(year)) {
+      return;
+    }
+    const base =
+      typeof state.hoursReportCalendarMonth === "number"
+        ? new Date(state.hoursReportCalendarMonth)
+        : typeof state.hoursReportRangeStart === "number"
+          ? new Date(state.hoursReportRangeStart)
+          : new Date();
+    if (Number.isNaN(base.getTime())) {
+      base.setTime(Date.now());
+    }
+    base.setHours(0, 0, 0, 0);
+    base.setDate(1);
+    base.setFullYear(year);
+    base.setMonth(month);
+    const newTime = base.getTime();
+    if (state.hoursReportCalendarMonth === newTime) {
+      return;
+    }
+    state.hoursReportCalendarFollowSelection = false;
+    state.hoursReportCalendarMonth = newTime;
+    renderHoursReport();
+    focusCalendarDay();
+  };
+
+  if (hoursReportMonthSelect) {
+    hoursReportMonthSelect.addEventListener("change", handleCalendarMonthYearChange);
+  }
+
+  if (hoursReportYearSelect) {
+    hoursReportYearSelect.addEventListener("change", handleCalendarMonthYearChange);
+  }
+
+  if (hoursReportThisWeekButton) {
+    hoursReportThisWeekButton.addEventListener("click", () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = new Date(today);
+      start.setDate(today.getDate() - today.getDay());
+      const end = new Date(start);
+      end.setDate(start.getDate() + 7);
+      const changed = applyHoursReportRange(start.getTime(), end.getTime());
+      if (changed) {
+        focusCalendarDay();
+      }
+      closeRangePicker();
+    });
+  }
+
+  if (hoursReportThisMonthButton) {
+    hoursReportThisMonthButton.addEventListener("click", () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = new Date(today);
+      start.setDate(1);
+      const end = new Date(start);
+      end.setMonth(start.getMonth() + 1);
+      const changed = applyHoursReportRange(start.getTime(), end.getTime());
+      if (changed) {
+        focusCalendarDay();
+      }
+      closeRangePicker();
+    });
+  }
+
+  if (hoursReportCalendarGrid) {
+    let isDraggingRange = false;
+    let selectionAnchor: number | null = null;
+
+    const updateRange = (anchorTime: number, targetTime: number) => {
+      const startTime = Math.min(anchorTime, targetTime);
+      const endTime = Math.max(anchorTime, targetTime) + DAY_IN_MS;
+      applyHoursReportRange(startTime, endTime);
     };
-    hoursReportDatePicker.addEventListener("change", applyDateSelection);
-    hoursReportDatePicker.addEventListener("blur", applyDateSelection);
+
+    const resolveDateFromPointer = (event: PointerEvent): number | null => {
+      const element = document.elementFromPoint(event.clientX, event.clientY);
+      if (!element) return null;
+      const button = element.closest<HTMLButtonElement>("[data-calendar-date]");
+      if (!button || !hoursReportCalendarGrid.contains(button)) return null;
+      const value = Number(button.dataset.calendarDate);
+      return Number.isFinite(value) ? value : null;
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      if (!isDraggingRange || selectionAnchor === null) return;
+      const targetValue = resolveDateFromPointer(event);
+      if (targetValue === null) return;
+      updateRange(selectionAnchor, targetValue);
+    };
+
+    function stopDragging(event?: PointerEvent): void {
+      if (!isDraggingRange) return;
+      if (event && selectionAnchor !== null) {
+        const targetValue = resolveDateFromPointer(event);
+        if (targetValue !== null) {
+          updateRange(selectionAnchor, targetValue);
+        }
+      }
+      isDraggingRange = false;
+      selectionAnchor = null;
+      removePointerListeners();
+      focusCalendarDay();
+    }
+
+    function cancelDragging(): void {
+      if (!isDraggingRange) return;
+      isDraggingRange = false;
+      selectionAnchor = null;
+      removePointerListeners();
+    }
+
+    function removePointerListeners(): void {
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerup", stopDragging);
+      document.removeEventListener("pointercancel", cancelDragging);
+    }
+
+    hoursReportCalendarGrid.addEventListener("pointerdown", (event) => {
+      const target = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>(
+        "[data-calendar-date]"
+      );
+      if (!target) return;
+      event.preventDefault();
+      const value = Number(target.dataset.calendarDate);
+      if (!Number.isFinite(value)) return;
+      const anchor =
+        event.shiftKey && typeof state.hoursReportRangeStart === "number"
+          ? state.hoursReportRangeStart
+          : value;
+      selectionAnchor = anchor;
+      isDraggingRange = true;
+      updateRange(anchor, value);
+      document.addEventListener("pointermove", handlePointerMove);
+      document.addEventListener("pointerup", stopDragging);
+      document.addEventListener("pointercancel", cancelDragging);
+    });
+
+    hoursReportCalendarGrid.addEventListener(
+      "wheel",
+      (event) => {
+        if (event.ctrlKey) return;
+        const primaryDelta =
+          Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+        if (primaryDelta === 0) return;
+        event.preventDefault();
+        const direction: 1 | -1 = primaryDelta > 0 ? 1 : -1;
+        shiftCalendarMonth(direction);
+      },
+      { passive: false }
+    );
   }
 
   if (hoursReportExportButton) {

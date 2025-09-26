@@ -109,6 +109,8 @@ export interface AppState {
   adminTimesheetMemberId: string | null;
   adminHolidayRequests: HolidayRequest[];
   payroll: PayrollSummary | null;
-  hoursReportRange: string;
-  hoursReportReference: number;
+  hoursReportRangeStart: number;
+  hoursReportRangeEnd: number;
+  hoursReportCalendarMonth: number | null;
+  hoursReportCalendarFollowSelection: boolean;
 }

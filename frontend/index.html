@@ -375,52 +375,50 @@
                   aria-modal="false"
                   hidden
                 >
-                  <div class="report-range-picker__ranges" aria-label="Report range">
-                    <button
-                      class="report-range__button is-active"
-                      type="button"
-                      data-report-range="weekly"
-                    >
-                      Weekly
-                    </button>
-                    <button
-                      class="report-range__button"
-                      type="button"
-                      data-report-range="monthly"
-                    >
-                      Monthly
-                    </button>
-                    <button
-                      class="report-range__button"
-                      type="button"
-                      data-report-range="yearly"
-                    >
-                      Yearly
-                    </button>
-                  </div>
-                  <div class="report-range-picker__controls">
-                    <button
-                      class="report-range-picker__nav"
-                      type="button"
-                      data-range-nav="previous"
-                      aria-label="Previous period"
-                    >
-                      &lsaquo;
-                    </button>
-                    <input
-                      id="hours-report-date-picker"
-                      class="report-range-picker__date"
-                      type="date"
-                      aria-label="Anchor date"
-                    />
-                    <button
-                      class="report-range-picker__nav"
-                      type="button"
-                      data-range-nav="next"
-                      aria-label="Next period"
-                    >
-                      &rsaquo;
-                    </button>
+                  <div class="report-range-picker__calendar" aria-label="Report range">
+                    <div class="report-range-picker__calendar-header">
+                      <label class="report-range-picker__calendar-field">
+                        <span class="report-range-picker__field-label">Month</span>
+                        <select
+                          id="hours-report-month-select"
+                          class="report-range-picker__select"
+                          aria-label="Select month"
+                        ></select>
+                      </label>
+                      <label class="report-range-picker__calendar-field">
+                        <span class="report-range-picker__field-label">Year</span>
+                        <select
+                          id="hours-report-year-select"
+                          class="report-range-picker__select"
+                          aria-label="Select year"
+                        ></select>
+                      </label>
+                    </div>
+                    <div
+                      id="hours-report-calendar"
+                      class="report-range-picker__calendar-grid"
+                      role="application"
+                      aria-label="Select a date range"
+                    ></div>
+                    <p class="report-range-picker__hint">
+                      Scroll to change months or use the dropdowns to jump.
+                    </p>
+                    <div class="report-range-picker__quick-actions">
+                      <button
+                        id="hours-report-this-week"
+                        class="report-range-picker__quick-button"
+                        type="button"
+                      >
+                        This week
+                      </button>
+                      <button
+                        id="hours-report-this-month"
+                        class="report-range-picker__quick-button"
+                        type="button"
+                      >
+                        This month
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

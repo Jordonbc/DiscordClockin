@@ -74,7 +74,6 @@ export const timeClockSummaryBreak = query<HTMLElement>("#time-clock-summary-bre
 export const timeClockSummaryOvertime = query<HTMLElement>("#time-clock-summary-overtime");
 export const timeClockSessionsList = query<HTMLElement>("#time-clock-sessions");
 
-export const hoursReportRangeButtons = queryAll<HTMLButtonElement>("[data-report-range]");
 export const hoursReportRangeLabel = query<HTMLElement>("#hours-report-range");
 export const hoursReportTotal = query<HTMLElement>("#hours-report-total");
 export const hoursReportBreak = query<HTMLElement>("#hours-report-break");
@@ -83,12 +82,15 @@ export const hoursReportAverage = query<HTMLElement>("#hours-report-average");
 export const hoursReportDailyList = query<HTMLElement>("#hours-report-daily");
 export const hoursReportRecentList = query<HTMLElement>("#hours-report-recent");
 export const hoursReportExportButton = query<HTMLButtonElement>("#hours-report-export");
-export const hoursReportDatePicker = query<HTMLInputElement>("#hours-report-date-picker");
 export const hoursReportRangeType = query<HTMLElement>("#hours-report-range-type");
 export const hoursReportPickerToggle = query<HTMLButtonElement>("#hours-report-picker-toggle");
 export const hoursReportPickerPanel = query<HTMLElement>("#hours-report-picker-panel");
 export const hoursReportRangePicker = query<HTMLElement>("[data-range-selector]");
-export const hoursReportNavButtons = queryAll<HTMLButtonElement>("[data-range-nav]");
+export const hoursReportCalendarGrid = query<HTMLElement>("#hours-report-calendar");
+export const hoursReportMonthSelect = query<HTMLSelectElement>("#hours-report-month-select");
+export const hoursReportYearSelect = query<HTMLSelectElement>("#hours-report-year-select");
+export const hoursReportThisWeekButton = query<HTMLButtonElement>("#hours-report-this-week");
+export const hoursReportThisMonthButton = query<HTMLButtonElement>("#hours-report-this-month");
 
 export const clockOutModal = query<HTMLElement>("#clockout-modal");
 export const clockOutModalForm = query<HTMLFormElement>("#clockout-modal-form");

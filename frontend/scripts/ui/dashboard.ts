@@ -16,13 +16,14 @@ import {
   hoursReportBreak,
   hoursReportDailyList,
   hoursReportExportButton,
-  hoursReportRangeButtons,
+  hoursReportCalendarGrid,
+  hoursReportMonthSelect,
+  hoursReportYearSelect,
   hoursReportRangeLabel,
   hoursReportRangeType,
   hoursReportRecentList,
   hoursReportSessions,
   hoursReportTotal,
-  hoursReportDatePicker,
   timeClockActionButton,
   timeClockDate,
   timeClockDisplay,
@@ -41,16 +42,16 @@ import {
   formatDecimalHours,
   formatDuration,
   formatHours,
-  formatDateInputValue,
   formatReportRangeLabel,
   formatTimeRange,
-  getReportWindow,
-  normalizeReportReference,
   filterEntriesByRange,
   buildDailyBreakdown,
 } from "../utils/formatters.js";
 import { calculateDurationMinutes } from "../utils/time.js";
 import { hasActiveSession } from "./clockControls.js";
+
+const DAY_IN_MS = 86400000;
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 let timeClockTicker: ReturnType<typeof setInterval> | null = null;
 
@@ -325,46 +326,22 @@ export function renderTimeClockPage(): void {
 }
 
 export function renderHoursReport(): void {
-  const range = state.hoursReportRange || "weekly";
-  const referenceTime = normalizeReportReference(range, state.hoursReportReference);
-  if (state.hoursReportReference !== referenceTime) {
-    state.hoursReportReference = referenceTime;
-  }
-
-  const currentWindow = getReportWindow(range, referenceTime);
-  const weeklyWindow = getReportWindow("weekly", referenceTime);
-  const monthlyWindow = getReportWindow("monthly", referenceTime);
-  const yearlyWindow = getReportWindow("yearly", referenceTime);
-  const { start, end } = currentWindow;
+  const { start, end, daySpan } = normalizeHoursReportRange();
   const authed = Boolean(state.user);
   const metrics = authed ? state.timeMetrics : null;
   const workerError = authed ? state.workerError : null;
 
-  hoursReportRangeButtons.forEach((button) => {
-    const isActive = button.dataset.reportRange === range;
-    button.classList.toggle("is-active", isActive);
-    button.setAttribute("aria-pressed", isActive ? "true" : "false");
-  });
-
   if (hoursReportRangeLabel) {
-    hoursReportRangeLabel.textContent = formatReportRangeLabel(start, end);
+    const rangeLabel = formatReportRangeLabel(start, end);
+    const dayCountLabel = `${daySpan} ${daySpan === 1 ? "day" : "days"}`;
+    hoursReportRangeLabel.textContent = `${rangeLabel} • ${dayCountLabel}`;
   }
 
   if (hoursReportRangeType) {
-    const formattedRange =
-      range === "monthly" ? "Monthly" : range === "yearly" ? "Yearly" : "Weekly";
-    hoursReportRangeType.textContent = formattedRange;
+    hoursReportRangeType.textContent = "Range";
   }
 
-  if (hoursReportDatePicker) {
-    let pickerValue = weeklyWindow.start;
-    if (range === "monthly") {
-      pickerValue = monthlyWindow.start;
-    } else if (range === "yearly") {
-      pickerValue = yearlyWindow.start;
-    }
-    hoursReportDatePicker.value = formatDateInputValue(pickerValue);
-  }
+  renderHoursReportCalendar(start, end);
 
   const defaultSummary = {
     totalHours: "0.0h",
@@ -385,7 +362,6 @@ export function renderHoursReport(): void {
   }, 0);
   const totalHours = totalMinutes / 60;
   const sessionsCount = filteredEntries.length;
-  const daySpan = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000));
   const averageHours = totalHours / Math.max(1, daySpan);
   const breakHours = metrics && typeof metrics.break_hours === "number" ? metrics.break_hours : 0;
 
@@ -528,4 +504,247 @@ export function renderHoursReport(): void {
   if (hoursReportExportButton) {
     hoursReportExportButton.disabled = !authed;
   }
+}
+
+function normalizeHoursReportRange(): { start: Date; end: Date; daySpan: number } {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const defaultStart = new Date(now);
+  defaultStart.setDate(now.getDate() - now.getDay());
+
+  let start =
+    typeof state.hoursReportRangeStart === "number"
+      ? new Date(state.hoursReportRangeStart)
+      : new Date(defaultStart);
+  if (Number.isNaN(start.getTime())) {
+    start = new Date(defaultStart);
+  }
+  start.setHours(0, 0, 0, 0);
+
+  let end =
+    typeof state.hoursReportRangeEnd === "number"
+      ? new Date(state.hoursReportRangeEnd)
+      : new Date(start);
+  if (Number.isNaN(end.getTime())) {
+    end = new Date(start);
+  }
+  end.setHours(0, 0, 0, 0);
+
+  if (end.getTime() <= start.getTime()) {
+    end = new Date(start);
+    end.setDate(start.getDate() + 1);
+  }
+
+  const startTime = start.getTime();
+  const endTime = end.getTime();
+
+  if (state.hoursReportRangeStart !== startTime) {
+    state.hoursReportRangeStart = startTime;
+  }
+  if (state.hoursReportRangeEnd !== endTime) {
+    state.hoursReportRangeEnd = endTime;
+  }
+
+  const daySpan = Math.max(1, Math.round((endTime - startTime) / DAY_IN_MS));
+
+  return { start, end, daySpan };
+}
+
+function ensureCalendarMonth(start: Date): Date {
+  const fallback = new Date(start);
+  fallback.setDate(1);
+  fallback.setHours(0, 0, 0, 0);
+
+  const month =
+    typeof state.hoursReportCalendarMonth === "number"
+      ? new Date(state.hoursReportCalendarMonth)
+      : new Date(fallback);
+
+  if (Number.isNaN(month.getTime())) {
+    month.setTime(fallback.getTime());
+  }
+
+  month.setHours(0, 0, 0, 0);
+  month.setDate(1);
+
+  const monthTime = month.getTime();
+  if (state.hoursReportCalendarMonth !== monthTime) {
+    state.hoursReportCalendarMonth = monthTime;
+  }
+
+  return month;
+}
+
+function renderHoursReportCalendar(start: Date, end: Date): void {
+  if (!hoursReportCalendarGrid) return;
+
+  const calendarMonth = ensureCalendarMonth(start);
+
+  if (hoursReportMonthSelect) {
+    if (!hoursReportMonthSelect.options.length) {
+      const monthFormatter = new Intl.DateTimeFormat(undefined, { month: "long" });
+      for (let monthIndex = 0; monthIndex < 12; monthIndex += 1) {
+        const option = document.createElement("option");
+        option.value = String(monthIndex);
+        option.textContent = monthFormatter.format(new Date(2000, monthIndex, 1));
+        hoursReportMonthSelect.append(option);
+      }
+    }
+    hoursReportMonthSelect.value = String(calendarMonth.getMonth());
+  }
+
+  if (hoursReportYearSelect) {
+    const today = new Date();
+    const entries = state.userEntries;
+    let minYear = today.getFullYear() - 5;
+    let maxYear = today.getFullYear() + 5;
+
+    if (typeof state.hoursReportRangeStart === "number") {
+      minYear = Math.min(minYear, new Date(state.hoursReportRangeStart).getFullYear());
+      maxYear = Math.max(maxYear, new Date(state.hoursReportRangeStart).getFullYear());
+    }
+    if (typeof state.hoursReportRangeEnd === "number") {
+      minYear = Math.min(minYear, new Date(state.hoursReportRangeEnd).getFullYear());
+      maxYear = Math.max(maxYear, new Date(state.hoursReportRangeEnd).getFullYear());
+    }
+
+    entries.forEach((entry) => {
+      const times = [entry.start, entry.end].filter(Boolean);
+      times.forEach((value) => {
+        const date = new Date(value as string | number);
+        if (Number.isNaN(date.getTime())) return;
+        const year = date.getFullYear();
+        minYear = Math.min(minYear, year);
+        maxYear = Math.max(maxYear, year);
+      });
+    });
+
+    const currentYear = calendarMonth.getFullYear();
+    minYear = Math.min(minYear, currentYear);
+    maxYear = Math.max(maxYear, currentYear);
+
+    const existingYears = Array.from(hoursReportYearSelect.options).map((option) =>
+      Number(option.value)
+    );
+    const desiredYears: number[] = [];
+    for (let year = minYear; year <= maxYear; year += 1) {
+      desiredYears.push(year);
+    }
+
+    if (
+      desiredYears.length !== existingYears.length ||
+      desiredYears.some((year, index) => year !== existingYears[index])
+    ) {
+      hoursReportYearSelect.replaceChildren();
+      desiredYears.forEach((year) => {
+        const option = document.createElement("option");
+        option.value = String(year);
+        option.textContent = String(year);
+        hoursReportYearSelect.append(option);
+      });
+    }
+
+    hoursReportYearSelect.value = String(currentYear);
+  }
+
+  const monthTime = calendarMonth.getTime();
+
+  const gridStart = new Date(calendarMonth);
+  const leadingDays = gridStart.getDay();
+  gridStart.setDate(gridStart.getDate() - leadingDays);
+  gridStart.setHours(0, 0, 0, 0);
+
+  const gridEnd = new Date(gridStart);
+  gridEnd.setDate(gridStart.getDate() + 42);
+
+  const selectionStart = start.getTime();
+  const selectionEnd = end.getTime();
+
+  if (
+    state.hoursReportCalendarFollowSelection &&
+    (selectionEnd <= gridStart.getTime() || selectionStart >= gridEnd.getTime())
+  ) {
+    const newMonth = new Date(start);
+    newMonth.setDate(1);
+    newMonth.setHours(0, 0, 0, 0);
+    const newMonthTime = newMonth.getTime();
+    if (newMonthTime !== monthTime) {
+      state.hoursReportCalendarMonth = newMonthTime;
+      renderHoursReportCalendar(start, end);
+      return;
+    }
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayTime = today.getTime();
+
+  const fragment = document.createDocumentFragment();
+  const weekdayRow = document.createElement("div");
+  weekdayRow.className = "report-range-picker__weekday-row";
+  WEEKDAY_LABELS.forEach((day) => {
+    const cell = document.createElement("span");
+    cell.textContent = day;
+    weekdayRow.appendChild(cell);
+  });
+  fragment.appendChild(weekdayRow);
+
+  const daysContainer = document.createElement("div");
+  daysContainer.className = "report-range-picker__days";
+
+  for (let index = 0; index < 42; index += 1) {
+    const date = new Date(gridStart);
+    date.setDate(gridStart.getDate() + index);
+    date.setHours(0, 0, 0, 0);
+    const timestamp = date.getTime();
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "report-range-picker__day";
+    button.dataset.calendarDate = String(timestamp);
+    button.textContent = String(date.getDate());
+
+    if (date.getMonth() !== calendarMonth.getMonth()) {
+      button.classList.add("is-outside");
+    }
+
+    if (timestamp === todayTime) {
+      button.classList.add("is-today");
+    }
+
+    const isSelected = timestamp >= selectionStart && timestamp < selectionEnd;
+    if (isSelected) {
+      button.classList.add("is-selected");
+    }
+
+    if (timestamp === selectionStart) {
+      button.classList.add("is-range-start");
+    }
+
+    if (timestamp === selectionEnd - DAY_IN_MS) {
+      button.classList.add("is-range-end");
+    }
+
+    button.setAttribute(
+      "aria-pressed",
+      isSelected ? "true" : "false"
+    );
+    button.setAttribute(
+      "aria-label",
+      date.toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+    );
+
+    daysContainer.appendChild(button);
+  }
+
+  fragment.appendChild(daysContainer);
+
+  hoursReportCalendarGrid.innerHTML = "";
+  hoursReportCalendarGrid.appendChild(fragment);
 }
