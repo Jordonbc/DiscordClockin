@@ -1,4 +1,7 @@
 import {
+  appShell,
+  authRequiredModal,
+  authRequiredLoginButton,
   heroLoginButton,
   loginButton,
   logoutButton,
@@ -21,6 +24,28 @@ import { canAccessAdmin } from "./permissions.js";
 
 export function renderAuthState(): void {
   const authed = Boolean(state.user);
+
+  if (authRequiredModal) {
+    const previouslyHidden = authRequiredModal.hidden;
+    authRequiredModal.hidden = authed;
+    if (document.body) {
+      document.body.classList.toggle("auth-modal-open", !authed);
+    }
+    if (!authed && previouslyHidden && authRequiredLoginButton) {
+      authRequiredLoginButton.focus();
+    }
+  }
+
+  if (appShell) {
+    appShell.classList.toggle("app--auth-locked", !authed);
+    if (!authed) {
+      appShell.setAttribute("aria-hidden", "true");
+      appShell.setAttribute("inert", "");
+    } else {
+      appShell.removeAttribute("aria-hidden");
+      appShell.removeAttribute("inert");
+    }
+  }
 
   if (loginButton) loginButton.hidden = authed;
   if (heroLoginButton) heroLoginButton.hidden = authed;

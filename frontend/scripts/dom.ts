@@ -8,6 +8,9 @@ export const viewJumpButtons = Array.from(
   document.querySelectorAll<HTMLElement>("[data-view-jump]")
 );
 export const heroLoginButton = query<HTMLElement>("[data-hero-action='login']");
+export const authRequiredModal = query<HTMLElement>("#auth-required-modal");
+export const authRequiredLoginButton = query<HTMLButtonElement>("#auth-required-login");
+export const appShell = query<HTMLElement>(".app");
 
 export const connectionIndicator = query<HTMLElement>("#connection-indicator");
 

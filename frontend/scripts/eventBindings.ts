@@ -9,6 +9,7 @@ import {
   clockOutModalForm,
   clockSummaryInput,
   heroLoginButton,
+  authRequiredLoginButton,
   holidayForm,
   hoursReportExportButton,
   hoursReportRangeButtons,
@@ -63,6 +64,10 @@ export function bindEvents(): void {
 
   if (loginButton) {
     loginButton.addEventListener("click", initiateLogin);
+  }
+
+  if (authRequiredLoginButton) {
+    authRequiredLoginButton.addEventListener("click", initiateLogin);
   }
 
   if (userMenuButton) {
