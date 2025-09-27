@@ -1,0 +1,150 @@
+.time-clock-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  gap: 1.75rem;
+  align-items: start;
+}
+
+.time-clock-main {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.time-clock-card {
+  background: radial-gradient(
+      circle at top left,
+      rgba(99, 102, 241, 0.28),
+      rgba(15, 23, 42, 0.92)
+    );
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 1.5rem;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  box-shadow: 0 25px 45px rgba(15, 23, 42, 0.45);
+  display: grid;
+  gap: 1rem;
+}
+
+.time-clock-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.time-clock-card__header h3 {
+  margin: 0;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(226, 232, 240, 0.85);
+}
+
+.time-clock-card__time {
+  margin: 0;
+  font-size: clamp(2.8rem, 6vw, 3.75rem);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.time-clock-card__date {
+  margin: -0.4rem 0 0;
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 1rem;
+}
+
+.time-clock-card__message {
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+  color: rgba(226, 232, 240, 0.9);
+}
+
+.time-clock-card .button {
+  justify-self: start;
+  margin-top: 0.25rem;
+}
+
+.time-clock-summary {
+  display: grid;
+  gap: 1rem;
+}
+
+.time-clock-summary__total {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.time-clock-summary__details {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.time-clock-summary__details div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.time-clock-summary__details dt {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.time-clock-summary__details dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.time-clock-session-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.time-clock-session-list .muted {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px dashed rgba(148, 163, 184, 0.2);
+  text-align: center;
+}
+
+.time-clock-session {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 1.1rem;
+  padding: 1rem 1.25rem;
+  display: grid;
+  gap: 0.35rem;
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.08);
+}
+
+.time-clock-session__times {
+  margin: 0;
+  font-weight: 600;
+}
+
+.time-clock-session__meta {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.time-clock-tips__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.time-clock-tips__list li {
+  font-size: 0.95rem;
+  color: rgba(226, 232, 240, 0.85);
+  line-height: 1.5;
+}

@@ -1,0 +1,125 @@
+<section class="view" data-view="admin" data-requires-role="admin">
+  <header class="view-header">
+    <h2>Admin Panel</h2>
+    <p>Manage departments, roles, and developer accounts.</p>
+  </header>
+
+  <article class="panel panel--compact">
+    <nav class="admin-nav" aria-label="Admin sections">
+      <button class="admin-nav__button is-active" type="button" data-admin-tab="departments">
+        Departments
+      </button>
+      <button class="admin-nav__button" type="button" data-admin-tab="roles">
+        Roles
+      </button>
+      <button class="admin-nav__button" type="button" data-admin-tab="developers">
+        Developers
+      </button>
+      <button class="admin-nav__button" type="button" data-admin-tab="offboarding">
+        Offboarding
+      </button>
+      <button class="admin-nav__button" type="button" data-admin-tab="performance">
+        Performance
+      </button>
+      <button class="admin-nav__button" type="button" data-admin-tab="time-entries">
+        Time Entries
+      </button>
+      <button class="admin-nav__button" type="button" data-admin-tab="holiday">
+        Holiday Overview
+      </button>
+    </nav>
+  </article>
+
+  <section class="panel admin-section" data-admin-section="departments">
+    <div class="admin-section__header">
+      <div>
+        <h3>Departments</h3>
+        <p>Organize teams and reporting lines.</p>
+      </div>
+      <button id="admin-add-department" class="button button--primary" type="button">
+        + Add Department
+      </button>
+    </div>
+    <div id="admin-departments" class="admin-grid admin-grid--cards"></div>
+  </section>
+
+  <section class="panel admin-section" data-admin-section="roles" hidden>
+    <div class="admin-section__header">
+      <div>
+        <h3>Roles</h3>
+        <p>Define compensation bands and experience tracks.</p>
+      </div>
+      <button id="admin-add-role" class="button button--primary" type="button">
+        + Add Role
+      </button>
+    </div>
+    <div id="admin-roles" class="admin-grid admin-grid--cards"></div>
+  </section>
+
+  <section class="panel admin-section" data-admin-section="developers" hidden>
+    <div class="admin-section__header">
+      <div>
+        <h3>Developers</h3>
+        <p>Monitor active contributors and staffing levels.</p>
+      </div>
+      <button id="admin-refresh-developers" class="button button--ghost" type="button">
+        Refresh
+      </button>
+    </div>
+    <div id="admin-developers" class="admin-stack"></div>
+  </section>
+
+  <section class="panel admin-section" data-admin-section="offboarding" hidden>
+    <div class="admin-section__header">
+      <div>
+        <h3>Offboarding</h3>
+        <p>Track exits and retention risks.</p>
+      </div>
+    </div>
+    <div id="admin-offboarding" class="admin-stack"></div>
+  </section>
+
+  <section class="panel admin-section" data-admin-section="performance" hidden>
+    <div class="admin-section__header">
+      <div>
+        <h3>Performance</h3>
+        <p>Compare planned hours against actuals.</p>
+      </div>
+      <button id="admin-refresh-performance" class="button button--ghost" type="button">
+        Refresh
+      </button>
+    </div>
+    <div id="admin-performance-metrics" class="admin-grid admin-grid--metrics"></div>
+    <div class="admin-section__subheader">
+      <h4>Individual Performance Analysis</h4>
+      <p>Review weekly compliance, overtime, and intervention needs.</p>
+    </div>
+    <div id="admin-performance-details" class="admin-stack"></div>
+  </section>
+
+  <section class="panel admin-section" data-admin-section="time-entries" hidden>
+    <div class="admin-section__header">
+      <div>
+        <h3>Time Entries Management</h3>
+        <p>Audit clock-in activity and manager notes.</p>
+      </div>
+      <button id="admin-add-time-entry" class="button button--primary" type="button">
+        + Add Time Entry
+      </button>
+    </div>
+    <div id="admin-time-entries" class="admin-stack"></div>
+  </section>
+
+  <section class="panel admin-section" data-admin-section="holiday" hidden>
+    <div class="admin-section__header">
+      <div>
+        <h3>Holiday Overview</h3>
+        <p>Review planned leave and coverage windows.</p>
+      </div>
+      <button id="admin-refresh-holidays" class="button button--ghost" type="button">
+        Refresh
+      </button>
+    </div>
+    <ul id="admin-holiday-overview" class="admin-timeline"></ul>
+  </section>
+</section>

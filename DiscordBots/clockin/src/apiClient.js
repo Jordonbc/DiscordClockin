@@ -25,13 +25,17 @@ class ApiClient {
       guild_id: guildId,
       user_id: userId,
       clock_in_message_id: clockInMessageId,
+      source: "discord_bot",
     });
   }
 
-  async endShift({ guildId, userId }) {
+  async endShift({ guildId, userId, summary }) {
+    const summaryValue = typeof summary === "string" ? summary.trim() : "";
     return this.#postJson("shifts/end", {
       guild_id: guildId,
       user_id: userId,
+      summary: summaryValue,
+      source: "discord_bot",
     });
   }
 
@@ -39,6 +43,7 @@ class ApiClient {
     return this.#postJson("shifts/break/start", {
       guild_id: guildId,
       user_id: userId,
+      source: "discord_bot",
     });
   }
 
@@ -46,6 +51,7 @@ class ApiClient {
     return this.#postJson("shifts/break/end", {
       guild_id: guildId,
       user_id: userId,
+      source: "discord_bot",
     });
   }
 

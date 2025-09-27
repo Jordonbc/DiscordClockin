@@ -27,6 +27,7 @@ pub struct ShiftSession {
     pub started_at_ms: i64,
     pub ended_at_ms: Option<i64>,
     pub duration_minutes: f64,
+    pub summary: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -118,10 +119,17 @@ fn build_sessions(worker: &WorkerRecord) -> (Vec<ShiftSession>, Option<ActiveSes
         match end {
             Some(ended_at) => {
                 let duration = duration_minutes(*start, ended_at);
+                let summary = worker
+                    .clock_dates
+                    .clock_summary
+                    .get(index)
+                    .cloned()
+                    .filter(|s| !s.trim().is_empty());
                 sessions.push(ShiftSession {
                     started_at_ms: *start,
                     ended_at_ms: Some(ended_at),
                     duration_minutes: duration,
+                    summary,
                 });
             }
             None => {
@@ -135,6 +143,7 @@ fn build_sessions(worker: &WorkerRecord) -> (Vec<ShiftSession>, Option<ActiveSes
                     started_at_ms: *start,
                     ended_at_ms: None,
                     duration_minutes: duration,
+                    summary: None,
                 });
             }
         }

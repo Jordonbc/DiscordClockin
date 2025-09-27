@@ -11,6 +11,7 @@ const {
   Collection,
 } = require("discord.js");
 const { ApiClient } = require("./src/apiClient");
+const { startClockEventStream } = require("./src/events/clockEvents");
 
 const DISCORD_TOKEN = process.env.TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -70,6 +71,7 @@ client.once("ready", async () => {
   }
 
   console.log(`Clock bot ready as ${client.user.tag}`);
+  startClockEventStream(client);
 });
 
 client.on("interactionCreate", async (interaction) => {

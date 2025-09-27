@@ -5,6 +5,7 @@ use log::{debug, info};
 use crate::{
     config::AppConfig,
     error::ApiError,
+    events::EventBroadcaster,
     repository::{self, Repository},
 };
 
@@ -13,6 +14,7 @@ pub struct AppState {
     #[allow(dead_code)]
     pub config: AppConfig,
     pub repository: Arc<dyn Repository>,
+    pub events: EventBroadcaster,
 }
 
 impl AppState {
@@ -29,6 +31,12 @@ impl AppState {
 
         info!("Repository initialized using {backend:?} backend");
 
-        Ok(Self { config, repository })
+        let events = EventBroadcaster::new(256);
+
+        Ok(Self {
+            config,
+            repository,
+            events,
+        })
     }
 }

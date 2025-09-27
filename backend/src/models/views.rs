@@ -85,6 +85,7 @@ impl From<&GuildRolesDocument> for GuildRolesView {
 pub struct ClockDatesView {
     pub clock_in: Vec<i64>,
     pub clock_out: Vec<i64>,
+    pub clock_summary: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -135,6 +136,7 @@ impl From<&ClockDates> for ClockDatesView {
         Self {
             clock_in: clock_dates.clock_in.clone(),
             clock_out: clock_dates.clock_out.clone(),
+            clock_summary: clock_dates.clock_summary.clone(),
         }
     }
 }

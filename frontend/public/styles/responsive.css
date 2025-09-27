@@ -1,0 +1,143 @@
+@media (max-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-sidebar > * {
+    flex: 1 1 260px;
+  }
+
+  .report-content-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-header__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .stat-card__value {
+    font-size: 1.7rem;
+  }
+
+  .activity-list__item {
+    padding: 0.9rem;
+  }
+
+  .time-clock-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .time-clock-sidebar {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .report-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .report-header__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .report-summary-card__value {
+    font-size: 1.7rem;
+  }
+}
+
+@media (max-width: 540px) {
+  .time-clock-card {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .time-clock-card__time {
+    font-size: 2.5rem;
+  }
+
+  .time-clock-summary__details div {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .time-clock-summary__details dd {
+    font-size: 1.1rem;
+  }
+
+  .report-range {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .report-header__meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .report-session {
+    padding: 0.9rem 1rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .site-header {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .brand {
+    justify-self: flex-start;
+  }
+
+  .main-nav {
+    justify-self: flex-start;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .auth-controls {
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    text-align: left;
+  }
+
+  .user-summary {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .main-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .main-nav__link {
+    flex: 1;
+    text-align: center;
+  }
+
+  .data-table {
+    min-width: 100%;
+  }
+}

@@ -15,6 +15,18 @@ pub struct GuildWorkersDocument {
 pub struct WorkerRecord {
     #[serde(rename = "userId")]
     pub user_id: String,
+    #[serde(default)]
+    pub username: Option<String>,
+    #[serde(default, rename = "displayName")]
+    pub display_name: Option<String>,
+    #[serde(default, rename = "globalName")]
+    pub global_name: Option<String>,
+    #[serde(default)]
+    pub nickname: Option<String>,
+    #[serde(default)]
+    pub discriminator: Option<String>,
+    #[serde(default, rename = "userTag")]
+    pub user_tag: Option<String>,
     #[serde(default, rename = "clockDates")]
     pub clock_dates: ClockDates,
     #[serde(default, rename = "afkDates")]
@@ -51,6 +63,8 @@ pub struct ClockDates {
     pub clock_in: Vec<i64>,
     #[serde(default, rename = "clockOut")]
     pub clock_out: Vec<i64>,
+    #[serde(default, rename = "clockSummary")]
+    pub clock_summary: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -83,6 +97,12 @@ impl WorkerRecord {
     pub fn new(user_id: String, role_id: String, experience: Option<String>) -> Self {
         Self {
             user_id,
+            username: None,
+            display_name: None,
+            global_name: None,
+            nickname: None,
+            discriminator: None,
+            user_tag: None,
             clock_dates: ClockDates::default(),
             afk_dates: AfkDates::default(),
             on_leave: LeaveWindow::default(),
@@ -108,12 +128,13 @@ impl WorkerRecord {
         }
     }
 
-    pub fn mark_clock_out(&mut self, timestamp_ms: i64) {
+    pub fn mark_clock_out(&mut self, timestamp_ms: i64, summary: String) {
         self.status = "Offline".to_string();
         self.breaks_count = 0;
         self.worked = Some(0.0);
         self.break_time = 0.0;
         self.clock_dates.clock_out.push(timestamp_ms);
+        self.clock_dates.clock_summary.push(summary);
         self.afk_dates.afk_in.clear();
         self.afk_dates.afk_out.clear();
     }
