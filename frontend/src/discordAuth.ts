@@ -24,15 +24,34 @@ function generateOAuthStateToken(length = 16): string {
   return result;
 }
 
-function storeOAuthState(value: string): void {
+async function hashOAuthState(value: string): Promise<string> {
+  if (window.crypto?.subtle?.digest) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(value);
+    const digest = await window.crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest))
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16);
+}
+
+async function storeOAuthState(value: string): Promise<void> {
   try {
-    window.sessionStorage.setItem(DISCORD_OAUTH_STATE_KEY, value);
+    const hashedState = await hashOAuthState(value);
+    window.sessionStorage.setItem(DISCORD_OAUTH_STATE_KEY, hashedState);
   } catch (error) {
     console.warn("Unable to persist OAuth state", error);
   }
 }
 
-function consumeOAuthState(received: string | null): boolean {
+async function consumeOAuthState(received: string | null): Promise<boolean> {
   let stored: string | null = null;
   try {
     stored = window.sessionStorage.getItem(DISCORD_OAUTH_STATE_KEY);
@@ -45,7 +64,17 @@ function consumeOAuthState(received: string | null): boolean {
     return true;
   }
 
-  return stored === received;
+  if (!received) {
+    return false;
+  }
+
+  try {
+    const hashedReceived = await hashOAuthState(received);
+    return stored === hashedReceived;
+  } catch (error) {
+    console.warn("Unable to verify OAuth state", error);
+    return false;
+  }
 }
 
 function persistDiscordSession(session: unknown): void {
@@ -87,7 +116,7 @@ function clearUrlHash(): void {
   window.history.replaceState(null, document.title, `${pathname}${search}`);
 }
 
-function extractTokenFromHash(): any | null {
+async function extractTokenFromHash(): Promise<any | null> {
   const { hash } = window.location;
   if (!hash || hash.length <= 1) return null;
 
@@ -96,7 +125,7 @@ function extractTokenFromHash(): any | null {
   if (!accessToken) return null;
 
   const stateParam = params.get("state");
-  const stateValid = consumeOAuthState(stateParam);
+  const stateValid = await consumeOAuthState(stateParam);
   if (!stateValid) {
     showToast("Login verification failed. Please try again.", "error");
     clearUrlHash();
@@ -163,7 +192,7 @@ function resolveUserRoles(userId: string): string[] {
 }
 
 export async function hydrateDiscordSession(): Promise<void> {
-  const fragmentToken = extractTokenFromHash();
+  const fragmentToken = await extractTokenFromHash();
   const hadFragment = Boolean(fragmentToken);
 
   if (fragmentToken) {
@@ -213,14 +242,14 @@ export async function hydrateDiscordSession(): Promise<void> {
   }
 }
 
-export function initiateLogin(): void {
+export async function initiateLogin(): Promise<void> {
   if (!state.discordClientId) {
     showToast("Discord login is not configured.", "error");
     return;
   }
 
   const oauthState = generateOAuthStateToken();
-  storeOAuthState(oauthState);
+  await storeOAuthState(oauthState);
 
   const params = new URLSearchParams({
     client_id: state.discordClientId,

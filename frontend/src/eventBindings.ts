@@ -64,17 +64,21 @@ export function bindEvents(): void {
       if (state.user) {
         switchView("my-time");
       } else {
-        initiateLogin();
+        void initiateLogin();
       }
     });
   }
 
   if (loginButton) {
-    loginButton.addEventListener("click", initiateLogin);
+    loginButton.addEventListener("click", () => {
+      void initiateLogin();
+    });
   }
 
   if (authRequiredLoginButton) {
-    authRequiredLoginButton.addEventListener("click", initiateLogin);
+    authRequiredLoginButton.addEventListener("click", () => {
+      void initiateLogin();
+    });
   }
 
   const rangePickerElementsReady =
