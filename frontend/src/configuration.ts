@@ -1,11 +1,11 @@
 import {
   DEFAULT_DISCORD_AUTHORIZE_URL,
   DISCORD_OAUTH_STATE_KEY,
-} from "./constants.js";
-import { getRuntimeConfig } from "./runtimeConfig.js";
-import { state } from "./state.js";
-import { showToast } from "./ui/notifications.js";
-import { updateConnectionIndicator } from "./connectionStatus.js";
+} from "./constants";
+import { getRuntimeConfig } from "./runtimeConfig";
+import { state } from "./state";
+import { showToast } from "./ui/notifications";
+import { updateConnectionIndicator } from "./connectionStatus";
 
 const config = getRuntimeConfig();
 

@@ -1,4 +1,4 @@
-import { state } from "./state.js";
+import { state } from "./state";
 
 export function canAccessAdmin(): boolean {
   return Boolean(

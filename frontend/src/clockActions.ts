@@ -1,8 +1,8 @@
-import { state } from "./state.js";
-import { showToast } from "./ui/notifications.js";
-import { apiRequest, ensureGuildConfigured } from "./apiClient.js";
-import { refreshMyTime } from "./timesheetData.js";
-import { hasActiveSession, openClockOutModal } from "./ui/clockControls.js";
+import { state } from "./state";
+import { showToast } from "./ui/notifications";
+import { apiRequest, ensureGuildConfigured } from "./apiClient";
+import { refreshMyTime } from "./timesheetData";
+import { hasActiveSession, openClockOutModal } from "./ui/clockControls";
 
 export async function performClockIn(): Promise<void> {
   if (!state.user) {

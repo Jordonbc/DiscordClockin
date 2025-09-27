@@ -13,14 +13,14 @@ import {
   userName,
   userRoles,
   viewJumpButtons,
-} from "./dom.js";
-import { state } from "./state.js";
-import { closeUserMenu } from "./ui/clockControls.js";
-import { updateClockStatus } from "./clockStatusManager.js";
-import { renderDashboardOverview, renderHoursReport } from "./ui/dashboard.js";
-import { updateClockControlsVisibility } from "./ui/clockControls.js";
-import { switchView } from "./navigation.js";
-import { canAccessAdmin } from "./permissions.js";
+} from "./dom";
+import { state } from "./state";
+import { closeUserMenu } from "./ui/clockControls";
+import { updateClockStatus } from "./clockStatusManager";
+import { renderDashboardOverview, renderHoursReport } from "./ui/dashboard";
+import { updateClockControlsVisibility } from "./ui/clockControls";
+import { switchView } from "./navigation";
+import { canAccessAdmin } from "./permissions";
 
 export function renderAuthState(): void {
   const authed = Boolean(state.user);

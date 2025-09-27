@@ -1,11 +1,11 @@
-import { state } from "../state.js";
+import { state } from "../state";
 import {
   clockOutButton,
   clockOutModal,
   clockSummaryInput,
   userMenuButton,
   userMenu,
-} from "../dom.js";
+} from "../dom";
 
 let userMenuIsOpen = false;
 

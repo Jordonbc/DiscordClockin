@@ -1,0 +1,118 @@
+<section class="view" data-view="hours-report" data-requires-auth="true">
+  <header class="view-header report-header">
+    <div class="report-header__copy">
+      <p class="report-header__eyebrow">Reports</p>
+      <h2>Hours report</h2>
+      <p>View and analyze your time tracking data.</p>
+    </div>
+    <div class="report-header__actions">
+      <div class="report-range-picker" data-range-selector>
+        <button
+          id="hours-report-picker-toggle"
+          class="report-range-picker__toggle"
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          aria-controls="hours-report-picker-panel"
+        >
+          <span id="hours-report-range-type" class="report-range-picker__type">Weekly</span>
+          <span id="hours-report-range" class="report-range-picker__value">—</span>
+          <span class="report-range-picker__icon" aria-hidden="true">▾</span>
+        </button>
+        <div
+          id="hours-report-picker-panel"
+          class="report-range-picker__popover"
+          role="dialog"
+          aria-modal="false"
+          hidden
+        >
+          <div class="report-range-picker__calendar" aria-label="Report range">
+            <div class="report-range-picker__calendar-header">
+              <label class="report-range-picker__calendar-field">
+                <span class="report-range-picker__field-label">Month</span>
+                <select
+                  id="hours-report-month-select"
+                  class="report-range-picker__select"
+                  aria-label="Select month"
+                ></select>
+              </label>
+              <label class="report-range-picker__calendar-field">
+                <span class="report-range-picker__field-label">Year</span>
+                <select
+                  id="hours-report-year-select"
+                  class="report-range-picker__select"
+                  aria-label="Select year"
+                ></select>
+              </label>
+            </div>
+            <div
+              id="hours-report-calendar"
+              class="report-range-picker__calendar-grid"
+              role="application"
+              aria-label="Select a date range"
+            ></div>
+            <p class="report-range-picker__hint">
+              Scroll to change months or use the dropdowns to jump.
+            </p>
+            <div class="report-range-picker__quick-actions">
+              <button id="hours-report-this-week" class="report-range-picker__quick-button" type="button">
+                This week
+              </button>
+              <button id="hours-report-this-month" class="report-range-picker__quick-button" type="button">
+                This month
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button id="hours-report-export" class="button button--ghost" type="button">
+        <span aria-hidden="true">⬇️</span>
+        Export CSV
+      </button>
+    </div>
+  </header>
+
+  <div class="report-summary-grid">
+    <article class="report-summary-card report-summary-card--primary">
+      <p class="report-summary-card__label">Total hours</p>
+      <p id="hours-report-total" class="report-summary-card__value">0.0h</p>
+      <p class="report-summary-card__hint">Logged in this period</p>
+    </article>
+    <article class="report-summary-card">
+      <p class="report-summary-card__label">Break time</p>
+      <p id="hours-report-break" class="report-summary-card__value">0.0h</p>
+      <p class="report-summary-card__hint">Recorded downtime</p>
+    </article>
+    <article class="report-summary-card">
+      <p class="report-summary-card__label">Sessions</p>
+      <p id="hours-report-sessions" class="report-summary-card__value">0</p>
+      <p class="report-summary-card__hint">Unique work sessions</p>
+    </article>
+    <article class="report-summary-card">
+      <p class="report-summary-card__label">Average session</p>
+      <p id="hours-report-average" class="report-summary-card__value">0h 00m</p>
+      <p class="report-summary-card__hint">Across the selected period</p>
+    </article>
+  </div>
+
+  <div class="report-layout">
+    <section class="panel">
+      <div class="panel__header">
+        <h3>Daily totals</h3>
+        <button id="refresh-my-time" class="button button--ghost" type="button">
+          Refresh
+        </button>
+      </div>
+      <ul id="hours-report-daily" class="report-timeline">
+        <li class="report-timeline__empty muted">No data available for this period.</li>
+      </ul>
+    </section>
+
+    <aside class="panel panel--compact">
+      <h3>Recent sessions</h3>
+      <ul id="hours-report-recent" class="report-recent-list">
+        <li class="report-recent-list__empty muted">No recent sessions.</li>
+      </ul>
+    </aside>
+  </div>
+</section>

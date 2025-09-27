@@ -1,13 +1,13 @@
-import { state } from "./state.js";
-import { showToast } from "./ui/notifications.js";
-import { renderMyTime, renderHolidayRequests } from "./ui/myTime.js";
-import { renderAdminHolidays, renderAdminTimesheets } from "./ui/admin.js";
-import { renderDashboardOverview, renderHoursReport } from "./ui/dashboard.js";
-import { calculateDurationMinutes } from "./utils/time.js";
-import { apiRequest, ensureGuildConfigured } from "./apiClient.js";
-import { updateClockStatus } from "./clockStatusManager.js";
-import { updateConnectionIndicator } from "./connectionStatus.js";
-import { canAccessAdmin } from "./permissions.js";
+import { state } from "./state";
+import { showToast } from "./ui/notifications";
+import { renderMyTime, renderHolidayRequests } from "./ui/myTime";
+import { renderAdminHolidays, renderAdminTimesheets } from "./ui/admin";
+import { renderDashboardOverview, renderHoursReport } from "./ui/dashboard";
+import { calculateDurationMinutes } from "./utils/time";
+import { apiRequest, ensureGuildConfigured } from "./apiClient";
+import { updateClockStatus } from "./clockStatusManager";
+import { updateConnectionIndicator } from "./connectionStatus";
+import { canAccessAdmin } from "./permissions";
 
 export async function refreshMyTime(): Promise<void> {
   if (!state.user) return;

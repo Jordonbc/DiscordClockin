@@ -1,6 +1,6 @@
-import { state } from "../state.js";
-import { adminHolidayList, adminTimesheetRows } from "../dom.js";
-import { formatDateTime, formatDuration } from "../utils/formatters.js";
+import { state } from "../state";
+import { adminHolidayList, adminTimesheetRows } from "../dom";
+import { formatDateTime, formatDuration } from "../utils/formatters";
 
 export function renderAdminTimesheets(): void {
   if (!adminTimesheetRows) return;

@@ -1,9 +1,9 @@
-import { clockMessage, clockState, dashboardClockMessage, dashboardClockStatus } from "./dom.js";
-import { state } from "./state.js";
-import { ClockStatus, setLastClockStatus } from "./clockStatus.js";
-import { formatDateTime } from "./utils/formatters.js";
-import { updateClockControlsVisibility } from "./ui/clockControls.js";
-import { renderDashboardOverview, renderTimeClockPage } from "./ui/dashboard.js";
+import { clockMessage, clockState, dashboardClockMessage, dashboardClockStatus } from "./dom";
+import { state } from "./state";
+import { ClockStatus, setLastClockStatus } from "./clockStatus";
+import { formatDateTime } from "./utils/formatters";
+import { updateClockControlsVisibility } from "./ui/clockControls";
+import { renderDashboardOverview, renderTimeClockPage } from "./ui/dashboard";
 
 function buildWaitingStatus(): ClockStatus {
   return {

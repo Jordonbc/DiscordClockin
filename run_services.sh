@@ -47,7 +47,7 @@ run_service() {
 
 run_service "backend" "$SCRIPT_DIR/backend" cargo run
 run_service "discord_bot" "$SCRIPT_DIR/DiscordBots/clockin" node .
-run_service "frontend" "$SCRIPT_DIR/frontend" npx serve .
+run_service "frontend" "$SCRIPT_DIR/frontend" npm run dev -- --host 0.0.0.0
 
 echo "All services started. Press Ctrl+C to stop."
 

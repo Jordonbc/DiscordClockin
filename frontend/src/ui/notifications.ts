@@ -1,4 +1,4 @@
-import { notifications } from "../dom.js";
+import { notifications } from "../dom";
 
 export function showToast(message: string, type: "info" | "success" | "error" = "info"): void {
   if (!notifications) return;

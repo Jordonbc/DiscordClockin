@@ -1,4 +1,4 @@
-import { calculateDurationMinutes } from "./time.js";
+import { calculateDurationMinutes } from "./time";
 
 export function formatDateTime(value: unknown): string {
   if (!value) return "—";

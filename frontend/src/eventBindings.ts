@@ -32,29 +32,29 @@ import {
   userMenuButton,
   userMenuDropdown,
   userMenuProfile,
-} from "./dom.js";
-import { state } from "./state.js";
-import { showToast } from "./ui/notifications.js";
+} from "./dom";
+import { state } from "./state";
+import { showToast } from "./ui/notifications";
 import {
   closeClockOutModal,
   closeUserMenu,
   hasActiveSession,
   isUserMenuOpen,
   toggleUserMenu,
-} from "./ui/clockControls.js";
-import { bindNavigation, switchView } from "./navigation.js";
-import { initiateLogin, clearDiscordSession } from "./discordAuth.js";
-import { performClockIn, promptClockOut } from "./clockActions.js";
+} from "./ui/clockControls";
+import { bindNavigation, switchView } from "./navigation";
+import { initiateLogin, clearDiscordSession } from "./discordAuth";
+import { performClockIn, promptClockOut } from "./clockActions";
 import {
   loadAdminHolidays,
   loadAdminTimesheets,
   refreshHolidays,
   refreshMyTime,
-} from "./timesheetData.js";
-import { ensureGuildConfigured, apiRequest } from "./apiClient.js";
-import { renderAuthState } from "./authState.js";
-import { renderHoursReport } from "./ui/dashboard.js";
-import { canAccessAdmin } from "./permissions.js";
+} from "./timesheetData";
+import { ensureGuildConfigured, apiRequest } from "./apiClient";
+import { renderAuthState } from "./authState";
+import { renderHoursReport } from "./ui/dashboard";
+import { canAccessAdmin } from "./permissions";
 
 const DAY_IN_MS = 86400000;
 

@@ -1,7 +1,7 @@
-import { state } from "../state.js";
-import { myTimeEntries, holidayList } from "../dom.js";
-import { formatDateTime, formatDuration } from "../utils/formatters.js";
-import { renderTimeClockPage } from "./dashboard.js";
+import { state } from "../state";
+import { myTimeEntries, holidayList } from "../dom";
+import { formatDateTime, formatDuration } from "../utils/formatters";
+import { renderTimeClockPage } from "./dashboard";
 
 export function renderMyTime(): void {
   if (!myTimeEntries) return;

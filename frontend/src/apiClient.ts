@@ -1,6 +1,6 @@
-import { state } from "./state.js";
-import { showToast } from "./ui/notifications.js";
-import { updateConnectionIndicator } from "./connectionStatus.js";
+import { state } from "./state";
+import { showToast } from "./ui/notifications";
+import { updateConnectionIndicator } from "./connectionStatus";
 
 export interface ApiRequestOptions {
   path: string;

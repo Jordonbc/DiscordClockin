@@ -1,0 +1,139 @@
+<section class="view" data-view="admin" data-requires-role="admin">
+  <header class="view-header">
+    <h2>Admin workspace</h2>
+    <p>Review timesheets, handle time off, and manage team roles.</p>
+  </header>
+
+  <article class="panel">
+    <div class="panel__header">
+      <h3>Review team timesheets</h3>
+      <button id="refresh-admin-timesheets" class="button button--ghost">
+        Refresh
+      </button>
+    </div>
+    <form id="admin-timesheet-form" class="form-grid">
+      <label>
+        Member ID
+        <input name="memberId" placeholder="Discord ID" />
+      </label>
+      <p class="form-grid__full muted">
+        Enter a member's Discord ID to load their current timesheet summary.
+      </p>
+      <button type="submit" class="button button--primary">
+        Fetch timesheet
+      </button>
+    </form>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Member</th>
+            <th scope="col">Start</th>
+            <th scope="col">End</th>
+            <th scope="col">Duration</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody id="admin-timesheet-rows">
+          <tr>
+            <td colspan="5" class="muted">
+              Submit a search to view entries.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  <article class="panel">
+    <h3>Modify logged hours</h3>
+    <form id="admin-modify-hours-form" class="form-grid">
+      <label>
+        Member ID
+        <input name="memberId" placeholder="Discord ID" required />
+      </label>
+      <label>
+        Hours
+        <input
+          type="number"
+          name="hours"
+          min="0.25"
+          step="0.25"
+          placeholder="e.g. 1.5"
+          required
+        />
+      </label>
+      <label>
+        Scope
+        <select name="scope" required>
+          <option value="daily">Daily total</option>
+          <option value="weekly">Weekly total</option>
+          <option value="total">All-time total</option>
+        </select>
+      </label>
+      <label>
+        Action
+        <select name="action" required>
+          <option value="add">Add hours</option>
+          <option value="remove">Remove hours</option>
+        </select>
+      </label>
+      <button type="submit" class="button button--primary">
+        Apply adjustment
+      </button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <div class="panel__header">
+      <h3>Holiday approvals</h3>
+      <button id="refresh-admin-holidays" class="button button--ghost">
+        Refresh
+      </button>
+    </div>
+    <ul id="admin-holiday-requests" class="timeline">
+      <li class="timeline__item muted">No pending requests.</li>
+    </ul>
+    <form id="admin-holiday-form" class="form-grid">
+      <label>
+        Request ID
+        <input name="requestId" placeholder="Holiday request ID" required />
+      </label>
+      <label>
+        Action
+        <select name="status" required>
+          <option value="approved">Approve</option>
+          <option value="denied">Deny</option>
+        </select>
+      </label>
+      <label class="form-grid__full">
+        Manager note
+        <textarea name="managerNote" rows="2"></textarea>
+      </label>
+      <button type="submit" class="button button--primary">
+        Submit decision
+      </button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h3>Role management</h3>
+    <form id="admin-role-form" class="form-grid">
+      <label>
+        Member ID
+        <input name="memberId" placeholder="Discord ID" required />
+      </label>
+      <label>
+        Role ID
+        <input name="roleId" placeholder="Backend role identifier" required />
+      </label>
+      <label>
+        Experience
+        <input name="experience" placeholder="Experience label (optional)" />
+      </label>
+      <button type="submit" class="button button--primary">
+        Change role
+      </button>
+    </form>
+  </article>
+</section>

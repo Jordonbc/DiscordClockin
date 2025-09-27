@@ -1,4 +1,4 @@
-import { DEFAULT_DISCORD_AUTHORIZE_URL } from "./constants.js";
+import { DEFAULT_DISCORD_AUTHORIZE_URL } from "./constants";
 import type { AppState } from "./types";
 
 const today = new Date();

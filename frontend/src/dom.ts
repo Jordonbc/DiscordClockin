@@ -1,4 +1,4 @@
-import { query, queryAll } from "./domUtils.js";
+import { query, queryAll } from "./domUtils";
 
 export { query, queryAll };
 

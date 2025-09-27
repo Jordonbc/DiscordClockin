@@ -1,5 +1,5 @@
-import { state } from "./state.js";
-import { refreshMyTime } from "./timesheetData.js";
+import { state } from "./state";
+import { refreshMyTime } from "./timesheetData";
 
 let eventSource: EventSource | null = null;
 let eventStreamReconnectTimer: ReturnType<typeof setTimeout> | null = null;

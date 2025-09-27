@@ -1,7 +1,7 @@
-import { navButtons, viewJumpButtons, views } from "./dom.js";
-import { showToast } from "./ui/notifications.js";
-import { state } from "./state.js";
-import { canAccessAdmin } from "./permissions.js";
+import { navButtons, viewJumpButtons, views } from "./dom";
+import { showToast } from "./ui/notifications";
+import { state } from "./state";
+import { canAccessAdmin } from "./permissions";
 
 export function switchView(target: string): void {
   views.forEach((view) => {

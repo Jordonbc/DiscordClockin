@@ -1,21 +1,21 @@
-import { configureBaseUrl, configureDiscordLogin, configureGuild } from "./configuration.js";
-import { connectEventStream } from "./eventStream.js";
-import { renderHolidayRequests } from "./ui/myTime.js";
-import { startTimeClockTicker } from "./ui/dashboard.js";
-import { bindEvents } from "./eventBindings.js";
-import { hydrateDiscordSession } from "./discordAuth.js";
-import { renderAuthState } from "./authState.js";
-import { showToast } from "./ui/notifications.js";
-import { state } from "./state.js";
-import { switchView } from "./navigation.js";
+import { configureBaseUrl, configureDiscordLogin, configureGuild } from "./configuration";
+import { connectEventStream } from "./eventStream";
+import { renderHolidayRequests } from "./ui/myTime";
+import { startTimeClockTicker } from "./ui/dashboard";
+import { bindEvents } from "./eventBindings";
+import { hydrateDiscordSession } from "./discordAuth";
+import { renderAuthState } from "./authState";
+import { showToast } from "./ui/notifications";
+import { state } from "./state";
+import { switchView } from "./navigation";
 import {
   refreshHolidays,
   refreshMyTime,
   loadAdminHolidays,
   loadAdminTimesheets,
-} from "./timesheetData.js";
+} from "./timesheetData";
 
-function initialize(): void {
+export function initialize(): void {
   configureBaseUrl();
   configureDiscordLogin();
   configureGuild();
@@ -56,5 +56,3 @@ function initialize(): void {
     }
   });
 }
-
-initialize();

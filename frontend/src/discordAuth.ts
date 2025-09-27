@@ -2,11 +2,11 @@ import {
   DISCORD_OAUTH_STATE_KEY,
   DISCORD_STORAGE_KEY,
   DISCORD_USER_API_URL,
-} from "./constants.js";
-import { state } from "./state.js";
-import { showToast } from "./ui/notifications.js";
-import { renderAuthState } from "./authState.js";
-import { refreshMyTime } from "./timesheetData.js";
+} from "./constants";
+import { state } from "./state";
+import { showToast } from "./ui/notifications";
+import { renderAuthState } from "./authState";
+import { refreshMyTime } from "./timesheetData";
 
 function generateOAuthStateToken(length = 16): string {
   if (window.crypto && window.crypto.getRandomValues) {

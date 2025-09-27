@@ -10,35 +10,20 @@ touching Postman or cURL.
 1. Copy `config.example.ts` to `config.ts` (or edit the existing file) and set
    `apiBaseUrl` to the full URL of your backend, e.g.
    `https://clockin.example.com/api` or `http://localhost:3000`.
-2. Run `npm install` followed by `npm run build` to compile the TypeScript
-   sources under `scripts/` and the runtime configuration into `dist/`.
+2. Run `npm install` followed by `npm run build` to bundle the TypeScript
+   sources under `src/` together with the runtime configuration. The compiled
+   site is emitted into `dist/` and is ready to deploy to any static host.
 3. Redeploy or refresh the page after updating the configuration.
 
-The build step emits ES modules into `dist/`. You can integrate the compile
-step into your existing deployment tooling or run `npm run watch` during local
-development for automatic rebuilds.
+The Vite toolchain also provides a dev server so you can iterate quickly. Run
+`npm run dev` to start it and open the printed URL in your browser. Changes to
+TypeScript, HTML fragments, or the runtime configuration hot-reload in place.
 
 ## Running locally or hosting
 
-The console ships with a lightweight Node server so you can host it with the
-same runtime you already use for the Discord bot. From this folder run:
-
-```bash
-node server.js
-```
-
-The server listens on `0.0.0.0:5173` by default. To use a different interface
-or port set the `HOST` and `PORT` environment variables, for example:
-
-```bash
-PORT=8080 HOST=127.0.0.1 node server.js
-```
-
-The Node server only serves static assets so you can also deploy it behind
-process managers like PM2 alongside the rest of your stack.
-
-Then open the printed URL in your browser. The portal automatically connects
-using the configured `apiBaseUrl`.
+When you're ready to serve the production build locally run `npm run preview`.
+It uses the same optimized bundle that `npm run build` emits and serves it on a
+temporary local server so you can smoke-test before deploying.
 
 ## Using the dashboard
 

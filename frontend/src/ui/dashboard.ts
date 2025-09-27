@@ -1,4 +1,4 @@
-import { state } from "../state.js";
+import { state } from "../state";
 import {
   dashboardActivity,
   dashboardBreakHours,
@@ -34,8 +34,8 @@ import {
   timeClockSummaryOvertime,
   timeClockSummarySessions,
   timeClockSummaryTotal,
-} from "../dom.js";
-import { getLastClockStatus } from "../clockStatus.js";
+} from "../dom";
+import { getLastClockStatus } from "../clockStatus";
 import {
   formatCurrency,
   formatDateTime,
@@ -46,9 +46,9 @@ import {
   formatTimeRange,
   filterEntriesByRange,
   buildDailyBreakdown,
-} from "../utils/formatters.js";
-import { calculateDurationMinutes } from "../utils/time.js";
-import { hasActiveSession } from "./clockControls.js";
+} from "../utils/formatters";
+import { calculateDurationMinutes } from "../utils/time";
+import { hasActiveSession } from "./clockControls";
 
 const DAY_IN_MS = 86400000;
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

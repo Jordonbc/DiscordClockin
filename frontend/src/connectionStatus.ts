@@ -1,5 +1,5 @@
-import { connectionIndicator } from "./dom.js";
-import { state } from "./state.js";
+import { connectionIndicator } from "./dom";
+import { state } from "./state";
 
 export interface ConnectionStatus {
   ok: boolean;

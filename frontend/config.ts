@@ -1,4 +1,4 @@
-import type { FrontendConfig } from "./scripts/types";
+import type { FrontendConfig } from "./src/types";
 
 declare global {
   interface Window {
