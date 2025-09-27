@@ -15,6 +15,18 @@ pub struct GuildWorkersDocument {
 pub struct WorkerRecord {
     #[serde(rename = "userId")]
     pub user_id: String,
+    #[serde(default)]
+    pub username: Option<String>,
+    #[serde(default, rename = "displayName")]
+    pub display_name: Option<String>,
+    #[serde(default, rename = "globalName")]
+    pub global_name: Option<String>,
+    #[serde(default)]
+    pub nickname: Option<String>,
+    #[serde(default)]
+    pub discriminator: Option<String>,
+    #[serde(default, rename = "userTag")]
+    pub user_tag: Option<String>,
     #[serde(default, rename = "clockDates")]
     pub clock_dates: ClockDates,
     #[serde(default, rename = "afkDates")]
@@ -85,6 +97,12 @@ impl WorkerRecord {
     pub fn new(user_id: String, role_id: String, experience: Option<String>) -> Self {
         Self {
             user_id,
+            username: None,
+            display_name: None,
+            global_name: None,
+            nickname: None,
+            discriminator: None,
+            user_tag: None,
             clock_dates: ClockDates::default(),
             afk_dates: AfkDates::default(),
             on_leave: LeaveWindow::default(),

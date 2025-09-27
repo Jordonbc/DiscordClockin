@@ -124,6 +124,10 @@ function extractTokenFromHash(): any | null {
 export function clearDiscordSession(options: { skipStorage?: boolean } = {}): void {
   state.discordToken = null;
   state.user = null;
+  state.adminOverview = null;
+  state.adminOverviewError = null;
+  state.adminOverviewLoading = false;
+  state.adminActiveTab = "departments";
   if (!options.skipStorage) {
     clearPersistedDiscordSession();
   }

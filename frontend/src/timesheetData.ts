@@ -1,13 +1,11 @@
 import { state } from "./state";
 import { showToast } from "./ui/notifications";
 import { renderMyTime, renderHolidayRequests } from "./ui/myTime";
-import { renderAdminHolidays, renderAdminTimesheets } from "./ui/admin";
 import { renderDashboardOverview, renderHoursReport } from "./ui/dashboard";
 import { calculateDurationMinutes } from "./utils/time";
 import { apiRequest, ensureGuildConfigured } from "./apiClient";
 import { updateClockStatus } from "./clockStatusManager";
 import { updateConnectionIndicator } from "./connectionStatus";
-import { canAccessAdmin } from "./permissions";
 
 export async function refreshMyTime(): Promise<void> {
   if (!state.user) return;
@@ -91,63 +89,3 @@ export function refreshHolidays(): void {
   renderHolidayRequests();
 }
 
-export async function loadAdminTimesheets(memberId?: string): Promise<void> {
-  if (!canAccessAdmin()) return;
-
-  if (typeof memberId === "string") {
-    state.adminTimesheetMemberId = memberId.trim() || null;
-  }
-
-  if (!state.adminTimesheetMemberId) {
-    state.adminTimesheets = [];
-    state.adminTimesheetWorker = null;
-    renderAdminTimesheets();
-    return;
-  }
-
-  try {
-    ensureGuildConfigured();
-  } catch (error) {
-    state.adminTimesheets = [];
-    state.adminTimesheetWorker = null;
-    renderAdminTimesheets();
-    return;
-  }
-
-  try {
-    const path = `timesheets/${encodeURIComponent(state.guildId)}/${encodeURIComponent(
-      state.adminTimesheetMemberId,
-    )}`;
-    const data = await apiRequest({ path, silent: true });
-    const sessions = Array.isArray((data as any)?.sessions) ? (data as any).sessions : [];
-    state.adminTimesheets = sessions
-      .map((session: any) => ({
-        memberId: state.adminTimesheetMemberId,
-        start: session.started_at_ms ?? null,
-        end: session.ended_at_ms ?? null,
-        status: session.ended_at_ms ? "Completed" : "Active",
-      }))
-      .sort((a, b) => {
-        const aTime = a.start ? new Date(a.start).getTime() : 0;
-        const bTime = b.start ? new Date(b.start).getTime() : 0;
-        return bTime - aTime;
-      });
-    state.adminTimesheetWorker = (data as any)?.worker || null;
-  } catch (error: any) {
-    state.adminTimesheets = [];
-    state.adminTimesheetWorker = null;
-    if (error && typeof error === "object" && "status" in error && error.status === 404) {
-      showToast("No worker record found for that member.", "info");
-    } else {
-      showToast("Failed to load member timesheet.", "error");
-    }
-  }
-
-  renderAdminTimesheets();
-}
-
-export function loadAdminHolidays(): void {
-  if (!canAccessAdmin()) return;
-  renderAdminHolidays();
-  showToast("Holiday approvals are handled inside Discord.", "info");
-}

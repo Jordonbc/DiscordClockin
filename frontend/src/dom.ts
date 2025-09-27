@@ -37,16 +37,22 @@ export const holidayForm = query<HTMLFormElement>("#holiday-form");
 export const refreshHolidaysButton = query<HTMLButtonElement>("#refresh-holidays");
 export const holidayList = query<HTMLElement>("#holiday-list");
 
-export const adminTimesheetForm = query<HTMLFormElement>("#admin-timesheet-form");
-export const adminTimesheetRows = query<HTMLElement>("#admin-timesheet-rows");
-export const refreshAdminTimesheets = query<HTMLButtonElement>("#refresh-admin-timesheets");
-export const adminModifyHoursForm = query<HTMLFormElement>("#admin-modify-hours-form");
-
-export const adminHolidayList = query<HTMLElement>("#admin-holiday-requests");
-export const refreshAdminHolidays = query<HTMLButtonElement>("#refresh-admin-holidays");
-export const adminHolidayForm = query<HTMLFormElement>("#admin-holiday-form");
-
-export const adminRoleForm = query<HTMLFormElement>("#admin-role-form");
+export const adminTabButtons = queryAll<HTMLButtonElement>("[data-admin-tab]");
+export const adminSections = queryAll<HTMLElement>("[data-admin-section]");
+export const adminDepartmentsContainer = query<HTMLElement>("#admin-departments");
+export const adminRolesContainer = query<HTMLElement>("#admin-roles");
+export const adminDevelopersContainer = query<HTMLElement>("#admin-developers");
+export const adminOffboardingContainer = query<HTMLElement>("#admin-offboarding");
+export const adminPerformanceMetrics = query<HTMLElement>("#admin-performance-metrics");
+export const adminPerformanceDetails = query<HTMLElement>("#admin-performance-details");
+export const adminTimeEntriesContainer = query<HTMLElement>("#admin-time-entries");
+export const adminHolidayOverview = query<HTMLElement>("#admin-holiday-overview");
+export const adminAddDepartmentButton = query<HTMLButtonElement>("#admin-add-department");
+export const adminAddRoleButton = query<HTMLButtonElement>("#admin-add-role");
+export const adminRefreshDevelopersButton = query<HTMLButtonElement>("#admin-refresh-developers");
+export const adminRefreshPerformanceButton = query<HTMLButtonElement>("#admin-refresh-performance");
+export const adminAddTimeEntryButton = query<HTMLButtonElement>("#admin-add-time-entry");
+export const adminRefreshHolidaysButton = query<HTMLButtonElement>("#admin-refresh-holidays");
 
 export const notifications = query<HTMLElement>("#notifications");
 

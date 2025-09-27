@@ -1,8 +1,11 @@
 import {
-  adminHolidayForm,
-  adminModifyHoursForm,
-  adminRoleForm,
-  adminTimesheetForm,
+  adminAddDepartmentButton,
+  adminAddRoleButton,
+  adminAddTimeEntryButton,
+  adminRefreshDevelopersButton,
+  adminRefreshHolidaysButton,
+  adminRefreshPerformanceButton,
+  adminTabButtons,
   clockInButton,
   clockOutButton,
   clockOutModalDismissButtons,
@@ -22,8 +25,6 @@ import {
   hoursReportPickerToggle,
   hoursReportPickerPanel,
   hoursReportRangePicker,
-  refreshAdminHolidays,
-  refreshAdminTimesheets,
   refreshHolidaysButton,
   refreshMyTimeButton,
   timeClockActionButton,
@@ -45,16 +46,13 @@ import {
 import { bindNavigation, switchView } from "./navigation";
 import { initiateLogin, clearDiscordSession } from "./discordAuth";
 import { performClockIn, promptClockOut } from "./clockActions";
-import {
-  loadAdminHolidays,
-  loadAdminTimesheets,
-  refreshHolidays,
-  refreshMyTime,
-} from "./timesheetData";
+import { refreshHolidays, refreshMyTime } from "./timesheetData";
 import { ensureGuildConfigured, apiRequest } from "./apiClient";
 import { renderAuthState } from "./authState";
 import { renderHoursReport } from "./ui/dashboard";
 import { canAccessAdmin } from "./permissions";
+import { loadAdminOverview, refreshAdminOverview, setAdminActiveTab } from "./adminData";
+import type { AdminTabKey } from "./types";
 
 const DAY_IN_MS = 86400000;
 
@@ -317,151 +315,64 @@ export function bindEvents(): void {
     });
   }
 
-  if (adminTimesheetForm) {
-    adminTimesheetForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
+  adminTabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const tab = button.dataset.adminTab as AdminTabKey | undefined;
+      if (!tab) return;
       if (!canAccessAdmin()) {
         showToast("Admin access required.", "error");
         return;
       }
-      const formData = new FormData(adminTimesheetForm);
-      const memberId = String(formData.get("memberId") ?? "").trim();
-      if (!memberId) {
-        state.adminTimesheetMemberId = null;
-        state.adminTimesheets = [];
-        state.adminTimesheetWorker = null;
-        loadAdminTimesheets();
-        showToast("Enter a Discord ID to load a timesheet.", "info");
-        return;
+      setAdminActiveTab(tab);
+      if (!state.adminOverview && !state.adminOverviewLoading) {
+        void loadAdminOverview();
       }
-      await loadAdminTimesheets(memberId);
+    });
+  });
+
+  if (adminAddDepartmentButton) {
+    adminAddDepartmentButton.addEventListener("click", () => {
+      showToast("Create departments through the Discord admin tools.", "info");
     });
   }
 
-  if (refreshAdminTimesheets) {
-    refreshAdminTimesheets.addEventListener("click", async () => {
+  if (adminAddRoleButton) {
+    adminAddRoleButton.addEventListener("click", () => {
+      showToast("Manage role definitions from the Discord bot setup.", "info");
+    });
+  }
+
+  if (adminAddTimeEntryButton) {
+    adminAddTimeEntryButton.addEventListener("click", () => {
+      showToast("Time entries are generated automatically from clock-ins.", "info");
+    });
+  }
+
+  const bindRefresh = (
+    button: HTMLButtonElement | null,
+    message: string,
+  ): void => {
+    if (!button) return;
+    button.addEventListener("click", () => {
       if (!canAccessAdmin()) {
         showToast("Admin access required.", "error");
         return;
       }
-      await loadAdminTimesheets();
+      showToast(message, "info");
+      void refreshAdminOverview();
     });
-  }
+  };
 
-  if (adminModifyHoursForm) {
-    adminModifyHoursForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
+  bindRefresh(adminRefreshDevelopersButton, "Refreshing developer analytics…");
+  bindRefresh(adminRefreshPerformanceButton, "Refreshing performance metrics…");
+  if (adminRefreshHolidaysButton) {
+    adminRefreshHolidaysButton.addEventListener("click", () => {
       if (!canAccessAdmin()) {
         showToast("Admin access required.", "error");
         return;
       }
-      try {
-        ensureGuildConfigured();
-      } catch (error) {
-        return;
-      }
-      const formData = new FormData(adminModifyHoursForm);
-      const memberId = String(formData.get("memberId") ?? "").trim();
-      const hours = Number(formData.get("hours"));
-      const scope = String(formData.get("scope") ?? "").toLowerCase();
-      const action = String(formData.get("action") ?? "add").toLowerCase();
-
-      if (!memberId) {
-        showToast("Provide a member ID.", "error");
-        return;
-      }
-
-      if (!Number.isFinite(hours) || hours <= 0) {
-        showToast("Enter a positive number of hours.", "error");
-        return;
-      }
-
-      if (!["daily", "weekly", "total"].includes(scope)) {
-        showToast("Select a valid scope.", "error");
-        return;
-      }
-
-      const endpoint = action === "remove" ? "workers/hours/remove" : "workers/hours/add";
-      const payload = {
-        guild_id: state.guildId,
-        user_id: memberId,
-        hours,
-        scope,
-      };
-      try {
-        await apiRequest({ path: endpoint, method: "POST", body: payload });
-        showToast("Hours updated.", "success");
-        adminModifyHoursForm.reset();
-        if (state.adminTimesheetMemberId === memberId) {
-          await loadAdminTimesheets();
-        }
-        if (state.user && state.user.id === memberId) {
-          await refreshMyTime();
-        }
-      } catch (error) {
-        // handled globally
-      }
-    });
-  }
-
-  if (refreshAdminHolidays) {
-    refreshAdminHolidays.addEventListener("click", () => {
-      loadAdminHolidays();
-    });
-  }
-
-  if (adminHolidayForm) {
-    adminHolidayForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      showToast("Handle holiday approvals from the Discord bot.", "info");
-    });
-  }
-
-  if (adminRoleForm) {
-    adminRoleForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      if (!canAccessAdmin()) {
-        showToast("Admin access required.", "error");
-        return;
-      }
-      const formData = new FormData(adminRoleForm);
-      try {
-        ensureGuildConfigured();
-      } catch (error) {
-        return;
-      }
-      const memberId = String(formData.get("memberId") ?? "").trim();
-      const roleId = String(formData.get("roleId") ?? "").trim();
-      const experience = String(formData.get("experience") ?? "").trim();
-
-      if (!memberId || !roleId) {
-        showToast("Provide both a member ID and role ID.", "error");
-        return;
-      }
-
-      const payload = {
-        guild_id: state.guildId,
-        user_id: memberId,
-        role_id: roleId,
-        experience: experience || undefined,
-      };
-      try {
-        await apiRequest({
-          path: "workers/change-role",
-          method: "POST",
-          body: payload,
-        });
-        showToast("Role updated.", "success");
-        adminRoleForm.reset();
-        if (state.adminTimesheetMemberId === memberId) {
-          await loadAdminTimesheets();
-        }
-        if (state.user && state.user.id === memberId) {
-          await refreshMyTime();
-        }
-      } catch (error) {
-        // handled globally
-      }
+      showToast("Reloading holiday overview…", "info");
+      void refreshAdminOverview();
     });
   }
 

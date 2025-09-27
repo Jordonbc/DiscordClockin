@@ -8,12 +8,9 @@ import { renderAuthState } from "./authState";
 import { showToast } from "./ui/notifications";
 import { state } from "./state";
 import { switchView } from "./navigation";
-import {
-  refreshHolidays,
-  refreshMyTime,
-  loadAdminHolidays,
-  loadAdminTimesheets,
-} from "./timesheetData";
+import { refreshHolidays, refreshMyTime } from "./timesheetData";
+import { loadAdminOverview } from "./adminData";
+import { renderAdminOverview } from "./ui/admin";
 
 export function initialize(): void {
   configureBaseUrl();
@@ -30,6 +27,7 @@ export function initialize(): void {
   bindEvents();
   renderAuthState();
   renderHolidayRequests();
+  renderAdminOverview();
 
   window.addEventListener("clockin:view-changed", (event) => {
     const target = (event as CustomEvent<string>).detail;
@@ -41,8 +39,7 @@ export function initialize(): void {
     } else if (target === "time-clock" || target === "hours-report") {
       void refreshMyTime();
     } else if (target === "admin") {
-      void loadAdminTimesheets();
-      loadAdminHolidays();
+      void loadAdminOverview();
     }
   });
 
