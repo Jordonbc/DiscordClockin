@@ -1,0 +1,69 @@
+<header class="site-header">
+  <div class="brand">
+    <span class="brand__icon">⏱️</span>
+    <div>
+      <p class="brand__eyebrow">Discord ClockIn</p>
+      <h1 class="brand__title">Team time tracking</h1>
+    </div>
+  </div>
+  <nav class="main-nav" aria-label="Primary">
+    <button class="main-nav__link is-active" data-view-button="home">
+      Dashboard
+    </button>
+    <button class="main-nav__link" data-view-button="time-clock" data-requires-auth="true">
+      Time clock
+    </button>
+    <button class="main-nav__link" data-view-button="hours-report" data-requires-auth="true">
+      Hours report
+    </button>
+    <button class="main-nav__link" data-view-button="my-time" data-requires-auth="true">
+      My time
+    </button>
+    <button class="main-nav__link" data-view-button="admin" data-requires-role="admin">
+      Admin
+    </button>
+  </nav>
+  <div class="header-actions">
+    <div class="auth-controls">
+      <button id="login-button" class="button button--primary">
+        Login with Discord
+      </button>
+      <div id="user-menu" class="user-menu" hidden>
+        <button
+          id="user-menu-button"
+          class="user-menu__trigger"
+          type="button"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          <img id="user-avatar" alt="" class="user-menu__avatar" />
+          <span class="user-menu__indicator" aria-hidden="true"></span>
+        </button>
+        <div id="user-menu-dropdown" class="user-menu__dropdown" role="menu">
+          <div class="user-menu__header">
+            <p id="user-name" class="user-menu__name"></p>
+            <p id="user-roles" class="user-menu__roles"></p>
+          </div>
+          <div class="user-menu__divider" role="presentation"></div>
+          <button class="user-menu__item" type="button" data-user-menu-action="profile" role="menuitem">
+            Profile
+          </button>
+          <button
+            id="user-menu-admin"
+            class="user-menu__item"
+            type="button"
+            data-user-menu-action="admin"
+            data-requires-role="admin"
+            role="menuitem"
+          >
+            Admin
+          </button>
+          <div class="user-menu__divider" role="presentation"></div>
+          <button id="logout-button" class="user-menu__item user-menu__item--danger" type="button" role="menuitem">
+            Sign out
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

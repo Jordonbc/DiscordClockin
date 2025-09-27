@@ -1,0 +1,131 @@
+<section class="view view--active" data-view="home">
+  <header class="dashboard-header">
+    <div class="dashboard-header__copy">
+      <p class="dashboard-header__eyebrow">Dashboard</p>
+      <h2 id="dashboard-greeting">Welcome to the ClockIn portal</h2>
+      <p id="dashboard-subtitle">
+        Track your day, request time off, and keep your team informed – all
+        in one place.
+      </p>
+    </div>
+    <div class="dashboard-header__actions">
+      <button class="button button--ghost" data-view-jump="my-time">
+        View my time
+      </button>
+      <button class="button button--primary" data-hero-action="login">
+        Get started
+      </button>
+    </div>
+  </header>
+
+  <div class="dashboard-grid">
+    <section class="dashboard-main">
+      <div class="stat-grid">
+        <article class="stat-card stat-card--clock">
+          <header class="stat-card__header">
+            <p class="stat-card__label">Time clock</p>
+            <span id="dashboard-clock-status" class="status-pill status-pill--idle">Waiting</span>
+          </header>
+          <p id="dashboard-clock-message" class="stat-card__value">
+            Sign in to manage your shift.
+          </p>
+          <button class="button button--primary button--small" data-view-jump="my-time">
+            Manage shift
+          </button>
+        </article>
+        <article class="stat-card">
+          <p class="stat-card__label">Today's hours</p>
+          <p id="dashboard-daily-hours" class="stat-card__value">0h 00m</p>
+          <p class="stat-card__hint">Includes active session time.</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-card__label">This week</p>
+          <p id="dashboard-weekly-hours" class="stat-card__value">0h 00m</p>
+          <p class="stat-card__hint">Resets Monday at midnight.</p>
+        </article>
+        <article class="stat-card">
+          <p class="stat-card__label">Break balance</p>
+          <p id="dashboard-break-hours" class="stat-card__value">0h 00m</p>
+          <p class="stat-card__hint">Tracked across your shifts.</p>
+        </article>
+      </div>
+
+      <article class="panel">
+        <div class="panel__header">
+          <h3>Recent activity</h3>
+          <button class="button button--ghost button--small" data-view-jump="my-time">
+            Open detailed log
+          </button>
+        </div>
+        <ul id="dashboard-activity" class="activity-list">
+          <li class="activity-list__empty muted">Sign in to see your latest updates.</li>
+        </ul>
+      </article>
+    </section>
+
+    <aside class="dashboard-sidebar">
+      <article class="panel panel--compact">
+        <h3>Quick actions</h3>
+        <ul class="quick-actions">
+          <li>
+            <button class="quick-actions__button" data-view-jump="my-time">
+              <span class="quick-actions__icon">🕒</span>
+              <div>
+                <p class="quick-actions__title">Clock in / out</p>
+                <p class="quick-actions__hint">Jump to your live shift controls.</p>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="quick-actions__button" data-view-jump="hours-report">
+              <span class="quick-actions__icon">📈</span>
+              <div>
+                <p class="quick-actions__title">Hours report</p>
+                <p class="quick-actions__hint">Analyze totals and daily trends.</p>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="quick-actions__button" data-view-jump="my-time">
+              <span class="quick-actions__icon">🗓️</span>
+              <div>
+                <p class="quick-actions__title">Request holiday</p>
+                <p class="quick-actions__hint">Send dates without leaving the dashboard.</p>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="quick-actions__button" data-view-jump="admin" data-requires-role="admin">
+              <span class="quick-actions__icon">🛠️</span>
+              <div>
+                <p class="quick-actions__title">Admin tools</p>
+                <p class="quick-actions__hint">Review timesheets and manage roles.</p>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </article>
+
+      <article class="panel panel--compact">
+        <h3>Payroll snapshot</h3>
+        <div class="payroll-card">
+          <div class="payroll-card__row">
+            <span class="payroll-card__label">Hourly rate</span>
+            <span id="dashboard-payroll-rate" class="payroll-card__value">—</span>
+          </div>
+          <div class="payroll-card__row">
+            <span class="payroll-card__label">Weekly projection</span>
+            <span id="dashboard-payroll-weekly" class="payroll-card__value">—</span>
+          </div>
+          <div class="payroll-card__row">
+            <span class="payroll-card__label">All-time total</span>
+            <span id="dashboard-payroll-total" class="payroll-card__value">—</span>
+          </div>
+          <p id="dashboard-payroll-note" class="payroll-card__note muted">
+            Add your hourly rate in Discord to calculate payroll estimates.
+          </p>
+        </div>
+      </article>
+    </aside>
+  </div>
+</section>

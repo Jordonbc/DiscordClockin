@@ -1,5 +1,6 @@
 mod config;
 mod error;
+mod events;
 mod logging;
 mod models;
 mod repository;

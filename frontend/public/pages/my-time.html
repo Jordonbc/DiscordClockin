@@ -1,0 +1,81 @@
+<section class="view" data-view="my-time" data-requires-auth="true">
+  <header class="view-header">
+    <h2>My time</h2>
+    <p>Manage your active shift, review logs, and request holidays.</p>
+  </header>
+
+  <div class="my-time-grid">
+    <article class="panel my-time-panel">
+      <div class="panel__header">
+        <h3>Clock in &amp; out</h3>
+        <span id="clock-state" class="status-pill status-pill--idle">Waiting</span>
+      </div>
+      <p id="clock-message" class="my-time-panel__message">
+        Sign in to see your current shift status.
+      </p>
+      <div class="my-time-panel__actions">
+        <button id="clock-in" class="button button--primary">Clock in</button>
+        <button id="clock-out" class="button button--ghost">Clock out</button>
+      </div>
+    </article>
+
+    <article class="panel">
+      <div class="panel__header">
+        <h3>Today's log</h3>
+        <button id="refresh-my-time" class="button button--ghost">
+          Refresh
+        </button>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th scope="col">Start</th>
+              <th scope="col">End</th>
+              <th scope="col">Duration</th>
+              <th scope="col">Summary</th>
+            </tr>
+          </thead>
+          <tbody id="my-time-entries">
+            <tr>
+              <td colspan="4" class="muted">No shifts to display.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </div>
+
+  <article class="panel">
+    <div class="panel__header">
+      <h3>Holiday requests</h3>
+      <button id="refresh-holidays" class="button button--ghost">
+        Refresh
+      </button>
+    </div>
+    <form id="holiday-form" class="form-grid">
+      <label>
+        Start date
+        <input type="date" name="startDate" required />
+      </label>
+      <label>
+        End date
+        <input type="date" name="endDate" required />
+      </label>
+      <label class="form-grid__full">
+        Reason
+        <textarea
+          name="reason"
+          rows="3"
+          placeholder="Let your manager know what you need"
+        ></textarea>
+      </label>
+      <button type="submit" class="button button--primary">
+        Request holiday
+      </button>
+    </form>
+    <ul id="holiday-list" class="timeline">
+      <li class="timeline__item muted">No holiday requests yet.</li>
+    </ul>
+  </article>
+</section>

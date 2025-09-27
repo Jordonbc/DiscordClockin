@@ -21,3 +21,4 @@ serde_with = "3.11"
 async-trait = "0.1"
 tokio-rusqlite = "0.5"
 rusqlite = "0.31"
+tokio-stream = { version = "0.1", features = ["sync"] }

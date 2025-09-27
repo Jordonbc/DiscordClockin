@@ -54,6 +54,7 @@ module.exports = {
       const response = await api.endShift({
         guildId,
         userId,
+        summary,
       });
 
       const guildName = await resolveGuildName(interaction, guildId);

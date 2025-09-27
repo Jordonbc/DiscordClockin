@@ -1,0 +1,93 @@
+<section class="view" data-view="time-clock" data-requires-auth="true">
+  <header class="view-header">
+    <h2>Time clock</h2>
+    <p>Track your working hours with precision time and break management.</p>
+  </header>
+
+  <div class="time-clock-layout">
+    <div class="time-clock-main">
+      <article class="time-clock-card">
+        <div class="time-clock-card__header">
+          <h3>Current time</h3>
+          <span id="time-clock-status" class="status-pill status-pill--idle">Waiting</span>
+        </div>
+        <p id="time-clock-display" class="time-clock-card__time">--:--:--</p>
+        <p id="time-clock-date" class="time-clock-card__date"></p>
+        <p id="time-clock-message" class="time-clock-card__message">
+          Sign in to start tracking your hours.
+        </p>
+        <button id="time-clock-action" class="button button--primary">
+          Sign in with Discord
+        </button>
+      </article>
+
+      <article class="panel">
+        <div class="panel__header">
+          <h3>Today's sessions</h3>
+          <button class="button button--ghost button--small" data-view-jump="my-time">
+            View full history
+          </button>
+        </div>
+        <ul id="time-clock-sessions" class="time-clock-session-list">
+          <li class="muted">No time entries for today yet.</li>
+        </ul>
+      </article>
+    </div>
+
+    <aside class="time-clock-sidebar">
+      <article class="panel panel--compact time-clock-summary">
+        <h3>Today's summary</h3>
+        <p id="time-clock-summary-total" class="time-clock-summary__total">
+          0.0h total working hours
+        </p>
+        <dl class="time-clock-summary__details">
+          <div>
+            <dt>Sessions</dt>
+            <dd id="time-clock-summary-sessions">0</dd>
+          </div>
+          <div>
+            <dt>Break time</dt>
+            <dd id="time-clock-summary-break">0h 00m</dd>
+          </div>
+          <div>
+            <dt>Overtime</dt>
+            <dd id="time-clock-summary-overtime">0h 00m</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="panel panel--compact">
+        <h3>Quick actions</h3>
+        <ul class="quick-actions quick-actions--stacked">
+          <li>
+            <button class="quick-actions__button" data-view-jump="my-time">
+              <span class="quick-actions__icon">📊</span>
+              <div>
+                <p class="quick-actions__title">Shift controls</p>
+                <p class="quick-actions__hint">Jump straight to clock in and out.</p>
+              </div>
+            </button>
+          </li>
+          <li>
+            <button class="quick-actions__button" data-view-jump="hours-report">
+              <span class="quick-actions__icon">📈</span>
+              <div>
+                <p class="quick-actions__title">View hours report</p>
+                <p class="quick-actions__hint">Review totals and recent sessions.</p>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </article>
+
+      <article class="panel panel--compact time-clock-tips">
+        <h3>Tips</h3>
+        <ul class="time-clock-tips__list">
+          <li>Take regular breaks to stay energized throughout your shift.</li>
+          <li>Use quick actions for fast access to reports and dashboards.</li>
+          <li>Add short summaries when clocking out to improve records.</li>
+        </ul>
+      </article>
+    </aside>
+  </div>
+</section>
