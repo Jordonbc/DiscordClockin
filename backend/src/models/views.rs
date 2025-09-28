@@ -109,6 +109,12 @@ pub struct WorkerView {
     pub daily_worked_hours: f64,
     pub weekly_worked_hours: f64,
     pub total_worked_hours: f64,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub pronouns: Option<String>,
+    pub location: Option<String>,
+    pub timezone: Option<String>,
+    pub bio: Option<String>,
 }
 
 impl From<&WorkerRecord> for WorkerView {
@@ -127,6 +133,12 @@ impl From<&WorkerRecord> for WorkerView {
             daily_worked_hours: worker.daily_worked,
             weekly_worked_hours: worker.weekly_worked,
             total_worked_hours: worker.total_worked,
+            first_name: worker.first_name.clone(),
+            last_name: worker.last_name.clone(),
+            pronouns: worker.pronouns.clone(),
+            location: worker.location.clone(),
+            timezone: worker.timezone.clone(),
+            bio: worker.bio.clone(),
         }
     }
 }

@@ -20,12 +20,13 @@ class ApiClient {
     this.timeoutMs = timeoutMs;
   }
 
-  async startShift({ guildId, userId, clockInMessageId = null }) {
+  async startShift({ guildId, userId, clockInMessageId = null, profile = null }) {
     return this.#postJson("shifts/start", {
       guild_id: guildId,
       user_id: userId,
       clock_in_message_id: clockInMessageId,
       source: "discord_bot",
+      profile: profile || undefined,
     });
   }
 
@@ -55,12 +56,13 @@ class ApiClient {
     });
   }
 
-  async registerWorker({ guildId, userId, roleId, experience }) {
+  async registerWorker({ guildId, userId, roleId, experience, profile = null }) {
     return this.#postJson("workers/register", {
       guild_id: guildId,
       user_id: userId,
       role_id: roleId,
       experience: experience || null,
+      profile: profile || undefined,
     });
   }
 

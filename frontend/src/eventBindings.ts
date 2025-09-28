@@ -53,10 +53,15 @@ import { renderHoursReport } from "./ui/dashboard";
 import { canAccessAdmin } from "./permissions";
 import { loadAdminOverview, refreshAdminOverview, setAdminActiveTab } from "./adminData";
 import type { AdminTabKey } from "./types";
+import { loadProfile } from "./profileData";
+import { initializeProfileView, renderProfileView } from "./ui/profile";
 
 const DAY_IN_MS = 86400000;
 
 export function bindEvents(): void {
+  initializeProfileView();
+  renderProfileView();
+
   bindNavigation();
 
   if (heroLoginButton) {
@@ -163,7 +168,8 @@ export function bindEvents(): void {
         return;
       }
       closeUserMenu();
-      switchView("my-time");
+      switchView("profile");
+      void loadProfile();
     });
   }
 

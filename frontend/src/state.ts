@@ -39,4 +39,7 @@ export const state: AppState = {
   adminOverviewLoading: false,
   adminOverviewError: null,
   adminActiveTab: "departments",
+  profileLoading: false,
+  profileSaving: false,
+  profileError: null,
 };

@@ -157,6 +157,10 @@ export function clearDiscordSession(options: { skipStorage?: boolean } = {}): vo
   state.adminOverviewError = null;
   state.adminOverviewLoading = false;
   state.adminActiveTab = "departments";
+  state.workerProfile = null;
+  state.profileLoading = false;
+  state.profileSaving = false;
+  state.profileError = null;
   if (!options.skipStorage) {
     clearPersistedDiscordSession();
   }

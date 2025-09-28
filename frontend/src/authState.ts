@@ -18,6 +18,7 @@ import { state } from "./state";
 import { closeUserMenu } from "./ui/clockControls";
 import { updateClockStatus } from "./clockStatusManager";
 import { renderDashboardOverview, renderHoursReport } from "./ui/dashboard";
+import { renderProfileView } from "./ui/profile";
 import { updateClockControlsVisibility } from "./ui/clockControls";
 import { switchView } from "./navigation";
 import { canAccessAdmin } from "./permissions";
@@ -135,6 +136,7 @@ export function renderAuthState(): void {
   });
 
   renderHoursReport();
+  renderProfileView();
 
   const activeButton = navButtons.find((button) =>
     button.classList.contains("is-active"),

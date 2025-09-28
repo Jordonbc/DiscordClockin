@@ -10,6 +10,7 @@ const {
 } = require("../views/dmShiftControls");
 const { buildClockOutSummaryModal } = require("../views/clockOutSummaryModal");
 const { buildShiftEmbed } = require("../views/shiftEmbeds");
+const { buildInteractionProfile } = require("../utils/profiles");
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -150,6 +151,7 @@ async function handleClockIn(interaction, api, guildId) {
     guildId,
     userId: interaction.user.id,
     clockInMessageId: interaction.channelId,
+    profile: buildInteractionProfile(interaction),
   });
 
   await interaction.reply({

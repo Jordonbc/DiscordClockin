@@ -12,6 +12,8 @@ use crate::{
     state::AppState,
 };
 
+use super::profile::{DiscordProfilePayload, apply_profile_update};
+
 #[derive(Debug, Serialize)]
 pub struct ListWorkersResponse {
     pub workers: Vec<WorkerView>,
@@ -23,6 +25,8 @@ pub struct RegisterWorkerRequest {
     pub user_id: String,
     pub role_id: String,
     pub experience: Option<String>,
+    #[serde(default)]
+    pub profile: Option<DiscordProfilePayload>,
 }
 
 #[derive(Debug, Serialize)]
@@ -58,11 +62,15 @@ pub async fn register_worker(
         return Err(ApiError::Conflict("Worker already registered".into()));
     }
 
-    let new_worker = WorkerRecord::new(
+    let mut new_worker = WorkerRecord::new(
         payload.user_id.clone(),
         payload.role_id.clone(),
         payload.experience.clone(),
     );
+
+    if let Some(profile) = payload.profile.as_ref() {
+        apply_profile_update(&mut new_worker, profile);
+    }
 
     guild_workers.workers.push(new_worker);
 

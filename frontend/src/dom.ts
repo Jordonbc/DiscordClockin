@@ -37,6 +37,18 @@ export const holidayForm = query<HTMLFormElement>("#holiday-form");
 export const refreshHolidaysButton = query<HTMLButtonElement>("#refresh-holidays");
 export const holidayList = query<HTMLElement>("#holiday-list");
 
+export const profileForm = query<HTMLFormElement>("#profile-form");
+export const profileFirstNameInput = query<HTMLInputElement>("#profile-first-name");
+export const profileLastNameInput = query<HTMLInputElement>("#profile-last-name");
+export const profilePronounsInput = query<HTMLInputElement>("#profile-pronouns");
+export const profileTimezoneInput = query<HTMLInputElement>("#profile-timezone");
+export const profileLocationInput = query<HTMLInputElement>("#profile-location");
+export const profileBioInput = query<HTMLTextAreaElement>("#profile-bio");
+export const profileSubmitButton = query<HTMLButtonElement>("#profile-submit");
+export const profileResetButton = query<HTMLButtonElement>("#profile-reset");
+export const profileStatus = query<HTMLElement>("#profile-status");
+export const profileEmptyState = query<HTMLElement>("#profile-empty-state");
+
 export const adminTabButtons = queryAll<HTMLButtonElement>("[data-admin-tab]");
 export const adminSections = queryAll<HTMLElement>("[data-admin-section]");
 export const adminDepartmentsContainer = query<HTMLElement>("#admin-departments");

@@ -78,6 +78,12 @@ mod tests {
             daily_worked_hours: 0.0,
             weekly_worked_hours: 0.0,
             total_worked_hours: 0.0,
+            first_name: None,
+            last_name: None,
+            pronouns: None,
+            location: None,
+            timezone: None,
+            bio: None,
         };
 
         let event = HookEvent {

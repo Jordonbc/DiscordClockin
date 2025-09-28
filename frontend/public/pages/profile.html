@@ -1,0 +1,57 @@
+<section class="view" data-view="profile" data-requires-auth="true">
+  <header class="view-header">
+    <h2>Profile</h2>
+    <p>Share the details your leads need to reach you and recognise your work.</p>
+  </header>
+
+  <article class="panel">
+    <div class="panel__header">
+      <h3>Personal details</h3>
+      <span id="profile-status" class="form-status" aria-live="polite"></span>
+    </div>
+    <p id="profile-empty-state" class="muted" hidden>
+      We couldn't find a worker record for you. Ask an administrator to register you in Discord before editing your profile.
+    </p>
+    <form id="profile-form" class="form-grid" novalidate>
+      <label>
+        First name
+        <input id="profile-first-name" name="first_name" type="text" maxlength="100" autocomplete="given-name" />
+      </label>
+      <label>
+        Last name
+        <input id="profile-last-name" name="last_name" type="text" maxlength="100" autocomplete="family-name" />
+      </label>
+      <label>
+        Pronouns
+        <input id="profile-pronouns" name="pronouns" type="text" maxlength="50" placeholder="they/them" />
+      </label>
+      <label>
+        Time zone
+        <input
+          id="profile-timezone"
+          name="timezone"
+          type="text"
+          maxlength="60"
+          placeholder="UTC+01:00"
+          autocomplete="off"
+        />
+      </label>
+      <label>
+        Location
+        <input id="profile-location" name="location" type="text" maxlength="120" placeholder="City, Country" autocomplete="address-level2" />
+      </label>
+      <label class="form-grid__full">
+        Bio / notes
+        <textarea id="profile-bio" name="bio" rows="4" maxlength="500" placeholder="Share anything your managers should know"></textarea>
+      </label>
+      <div class="form-grid__full profile-actions">
+        <button id="profile-reset" class="button button--ghost" type="reset">
+          Reset
+        </button>
+        <button id="profile-submit" class="button button--primary" type="submit">
+          Save changes
+        </button>
+      </div>
+    </form>
+  </article>
+</section>

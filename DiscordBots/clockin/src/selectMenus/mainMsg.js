@@ -9,6 +9,7 @@ const { submitIssueModal, submitSuggestionModal } = require("../workflows/suppor
 const { buildClockedInView } = require("../views/dmShiftControls");
 const { buildMainClockSelectRow } = require("../views/mainClockSelectMenu");
 const { triggerAvailabilityRefresh } = require("../utils/availabilitySnapshots");
+const { buildInteractionProfile } = require("../utils/profiles");
 
 const DEFAULT_COLOR = process.env.DEFAULT_COLOR || "#5865F2";
 
@@ -69,6 +70,7 @@ async function handleClockIn(interaction, { api }) {
       guildId: interaction.guildId,
       userId: interaction.user.id,
       clockInMessageId: interaction.message.id,
+      profile: buildInteractionProfile(interaction),
     });
 
     await interaction.reply({

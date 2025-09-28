@@ -11,6 +11,8 @@ import { switchView } from "./navigation";
 import { refreshHolidays, refreshMyTime } from "./timesheetData";
 import { loadAdminOverview } from "./adminData";
 import { renderAdminOverview } from "./ui/admin";
+import { loadProfile } from "./profileData";
+import { renderProfileView } from "./ui/profile";
 
 export function initialize(): void {
   configureBaseUrl();
@@ -40,11 +42,14 @@ export function initialize(): void {
       void refreshMyTime();
     } else if (target === "admin") {
       void loadAdminOverview();
+    } else if (target === "profile") {
+      void loadProfile();
     }
   });
 
   window.addEventListener("clockin:timesheet-updated", () => {
     renderAuthState();
+    renderProfileView();
   });
 
   hydrateDiscordSession().then(() => {

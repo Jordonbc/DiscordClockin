@@ -1,6 +1,7 @@
 mod admin;
 mod events;
 mod health;
+mod profile;
 mod roles;
 mod settings;
 mod shifts;
@@ -23,6 +24,8 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .service(events::stream_events)
             .service(timesheets::get_timesheet)
             .service(admin::get_admin_overview)
+            .service(profile::get_profile)
+            .service(profile::update_profile)
             .service(workers::register_worker)
             .service(workers::list_workers)
             .service(workers::get_worker)

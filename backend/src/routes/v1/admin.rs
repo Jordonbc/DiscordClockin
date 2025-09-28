@@ -603,6 +603,12 @@ fn format_worker_label(worker: &WorkerRecord) -> String {
         return label;
     }
 
+    if let Some(full_name) =
+        build_full_name(worker.first_name.as_deref(), worker.last_name.as_deref())
+    {
+        return full_name;
+    }
+
     if let Some(username) = clean_label(worker.username.as_deref()) {
         if let Some(discriminator) = worker
             .discriminator
@@ -623,6 +629,18 @@ fn clean_label(value: Option<&str>) -> Option<String> {
         .map(str::trim)
         .filter(|candidate| !candidate.is_empty())
         .map(|candidate| candidate.to_string())
+}
+
+fn build_full_name(first: Option<&str>, last: Option<&str>) -> Option<String> {
+    let first = first.map(str::trim).filter(|value| !value.is_empty());
+    let last = last.map(str::trim).filter(|value| !value.is_empty());
+
+    match (first, last) {
+        (Some(first), Some(last)) => Some(format!("{first} {last}")),
+        (Some(first), None) => Some(first.to_string()),
+        (None, Some(last)) => Some(last.to_string()),
+        (None, None) => None,
+    }
 }
 
 fn fallback_member_label(user_id: &str) -> String {

@@ -55,6 +55,18 @@ pub struct WorkerRecord {
     pub weekly_worked: f64,
     #[serde(rename = "totalWorked")]
     pub total_worked: f64,
+    #[serde(default, rename = "firstName")]
+    pub first_name: Option<String>,
+    #[serde(default, rename = "lastName")]
+    pub last_name: Option<String>,
+    #[serde(default)]
+    pub pronouns: Option<String>,
+    #[serde(default)]
+    pub location: Option<String>,
+    #[serde(default, rename = "timeZone")]
+    pub timezone: Option<String>,
+    #[serde(default)]
+    pub bio: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -117,6 +129,12 @@ impl WorkerRecord {
             daily_worked: 0.0,
             weekly_worked: 0.0,
             total_worked: 0.0,
+            first_name: None,
+            last_name: None,
+            pronouns: None,
+            location: None,
+            timezone: None,
+            bio: None,
         }
     }
 

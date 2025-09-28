@@ -10,6 +10,7 @@ const {
   buildAlreadyRegisteredEmbed,
   buildWorkerEmbed,
 } = require("../utils/workers");
+const { buildInteractionProfile } = require("../utils/profiles");
 
 const DEFAULT_COLOR = process.env.DEFAULT_COLOR || "#00FF00";
 
@@ -112,6 +113,7 @@ async function completeRegistration(interaction, { api }, roleId, experience) {
       userId: interaction.user.id,
       roleId,
       experience,
+      profile: buildInteractionProfile(interaction),
     });
 
     const worker = response.worker;

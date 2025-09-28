@@ -14,6 +14,8 @@ use crate::{
     state::AppState,
 };
 
+use super::profile::{DiscordProfilePayload, apply_profile_update};
+
 #[derive(Debug, Deserialize)]
 pub struct StartShiftRequest {
     pub guild_id: String,
@@ -21,6 +23,8 @@ pub struct StartShiftRequest {
     pub clock_in_message_id: Option<String>,
     #[serde(default)]
     pub source: Option<String>,
+    #[serde(default)]
+    pub profile: Option<DiscordProfilePayload>,
 }
 
 #[derive(Debug, Serialize)]
@@ -63,6 +67,10 @@ pub async fn start_shift(
             return Err(ApiError::Conflict(
                 "Worker is already clocked in or currently on break".into(),
             ));
+        }
+
+        if let Some(profile) = payload.profile.as_ref() {
+            apply_profile_update(worker, profile);
         }
 
         worker.mark_clock_in(now, payload.clock_in_message_id.clone());

@@ -30,6 +30,12 @@ export interface WorkerProfile {
   status?: string;
   member_id?: string;
   user_id?: string;
+   first_name?: string | null;
+   last_name?: string | null;
+   pronouns?: string | null;
+   location?: string | null;
+   timezone?: string | null;
+   bio?: string | null;
   [key: string]: unknown;
 }
 
@@ -211,4 +217,7 @@ export interface AppState {
   adminOverviewLoading: boolean;
   adminOverviewError: string | null;
   adminActiveTab: AdminTabKey;
+  profileLoading: boolean;
+  profileSaving: boolean;
+  profileError: string | null;
 }
