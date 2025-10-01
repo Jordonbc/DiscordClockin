@@ -1,4 +1,5 @@
 mod admin;
+mod departments;
 mod events;
 mod health;
 mod profile;
@@ -31,6 +32,9 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
             .service(workers::get_worker)
             .service(settings::get_settings)
             .service(settings::update_settings)
+            .service(departments::create_department)
+            .service(departments::rename_department)
+            .service(departments::delete_department)
             .service(roles::get_roles)
             .service(roles::create_role)
             .service(roles::delete_role)

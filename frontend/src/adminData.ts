@@ -60,6 +60,44 @@ export function refreshAdminOverview(): Promise<void> {
   return loadAdminOverview({ force: true });
 }
 
+interface DepartmentPayload {
+  name: string;
+}
+
+export async function createDepartment(payload: DepartmentPayload): Promise<void> {
+  ensureGuildConfigured();
+  const guildId = encodeURIComponent(state.guildId);
+  await apiRequest({
+    path: `guilds/${guildId}/departments`,
+    method: "POST",
+    body: { name: payload.name },
+  });
+}
+
+export async function updateDepartment(
+  departmentId: string,
+  payload: DepartmentPayload,
+): Promise<void> {
+  ensureGuildConfigured();
+  const guildId = encodeURIComponent(state.guildId);
+  const encodedDepartmentId = encodeURIComponent(departmentId);
+  await apiRequest({
+    path: `guilds/${guildId}/departments/${encodedDepartmentId}`,
+    method: "PATCH",
+    body: { name: payload.name },
+  });
+}
+
+export async function deleteDepartment(departmentId: string): Promise<void> {
+  ensureGuildConfigured();
+  const guildId = encodeURIComponent(state.guildId);
+  const encodedDepartmentId = encodeURIComponent(departmentId);
+  await apiRequest({
+    path: `guilds/${guildId}/departments/${encodedDepartmentId}`,
+    method: "DELETE",
+  });
+}
+
 function normalizeOverviewResponse(input: any): AdminOverviewResponse {
   const fallbackPerformance = {
     total_developers: 0,

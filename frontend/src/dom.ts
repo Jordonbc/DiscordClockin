@@ -115,3 +115,14 @@ export const clockOutModalForm = query<HTMLFormElement>("#clockout-modal-form");
 export const clockOutModalDismissButtons = clockOutModal
   ? Array.from(clockOutModal.querySelectorAll<HTMLButtonElement>("[data-modal-dismiss]"))
   : [];
+
+export const departmentModal = query<HTMLElement>("#department-modal");
+export const departmentModalForm = query<HTMLFormElement>("#department-form");
+export const departmentModalTitle = query<HTMLElement>("#department-modal-title");
+export const departmentModalDescription = query<HTMLElement>("#department-modal-description");
+export const departmentModalError = query<HTMLElement>("#department-modal-error");
+export const departmentNameInput = query<HTMLInputElement>("#department-name");
+export const departmentSubmitButton = query<HTMLButtonElement>("#department-submit");
+export const departmentModalDismissElements = departmentModal
+  ? Array.from(departmentModal.querySelectorAll<HTMLElement>("[data-modal-dismiss]"))
+  : [];

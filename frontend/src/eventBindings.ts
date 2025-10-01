@@ -2,6 +2,7 @@ import {
   adminAddDepartmentButton,
   adminAddRoleButton,
   adminAddTimeEntryButton,
+  adminDepartmentsContainer,
   adminRefreshDevelopersButton,
   adminRefreshHolidaysButton,
   adminRefreshPerformanceButton,
@@ -43,6 +44,7 @@ import {
   isUserMenuOpen,
   toggleUserMenu,
 } from "./ui/clockControls";
+import { openDepartmentModal } from "./ui/departmentModal";
 import { bindNavigation, switchView } from "./navigation";
 import { initiateLogin, clearDiscordSession } from "./discordAuth";
 import { performClockIn, promptClockOut } from "./clockActions";
@@ -51,12 +53,101 @@ import { ensureGuildConfigured, apiRequest } from "./apiClient";
 import { renderAuthState } from "./authState";
 import { renderHoursReport } from "./ui/dashboard";
 import { canAccessAdmin } from "./permissions";
-import { loadAdminOverview, refreshAdminOverview, setAdminActiveTab } from "./adminData";
+import {
+  deleteDepartment,
+  loadAdminOverview,
+  refreshAdminOverview,
+  setAdminActiveTab,
+} from "./adminData";
 import type { AdminTabKey } from "./types";
 import { loadProfile } from "./profileData";
 import { initializeProfileView, renderProfileView } from "./ui/profile";
 
 const DAY_IN_MS = 86400000;
+
+function hasStatus(error: unknown): error is { status: number } {
+  return Boolean(error && typeof error === "object" && "status" in error);
+}
+
+async function handleDepartmentDelete(
+  departmentId: string,
+  trigger: HTMLButtonElement,
+): Promise<void> {
+  const overview = state.adminOverview;
+  if (!overview) {
+    showToast("Load departments before performing this action.", "error");
+    return;
+  }
+
+  const department = overview.departments.find((entry) =>
+    entry.id.toLowerCase() === departmentId.toLowerCase(),
+  );
+
+  if (!department) {
+    showToast("Department not found.", "error");
+    return;
+  }
+
+  const details: string[] = [];
+  if (department.roles_count > 0) {
+    details.push(
+      `${department.roles_count} role${department.roles_count === 1 ? "" : "s"}`,
+    );
+  }
+  if (department.member_count > 0) {
+    details.push(
+      `${department.member_count} member${department.member_count === 1 ? "" : "s"}`,
+    );
+  }
+
+  const context = details.length ? ` (${details.join(", ")})` : "";
+  const confirmed = window.confirm(
+    `Delete "${department.name}"${context}? This action cannot be undone.`,
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const previousAriaLabel = trigger.getAttribute("aria-label") || "";
+  const srLabel = trigger.querySelector<HTMLElement>(".sr-only");
+  const previousSrText = srLabel?.textContent || "";
+  trigger.disabled = true;
+  trigger.classList.add("is-busy");
+  trigger.setAttribute("aria-label", "Deleting…");
+  if (srLabel) {
+    srLabel.textContent = "Deleting…";
+  }
+
+  try {
+    await deleteDepartment(departmentId);
+    showToast(`Department "${department.name}" deleted.`, "success");
+    await refreshAdminOverview();
+  } catch (error) {
+    const message =
+      typeof error === "string"
+        ? error
+        : error instanceof Error
+        ? error.message
+        : "Unable to delete department.";
+    if (message && !hasStatus(error)) {
+      showToast(message, "error");
+    }
+  } finally {
+    if (document.body.contains(trigger)) {
+      trigger.disabled = false;
+      trigger.classList.remove("is-busy");
+      if (previousAriaLabel) {
+        trigger.setAttribute("aria-label", previousAriaLabel);
+      } else {
+        trigger.removeAttribute("aria-label");
+      }
+      if (srLabel) {
+        srLabel.textContent = previousSrText;
+      }
+    }
+  }
+}
 
 export function bindEvents(): void {
   initializeProfileView();
@@ -342,7 +433,38 @@ export function bindEvents(): void {
 
   if (adminAddDepartmentButton) {
     adminAddDepartmentButton.addEventListener("click", () => {
-      showToast("Create departments through the Discord admin tools.", "info");
+      if (!canAccessAdmin()) {
+        showToast("Admin access required.", "error");
+        return;
+      }
+      openDepartmentModal({ mode: "create" });
+    });
+  }
+
+  if (adminDepartmentsContainer) {
+    adminDepartmentsContainer.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement | null;
+      const button = target?.closest<HTMLButtonElement>("[data-department-action]");
+      if (!button) return;
+      if (!canAccessAdmin()) {
+        showToast("Admin access required.", "error");
+        return;
+      }
+
+      const { departmentAction, departmentId } = button.dataset as {
+        departmentAction?: string;
+        departmentId?: string;
+      };
+
+      if (!departmentId) {
+        return;
+      }
+
+      if (departmentAction === "edit") {
+        openDepartmentModal({ mode: "edit", departmentId });
+      } else if (departmentAction === "delete") {
+        void handleDepartmentDelete(departmentId, button);
+      }
     });
   }
 
