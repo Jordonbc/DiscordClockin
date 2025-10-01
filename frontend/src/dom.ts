@@ -126,3 +126,14 @@ export const departmentSubmitButton = query<HTMLButtonElement>("#department-subm
 export const departmentModalDismissElements = departmentModal
   ? Array.from(departmentModal.querySelectorAll<HTMLElement>("[data-modal-dismiss]"))
   : [];
+
+export const confirmDialog = query<HTMLElement>("#confirm-dialog");
+export const confirmDialogTitle = query<HTMLElement>("#confirm-dialog-title");
+export const confirmDialogMessage = query<HTMLElement>("#confirm-dialog-message");
+export const confirmDialogDetails = query<HTMLUListElement>("#confirm-dialog-details");
+export const confirmDialogWarning = query<HTMLElement>("#confirm-dialog-warning");
+export const confirmDialogConfirmButton = query<HTMLButtonElement>("#confirm-dialog-confirm");
+export const confirmDialogCancelButton = query<HTMLButtonElement>("#confirm-dialog-cancel");
+export const confirmDialogDismissElements = confirmDialog
+  ? Array.from(confirmDialog.querySelectorAll<HTMLElement>("[data-confirm-dismiss]"))
+  : [];

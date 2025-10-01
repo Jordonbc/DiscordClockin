@@ -45,6 +45,7 @@ import {
   toggleUserMenu,
 } from "./ui/clockControls";
 import { openDepartmentModal } from "./ui/departmentModal";
+import { openConfirmDialog } from "./ui/confirmDialog";
 import { bindNavigation, switchView } from "./navigation";
 import { initiateLogin, clearDiscordSession } from "./discordAuth";
 import { performClockIn, promptClockOut } from "./clockActions";
@@ -88,22 +89,27 @@ async function handleDepartmentDelete(
     return;
   }
 
-  const details: string[] = [];
+  const impactDetails: string[] = [];
   if (department.roles_count > 0) {
-    details.push(
-      `${department.roles_count} role${department.roles_count === 1 ? "" : "s"}`,
+    impactDetails.push(
+      `${department.roles_count} role${department.roles_count === 1 ? "" : "s"} currently linked to this department.`,
     );
   }
   if (department.member_count > 0) {
-    details.push(
-      `${department.member_count} member${department.member_count === 1 ? "" : "s"}`,
+    impactDetails.push(
+      `${department.member_count} member${department.member_count === 1 ? "" : "s"} currently assigned to this department.`,
     );
   }
 
-  const context = details.length ? ` (${details.join(", ")})` : "";
-  const confirmed = window.confirm(
-    `Delete "${department.name}"${context}? This action cannot be undone.`,
-  );
+  const confirmed = await openConfirmDialog({
+    title: "Delete department",
+    message: `Are you sure you want to delete "${department.name}"? This action cannot be undone.`,
+    confirmLabel: "Delete department",
+    cancelLabel: "Keep department",
+    tone: "danger",
+    details: impactDetails.length ? impactDetails : undefined,
+    emphasizeWarning: true,
+  });
 
   if (!confirmed) {
     return;
