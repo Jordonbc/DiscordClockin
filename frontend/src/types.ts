@@ -86,20 +86,12 @@ export interface PayrollSummary {
 }
 
 export type AdminTabKey =
-  | "departments"
   | "roles"
   | "developers"
   | "offboarding"
   | "performance"
   | "time-entries"
   | "holiday";
-
-export interface AdminDepartmentSummary {
-  id: string;
-  name: string;
-  roles_count: number;
-  member_count: number;
-}
 
 export interface AdminRoleSummary {
   id: string;
@@ -195,7 +187,6 @@ export interface AdminPerformanceSnapshot {
 
 export interface AdminOverviewResponse {
   performance: AdminPerformanceSnapshot;
-  departments: AdminDepartmentSummary[];
   roles: AdminRoleSummary[];
   developers: AdminDeveloperSummary[];
   offboarding: AdminOffboardingCase[];

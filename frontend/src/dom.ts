@@ -51,7 +51,6 @@ export const profileEmptyState = query<HTMLElement>("#profile-empty-state");
 
 export const adminTabButtons = queryAll<HTMLButtonElement>("[data-admin-tab]");
 export const adminSections = queryAll<HTMLElement>("[data-admin-section]");
-export const adminDepartmentsContainer = query<HTMLElement>("#admin-departments");
 export const adminRolesContainer = query<HTMLElement>("#admin-roles");
 export const adminDevelopersContainer = query<HTMLElement>("#admin-developers");
 export const adminOffboardingContainer = query<HTMLElement>("#admin-offboarding");
@@ -59,7 +58,6 @@ export const adminPerformanceMetrics = query<HTMLElement>("#admin-performance-me
 export const adminPerformanceDetails = query<HTMLElement>("#admin-performance-details");
 export const adminTimeEntriesContainer = query<HTMLElement>("#admin-time-entries");
 export const adminHolidayOverview = query<HTMLElement>("#admin-holiday-overview");
-export const adminAddDepartmentButton = query<HTMLButtonElement>("#admin-add-department");
 export const adminAddRoleButton = query<HTMLButtonElement>("#admin-add-role");
 export const adminRefreshDevelopersButton = query<HTMLButtonElement>("#admin-refresh-developers");
 export const adminRefreshPerformanceButton = query<HTMLButtonElement>("#admin-refresh-performance");
@@ -114,17 +112,6 @@ export const clockOutModal = query<HTMLElement>("#clockout-modal");
 export const clockOutModalForm = query<HTMLFormElement>("#clockout-modal-form");
 export const clockOutModalDismissButtons = clockOutModal
   ? Array.from(clockOutModal.querySelectorAll<HTMLButtonElement>("[data-modal-dismiss]"))
-  : [];
-
-export const departmentModal = query<HTMLElement>("#department-modal");
-export const departmentModalForm = query<HTMLFormElement>("#department-form");
-export const departmentModalTitle = query<HTMLElement>("#department-modal-title");
-export const departmentModalDescription = query<HTMLElement>("#department-modal-description");
-export const departmentModalError = query<HTMLElement>("#department-modal-error");
-export const departmentNameInput = query<HTMLInputElement>("#department-name");
-export const departmentSubmitButton = query<HTMLButtonElement>("#department-submit");
-export const departmentModalDismissElements = departmentModal
-  ? Array.from(departmentModal.querySelectorAll<HTMLElement>("[data-modal-dismiss]"))
   : [];
 
 export const roleModal = query<HTMLElement>("#role-modal");

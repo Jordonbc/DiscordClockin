@@ -60,44 +60,6 @@ export function refreshAdminOverview(): Promise<void> {
   return loadAdminOverview({ force: true });
 }
 
-interface DepartmentPayload {
-  name: string;
-}
-
-export async function createDepartment(payload: DepartmentPayload): Promise<void> {
-  ensureGuildConfigured();
-  const guildId = encodeURIComponent(state.guildId);
-  await apiRequest({
-    path: `guilds/${guildId}/departments`,
-    method: "POST",
-    body: { name: payload.name },
-  });
-}
-
-export async function updateDepartment(
-  departmentId: string,
-  payload: DepartmentPayload,
-): Promise<void> {
-  ensureGuildConfigured();
-  const guildId = encodeURIComponent(state.guildId);
-  const encodedDepartmentId = encodeURIComponent(departmentId);
-  await apiRequest({
-    path: `guilds/${guildId}/departments/${encodedDepartmentId}`,
-    method: "PATCH",
-    body: { name: payload.name },
-  });
-}
-
-export async function deleteDepartment(departmentId: string): Promise<void> {
-  ensureGuildConfigured();
-  const guildId = encodeURIComponent(state.guildId);
-  const encodedDepartmentId = encodeURIComponent(departmentId);
-  await apiRequest({
-    path: `guilds/${guildId}/departments/${encodedDepartmentId}`,
-    method: "DELETE",
-  });
-}
-
 function normalizeOverviewResponse(input: any): AdminOverviewResponse {
   const fallbackPerformance = {
     total_developers: 0,
@@ -111,7 +73,6 @@ function normalizeOverviewResponse(input: any): AdminOverviewResponse {
   if (!input || typeof input !== "object") {
     return {
       performance: fallbackPerformance,
-      departments: [],
       roles: [],
       developers: [],
       offboarding: [],
@@ -131,7 +92,6 @@ function normalizeOverviewResponse(input: any): AdminOverviewResponse {
       on_leave: Number(data.performance?.on_leave) || 0,
       lagging_developers: Number(data.performance?.lagging_developers) || 0,
     },
-    departments: Array.isArray(data.departments) ? data.departments : [],
     roles: Array.isArray(data.roles) ? data.roles : [],
     developers: Array.isArray(data.developers) ? data.developers : [],
     offboarding: Array.isArray(data.offboarding) ? data.offboarding : [],

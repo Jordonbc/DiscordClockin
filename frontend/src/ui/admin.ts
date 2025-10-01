@@ -1,7 +1,6 @@
 import {
   adminTabButtons,
   adminSections,
-  adminDepartmentsContainer,
   adminRolesContainer,
   adminDevelopersContainer,
   adminOffboardingContainer,
@@ -16,7 +15,6 @@ import type { AdminDeveloperSummary } from "../types";
 
 export function renderAdminOverview(): void {
   updateTabVisibility();
-  renderDepartments();
   renderRoles();
   renderDevelopers();
   renderOffboarding();
@@ -36,77 +34,6 @@ export function updateTabVisibility(): void {
     const tab = section.dataset.adminSection;
     const isActive = tab === activeTab;
     section.hidden = !isActive;
-  });
-}
-
-function renderDepartments(): void {
-  if (!adminDepartmentsContainer) return;
-  const container = adminDepartmentsContainer;
-  container.innerHTML = "";
-
-  if (state.adminOverviewLoading) {
-    container.appendChild(buildLoadingState("Loading departments…"));
-    return;
-  }
-
-  const overview = state.adminOverview;
-  if (state.adminOverviewError) {
-    container.appendChild(
-      buildEmptyState("⚠️", "Unable to load departments.", state.adminOverviewError || undefined),
-    );
-    return;
-  }
-
-  if (!overview || !overview.departments.length) {
-    container.appendChild(
-      buildEmptyState("🏢", "No departments yet.", "Create your first department to begin."),
-    );
-    return;
-  }
-
-  overview.departments.forEach((department) => {
-    const card = document.createElement("article");
-    card.className = "admin-card";
-    card.dataset.departmentId = department.id;
-
-    const header = document.createElement("div");
-    header.className = "admin-card__header";
-
-    const title = document.createElement("h4");
-    title.className = "admin-card__title";
-    title.textContent = department.name;
-
-    const actions = document.createElement("div");
-    actions.className = "admin-card__actions";
-
-    const editButton = createAdminActionButton({
-      label: `Edit ${department.name}`,
-      icon: "edit",
-    });
-    editButton.dataset.departmentAction = "edit";
-    editButton.dataset.departmentId = department.id;
-
-    const deleteButton = createAdminActionButton({
-      label: `Delete ${department.name}`,
-      icon: "trash",
-      tone: "danger",
-    });
-    deleteButton.dataset.departmentAction = "delete";
-    deleteButton.dataset.departmentId = department.id;
-
-    actions.append(editButton, deleteButton);
-    header.append(title, actions);
-
-    const roles = document.createElement("p");
-    roles.className = "admin-card__meta";
-    roles.textContent = `${department.roles_count} role${department.roles_count === 1 ? "" : "s"}`;
-
-    const members = document.createElement("p");
-    members.className = "admin-card__meta";
-    members.textContent = `${department.member_count} member${department.member_count === 1 ? "" : "s"}`;
-
-    card.append(header, roles, members);
-    container.appendChild(card);
   });
 }
 

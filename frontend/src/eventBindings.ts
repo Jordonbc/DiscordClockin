@@ -1,8 +1,6 @@
 import {
-  adminAddDepartmentButton,
   adminAddRoleButton,
   adminAddTimeEntryButton,
-  adminDepartmentsContainer,
   adminRolesContainer,
   adminRefreshDevelopersButton,
   adminRefreshHolidaysButton,
@@ -45,7 +43,6 @@ import {
   isUserMenuOpen,
   toggleUserMenu,
 } from "./ui/clockControls";
-import { openDepartmentModal } from "./ui/departmentModal";
 import { openRoleModal } from "./ui/roleModal";
 import { openConfirmDialog } from "./ui/confirmDialog";
 import { bindNavigation, switchView } from "./navigation";
@@ -56,7 +53,7 @@ import { ensureGuildConfigured, apiRequest } from "./apiClient";
 import { renderAuthState } from "./authState";
 import { renderHoursReport } from "./ui/dashboard";
 import { canAccessAdmin } from "./permissions";
-import { deleteDepartment, loadAdminOverview, refreshAdminOverview, setAdminActiveTab } from "./adminData";
+import { loadAdminOverview, refreshAdminOverview, setAdminActiveTab } from "./adminData";
 import type { AdminTabKey } from "./types";
 import { loadProfile } from "./profileData";
 import { initializeProfileView, renderProfileView } from "./ui/profile";
@@ -66,91 +63,6 @@ const DAY_IN_MS = 86400000;
 
 function hasStatus(error: unknown): error is { status: number } {
   return Boolean(error && typeof error === "object" && "status" in error);
-}
-
-async function handleDepartmentDelete(
-  departmentId: string,
-  trigger: HTMLButtonElement,
-): Promise<void> {
-  const overview = state.adminOverview;
-  if (!overview) {
-    showToast("Load departments before performing this action.", "error");
-    return;
-  }
-
-  const department = overview.departments.find((entry) =>
-    entry.id.toLowerCase() === departmentId.toLowerCase(),
-  );
-
-  if (!department) {
-    showToast("Department not found.", "error");
-    return;
-  }
-
-  const impactDetails: string[] = [];
-  if (department.roles_count > 0) {
-    impactDetails.push(
-      `${department.roles_count} role${department.roles_count === 1 ? "" : "s"} currently linked to this department.`,
-    );
-  }
-  if (department.member_count > 0) {
-    impactDetails.push(
-      `${department.member_count} member${department.member_count === 1 ? "" : "s"} currently assigned to this department.`,
-    );
-  }
-
-  const confirmed = await openConfirmDialog({
-    title: "Delete department",
-    message: `Are you sure you want to delete "${department.name}"? This action cannot be undone.`,
-    confirmLabel: "Delete department",
-    cancelLabel: "Keep department",
-    tone: "danger",
-    details: impactDetails.length ? impactDetails : undefined,
-    emphasizeWarning: true,
-  });
-
-  if (!confirmed) {
-    return;
-  }
-
-  const previousAriaLabel = trigger.getAttribute("aria-label") || "";
-  const srLabel = trigger.querySelector<HTMLElement>(".sr-only");
-  const previousSrText = srLabel?.textContent || "";
-  trigger.disabled = true;
-  trigger.classList.add("is-busy");
-  trigger.setAttribute("aria-label", "Deleting…");
-  if (srLabel) {
-    srLabel.textContent = "Deleting…";
-  }
-
-  try {
-    await deleteDepartment(departmentId);
-    showToast(`Department "${department.name}" deleted.`, "success");
-    await refreshAdminOverview();
-  } catch (error) {
-    const message =
-      typeof error === "string"
-        ? error
-        : error instanceof Error
-        ? error.message
-        : "Unable to delete department.";
-    if (message && !hasStatus(error)) {
-      showToast(message, "error");
-    }
-  } finally {
-    if (document.body.contains(trigger)) {
-      trigger.disabled = false;
-      trigger.classList.remove("is-busy");
-      if (previousAriaLabel) {
-        trigger.setAttribute("aria-label", previousAriaLabel);
-      } else {
-        trigger.removeAttribute("aria-label");
-      }
-      if (srLabel) {
-        srLabel.textContent = previousSrText;
-      }
-    }
-  }
 }
 
 async function handleRoleDelete(roleId: string, trigger: HTMLButtonElement): Promise<void> {
@@ -508,43 +420,6 @@ export function bindEvents(): void {
       }
     });
   });
-
-  if (adminAddDepartmentButton) {
-    adminAddDepartmentButton.addEventListener("click", () => {
-      if (!canAccessAdmin()) {
-        showToast("Admin access required.", "error");
-        return;
-      }
-      openDepartmentModal({ mode: "create" });
-    });
-  }
-
-  if (adminDepartmentsContainer) {
-    adminDepartmentsContainer.addEventListener("click", (event) => {
-      const target = event.target as HTMLElement | null;
-      const button = target?.closest<HTMLButtonElement>("[data-department-action]");
-      if (!button) return;
-      if (!canAccessAdmin()) {
-        showToast("Admin access required.", "error");
-        return;
-      }
-
-      const { departmentAction, departmentId } = button.dataset as {
-        departmentAction?: string;
-        departmentId?: string;
-      };
-
-      if (!departmentId) {
-        return;
-      }
-
-      if (departmentAction === "edit") {
-        openDepartmentModal({ mode: "edit", departmentId });
-      } else if (departmentAction === "delete") {
-        void handleDepartmentDelete(departmentId, button);
-      }
-    });
-  }
 
   if (adminAddRoleButton) {
     adminAddRoleButton.addEventListener("click", () => {

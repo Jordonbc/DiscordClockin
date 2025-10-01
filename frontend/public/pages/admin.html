@@ -1,15 +1,12 @@
 <section class="view" data-view="admin" data-requires-role="admin">
   <header class="view-header">
     <h2>Admin Panel</h2>
-    <p>Manage departments, roles, and developer accounts.</p>
+    <p>Manage roles and developer accounts.</p>
   </header>
 
   <article class="panel panel--compact">
     <nav class="admin-nav" aria-label="Admin sections">
-      <button class="admin-nav__button is-active" type="button" data-admin-tab="departments">
-        Departments
-      </button>
-      <button class="admin-nav__button" type="button" data-admin-tab="roles">
+      <button class="admin-nav__button is-active" type="button" data-admin-tab="roles">
         Roles
       </button>
       <button class="admin-nav__button" type="button" data-admin-tab="developers">
@@ -30,20 +27,7 @@
     </nav>
   </article>
 
-  <section class="panel admin-section" data-admin-section="departments">
-    <div class="admin-section__header">
-      <div>
-        <h3>Departments</h3>
-        <p>Organize teams and reporting lines.</p>
-      </div>
-      <button id="admin-add-department" class="button button--primary" type="button">
-        + Add Department
-      </button>
-    </div>
-    <div id="admin-departments" class="admin-grid admin-grid--cards"></div>
-  </section>
-
-  <section class="panel admin-section" data-admin-section="roles" hidden>
+  <section class="panel admin-section" data-admin-section="roles">
     <div class="admin-section__header">
       <div>
         <h3>Roles</h3>

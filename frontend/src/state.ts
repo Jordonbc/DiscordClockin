@@ -38,7 +38,7 @@ export const state: AppState = {
   adminOverview: null,
   adminOverviewLoading: false,
   adminOverviewError: null,
-  adminActiveTab: "departments",
+  adminActiveTab: "roles",
   rolesConfiguration: null,
   rolesConfigurationLoading: false,
   rolesConfigurationError: null,
