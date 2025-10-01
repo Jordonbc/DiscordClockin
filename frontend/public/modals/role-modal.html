@@ -1,0 +1,65 @@
+<div
+  id="role-modal"
+  class="modal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="role-modal-title"
+  hidden
+>
+  <div class="modal__overlay" data-modal-dismiss></div>
+  <div class="modal__content">
+    <form id="role-form" class="modal__form">
+      <header class="modal__header">
+        <h2 id="role-modal-title">Add role</h2>
+        <button type="button" class="modal__close" aria-label="Close" data-modal-dismiss>
+          &times;
+        </button>
+      </header>
+      <div class="modal__body">
+        <p id="role-modal-description" class="modal__description">
+          Create a new role with experience-based compensation.
+        </p>
+        <label class="modal__field" for="role-name">
+          Role name
+          <input
+            id="role-name"
+            type="text"
+            name="name"
+            placeholder="e.g. Senior Backend Engineer"
+            required
+            autocomplete="off"
+          />
+        </label>
+        <label class="modal__field" for="role-category">
+          Category
+          <input
+            id="role-category"
+            type="text"
+            name="category"
+            list="role-category-options"
+            placeholder="e.g. Engineering"
+            required
+            autocomplete="off"
+          />
+          <datalist id="role-category-options"></datalist>
+        </label>
+        <div class="modal__field" id="role-experience-field">
+          <span>Experience tiers</span>
+          <p class="modal__hint">
+            Select the experiences that apply to this role and provide hourly rates for each tier.
+          </p>
+          <div id="role-experience-options" class="role-modal__options"></div>
+        </div>
+        <p id="role-modal-error" class="modal__error" role="alert" hidden></p>
+      </div>
+      <footer class="modal__footer">
+        <button type="button" class="button button--ghost" data-modal-dismiss>
+          Cancel
+        </button>
+        <button id="role-submit" type="submit" class="button button--primary">
+          Create role
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

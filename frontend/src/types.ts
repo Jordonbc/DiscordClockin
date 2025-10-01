@@ -111,6 +111,28 @@ export interface AdminRoleSummary {
   member_count: number;
 }
 
+export interface GuildRoleDefinition {
+  id: string;
+  name: string;
+  category: string;
+  experiences: string[];
+  hourly_salary: Record<string, number>;
+}
+
+export interface GuildRolesConfiguration {
+  guild_id: string;
+  roles: GuildRoleDefinition[];
+  categories: string[];
+  experiences: string[];
+}
+
+export interface RoleFormPayload {
+  name: string;
+  category: string;
+  experiences: string[];
+  hourly_salary: Record<string, number>;
+}
+
 export type ComplianceStatus = "on-track" | "warning" | "critical";
 
 export interface AdminDeveloperSummary {
@@ -217,6 +239,9 @@ export interface AppState {
   adminOverviewLoading: boolean;
   adminOverviewError: string | null;
   adminActiveTab: AdminTabKey;
+  rolesConfiguration: GuildRolesConfiguration | null;
+  rolesConfigurationLoading: boolean;
+  rolesConfigurationError: string | null;
   profileLoading: boolean;
   profileSaving: boolean;
   profileError: string | null;

@@ -79,14 +79,14 @@ function renderDepartments(): void {
     const actions = document.createElement("div");
     actions.className = "admin-card__actions";
 
-    const editButton = createDepartmentActionButton({
+    const editButton = createAdminActionButton({
       label: `Edit ${department.name}`,
       icon: "edit",
     });
     editButton.dataset.departmentAction = "edit";
     editButton.dataset.departmentId = department.id;
 
-    const deleteButton = createDepartmentActionButton({
+    const deleteButton = createAdminActionButton({
       label: `Delete ${department.name}`,
       icon: "trash",
       tone: "danger",
@@ -110,7 +110,7 @@ function renderDepartments(): void {
   });
 }
 
-function createDepartmentActionButton(options: {
+function createAdminActionButton(options: {
   label: string;
   icon: "edit" | "trash";
   tone?: "danger";
@@ -182,10 +182,35 @@ function renderRoles(): void {
   overview.roles.forEach((role) => {
     const card = document.createElement("article");
     card.className = "admin-card";
+    card.dataset.roleId = role.id;
 
     const title = document.createElement("h4");
     title.className = "admin-card__title";
     title.textContent = role.name;
+
+    const actions = document.createElement("div");
+    actions.className = "admin-card__actions";
+
+    const editButton = createAdminActionButton({
+      label: `Edit ${role.name}`,
+      icon: "edit",
+    });
+    editButton.dataset.roleAction = "edit";
+    editButton.dataset.roleId = role.id;
+
+    const deleteButton = createAdminActionButton({
+      label: `Delete ${role.name}`,
+      icon: "trash",
+      tone: "danger",
+    });
+    deleteButton.dataset.roleAction = "delete";
+    deleteButton.dataset.roleId = role.id;
+
+    actions.append(editButton, deleteButton);
+
+    const header = document.createElement("div");
+    header.className = "admin-card__header";
+    header.append(title, actions);
 
     const category = document.createElement("p");
     category.className = "admin-card__meta";
@@ -211,7 +236,7 @@ function renderRoles(): void {
     members.className = "admin-card__meta";
     members.textContent = `${role.member_count} assigned developer${role.member_count === 1 ? "" : "s"}`;
 
-    card.append(title, category, experience, rateRange, members);
+    card.append(header, category, experience, rateRange, members);
     container.appendChild(card);
   });
 }

@@ -84,6 +84,13 @@ body.auth-modal-open {
   color: var(--text-muted);
 }
 
+.modal__hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+
 .modal__field {
   display: flex;
   flex-direction: column;
@@ -135,6 +142,64 @@ body.auth-modal-open {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+}
+
+.role-modal__options {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.role-modal__option {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.role-modal__option-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.role-modal__option-header input[type="checkbox"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  cursor: pointer;
+}
+
+.role-modal__option-label {
+  font-weight: 500;
+}
+
+.role-modal__rate {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.role-modal__rate label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+.role-modal__rate input {
+  width: 100%;
+}
+
+.role-modal__option.is-disabled {
+  opacity: 0.65;
+}
+
+.role-modal__empty {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
 }
 
 .auth-required-modal__content {

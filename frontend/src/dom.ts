@@ -127,6 +127,21 @@ export const departmentModalDismissElements = departmentModal
   ? Array.from(departmentModal.querySelectorAll<HTMLElement>("[data-modal-dismiss]"))
   : [];
 
+export const roleModal = query<HTMLElement>("#role-modal");
+export const roleModalForm = query<HTMLFormElement>("#role-form");
+export const roleModalTitle = query<HTMLElement>("#role-modal-title");
+export const roleModalDescription = query<HTMLElement>("#role-modal-description");
+export const roleModalError = query<HTMLElement>("#role-modal-error");
+export const roleNameInput = query<HTMLInputElement>("#role-name");
+export const roleCategoryInput = query<HTMLInputElement>("#role-category");
+export const roleCategoryOptions = query<HTMLDataListElement>("#role-category-options");
+export const roleExperienceField = query<HTMLElement>("#role-experience-field");
+export const roleExperienceOptions = query<HTMLElement>("#role-experience-options");
+export const roleSubmitButton = query<HTMLButtonElement>("#role-submit");
+export const roleModalDismissElements = roleModal
+  ? Array.from(roleModal.querySelectorAll<HTMLElement>("[data-modal-dismiss]"))
+  : [];
+
 export const confirmDialog = query<HTMLElement>("#confirm-dialog");
 export const confirmDialogTitle = query<HTMLElement>("#confirm-dialog-title");
 export const confirmDialogMessage = query<HTMLElement>("#confirm-dialog-message");
